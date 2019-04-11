@@ -1,3 +1,11 @@
+# v5.0.0
+**Bug Fixes**
+- Fix !region and !platform on servers with more then 250 members
+
+**Minor Features:**
+- update nix-core
+- adding additional test coverage
+
 # v4.0.0
 **Major Features:**
 - Add Streaming module
