@@ -1,3 +1,8 @@
+# 5.0.1  
+**Bug fixes**
+- restore data directory location
+
+
 # v5.0.0
 **Bug Fixes**
 - Fix !region and !platform on servers with more then 250 members
