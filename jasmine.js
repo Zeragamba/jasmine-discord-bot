@@ -36,7 +36,7 @@ class Jasmine extends Nix {
   loadPlugins() {
     fs.readdirSync(Path.join(__dirname, './plugins'))
       .forEach((file) => {
-        this.addModule(require('./plugins/' + file));
+        this.addPlugin(require('./plugins/' + file));
       });
   }
 

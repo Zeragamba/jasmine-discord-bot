@@ -11,7 +11,7 @@ function logPrefix(member) {
 
 class StreamingService extends Service {
   configureService() {
-    this.moduleService = this.nix.getService('core', 'ModuleService');
+    this.pluginService = this.nix.getService('core', 'PluginService');
   }
 
   onNixListen() {
@@ -24,7 +24,7 @@ class StreamingService extends Service {
   handlePresenceUpdate(oldMember, newMember) {
     this.nix.logger.debug(`${logPrefix(newMember)} Handling presence update for ${newMember.user.tag} in ${newMember.guild.name}`);
     return Rx.Observable.merge(
-        this.moduleService.isModuleEnabled(newMember.guild.id, 'streaming')
+        this.pluginService.isPluginEnabled(newMember.guild.id, 'streaming')
           .do((moduleEnabled) => this.nix.logger.debug(`${logPrefix(newMember)} Module is ${moduleEnabled ? "enabled" : "disabled"} in ${newMember.guild.name}`)),
         this.getLiveRole(newMember.guild)
           .do((liveRole) => this.nix.logger.debug(`${logPrefix(newMember)} Live role in ${newMember.guild.name} is ${liveRole ? liveRole.name : "<none>"}`)),

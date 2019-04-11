@@ -26,7 +26,7 @@ describe('!config streaming setLiveRole', function () {
   });
 
   describe('#configureAction', function () {
-    it('gets ModuleService from Nix', function () {
+    it('gets PluginService from Nix', function () {
       this.setLiveRole.configureAction();
       expect(this.setLiveRole.streamingService).to.eq(this.streamingService);
     });

@@ -13,14 +13,14 @@ describe('Feature: !region', function () {
       if (jasmineInitalized) return Rx.Observable.of('');
       jasmineInitalized = true;
 
-      let moduleService = this.jasmine.getService('core', 'ModuleService');
+      let pluginService = this.jasmine.getService('core', 'PluginService');
       let commandService = this.jasmine.getService('core', 'CommandService');
 
       commandService.handleCmdError = (error) => Rx.Observable.throw(error);
 
       return Rx.Observable.of('')
         .flatMap(() => this.jasmine.onNixJoinGuild(this.message.guild))
-        .flatMap(() => moduleService.enableModule(this.message.guild.id, 'ow-info'));
+        .flatMap(() => pluginService.enablePlugin(this.message.guild.id, 'ow-info'));
     };
 
     this.listen = (done, tests) => {

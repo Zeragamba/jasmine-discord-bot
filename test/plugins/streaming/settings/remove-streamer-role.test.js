@@ -28,7 +28,7 @@ describe('!config streaming removeStreamerRole', function () {
   });
 
   describe('#configureAction', function () {
-    it('gets ModuleService from Nix', function () {
+    it('gets PluginService from Nix', function () {
       this.removeStreamerRole.configureAction();
       expect(this.removeStreamerRole.streamingService).to.eq(this.streamingService);
     });

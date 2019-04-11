@@ -42,7 +42,7 @@
     "discord.js": "11.4.2",
     "git-rev": "^0.2.1",
     "glob": "^7.1.3",
-    "nix-core": "github:nix-core/nix-core#v2.2.0",
+    "nix-core": "github:nix-core/nix-core#v3.0.0-dev",
     "nix-data-disk": "github:nix-core/nix-data-disk#master",
     "node-glob": "^1.2.0",
     "rx": "^4.1.0",

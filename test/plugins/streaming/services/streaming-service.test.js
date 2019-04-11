@@ -26,13 +26,13 @@ describe('StreamingService', function () {
 
   describe('#configureService', function () {
     beforeEach(function () {
-      this.moduleService = {};
-      this.jasmine.stubService('core', 'ModuleService', this.moduleService);
+      this.pluginService = {};
+      this.jasmine.stubService('core', 'PluginService', this.pluginService);
     });
 
-    it('gets ModuleService from Nix', function () {
+    it('gets PluginService from Nix', function () {
       this.streamingService.configureService();
-      expect(this.streamingService.moduleService).to.eq(this.moduleService);
+      expect(this.streamingService.pluginService).to.eq(this.pluginService);
     });
   });
 
@@ -92,10 +92,10 @@ describe('StreamingService', function () {
         guild: this.guild,
       };
 
-      this.moduleService = this.jasmine.getService('core', 'moduleService');
-      this.streamingService.moduleService = this.moduleService;
+      this.pluginService = this.jasmine.getService('core', 'pluginService');
+      this.streamingService.pluginService = this.pluginService;
 
-      sinon.stub(this.moduleService, 'isModuleEnabled').returns(Rx.Observable.of(false));
+      sinon.stub(this.pluginService, 'isPluginEnabled').returns(Rx.Observable.of(false));
       sinon.stub(this.streamingService, 'getLiveRole').returns(Rx.Observable.from([undefined]));
       sinon.stub(this.streamingService, 'memberIsStreamer').returns(Rx.Observable.of(true));
 
@@ -104,7 +104,7 @@ describe('StreamingService', function () {
 
     context('when the module is enabled', function () {
       beforeEach(function () {
-        this.streamingService.moduleService.isModuleEnabled.returns(Rx.Observable.of(true));
+        this.streamingService.pluginService.isPluginEnabled.returns(Rx.Observable.of(true));
       });
 
       context('when a live role is not set', function () {
