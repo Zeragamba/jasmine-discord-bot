@@ -28,7 +28,7 @@ module.exports = {
   ],
 
   configureCommand() {
-    this.broadcastService = this.nix.getService('owMains', 'broadcastService');
+    this.broadcastService = this.chaos.getService('owMains', 'broadcastService');
   },
 
   run(context, response) {

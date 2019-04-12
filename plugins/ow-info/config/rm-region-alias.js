@@ -17,7 +17,7 @@ module.exports = {
   ],
 
   configureAction() {
-    this.regionService = this.nix.getService('ow-info', 'regionService');
+    this.regionService = this.chaos.getService('ow-info', 'regionService');
   },
 
   run(context) {

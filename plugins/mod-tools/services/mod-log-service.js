@@ -1,6 +1,6 @@
 const Rx = require('rx');
 const Discord = require('discord.js');
-const Service = require('nix-core').Service;
+const Service = require('chaos-core').Service;
 
 const AuditLogActions = Discord.GuildAuditLogs.Actions;
 
@@ -10,27 +10,27 @@ const {
 } = require('../utility');
 
 class ModLogService extends Service {
-  onNixListen() {
-    this.nix.logger.debug('Adding listener for guildMemberAdd$ events');
-    this.nix.streams
+  onListen() {
+    this.chaos.logger.debug('Adding listener for guildMemberAdd$ events');
+    this.chaos.streams
       .guildMemberAdd$
       .flatMap((member) => this.handleGuildMemberAdd(member))
       .subscribe();
 
-    this.nix.logger.debug('Adding listener for guildMemberRemove$ events');
-    this.nix.streams
+    this.chaos.logger.debug('Adding listener for guildMemberRemove$ events');
+    this.chaos.streams
       .guildMemberRemove$
       .flatMap((member) => this.handleGuildMemberRemove(member))
       .subscribe();
 
-    this.nix.logger.debug('Adding listener for guildBanAdd$ events');
-    this.nix.streams
+    this.chaos.logger.debug('Adding listener for guildBanAdd$ events');
+    this.chaos.streams
       .guildBanAdd$
       .flatMap(([guild, user]) => this.handleGuildBanAdd(guild, user))
       .subscribe();
 
-    this.nix.logger.debug('Adding listener for guildBanRemove$ events');
-    this.nix.streams
+    this.chaos.logger.debug('Adding listener for guildBanRemove$ events');
+    this.chaos.streams
       .guildBanRemove$
       .flatMap(([guild, user]) => this.handleGuildBanRemove(guild, user))
       .subscribe();
@@ -41,10 +41,10 @@ class ModLogService extends Service {
   handleGuildMemberAdd(member) {
     return Rx.Observable
       .of('')
-      .do(() => this.nix.logger.debug(`[ModLog:${member.guild.name}] User ${member.user.tag} joined`))
+      .do(() => this.chaos.logger.debug(`[ModLog:${member.guild.name}] User ${member.user.tag} joined`))
       .flatMap(() => this.addUserJoinedEntry(member))
       .catch((error) => {
-        this.nix.handleError(error, [
+        this.chaos.handleError(error, [
           {name: "Service", value: "ModLogService"},
           {name: "Hook", value: "GuildMemberAdd"},
           {name: "User that joined", value: member.toString()},
@@ -57,7 +57,7 @@ class ModLogService extends Service {
   handleGuildMemberRemove(member) {
     return Rx.Observable
       .of('')
-      .do(() => this.nix.logger.debug(`[ModLog:${member.guild.name}] User ${member.user.tag} left`))
+      .do(() => this.chaos.logger.debug(`[ModLog:${member.guild.name}] User ${member.user.tag} left`))
       .flatMap(() =>
         //filter out members who are banned
         Rx.Observable
@@ -69,7 +69,7 @@ class ModLogService extends Service {
       )
       .flatMap(() => this.addUserLeftEntry(member))
       .catch((error) => {
-        this.nix.handleError(error, [
+        this.chaos.handleError(error, [
           {name: "Service", value: "ModLogService"},
           {name: "Hook", value: "GuildMemberRemove"},
           {name: "User that left", value: member.toString()},
@@ -82,7 +82,7 @@ class ModLogService extends Service {
   handleGuildBanAdd(guild, user) {
     return Rx.Observable
       .of('')
-      .do(() => this.nix.logger.debug(`[ModLog:${guild.name}] User ${user.tag} banned`))
+      .do(() => this.chaos.logger.debug(`[ModLog:${guild.name}] User ${user.tag} banned`))
       .flatMap(() => this.findReasonAuditLog(guild, user, {
         type: AuditLogActions.MEMBER_BAN_ADD,
       }))
@@ -104,7 +104,7 @@ class ModLogService extends Service {
       })
       .flatMap((log) => this.addBanEntry(guild, user, log.reason, log.executor))
       .catch((error) => {
-        this.nix.handleError(error, [
+        this.chaos.handleError(error, [
           {name: "Service", value: "ModLogService"},
           {name: "Hook", value: "guildBanAdd"},
           {name: "Banned User", value: user.toString()},
@@ -117,7 +117,7 @@ class ModLogService extends Service {
   handleGuildBanRemove(guild, user) {
     return Rx.Observable
       .of('')
-      .do(() => this.nix.logger.debug(`[ModLog:${guild.name}] User ${user.tag} unbanned`))
+      .do(() => this.chaos.logger.debug(`[ModLog:${guild.name}] User ${user.tag} unbanned`))
       .flatMap(() => this.findReasonAuditLog(guild, user, {
         type: AuditLogActions.MEMBER_BAN_REMOVE,
       }))
@@ -139,7 +139,7 @@ class ModLogService extends Service {
       })
       .flatMap((log) => this.addUnbanEntry(guild, user, log.executor))
       .catch((error) => {
-        this.nix.handleError(error, [
+        this.chaos.handleError(error, [
           {name: "Service", value: "ModLogService"},
           {name: "Hook", value: "guildBanRemove"},
           {name: "Unbanned User", value: user.toString()},
@@ -208,12 +208,12 @@ class ModLogService extends Service {
   }
 
   addLogEntry(guild, embed, logTypeName) {
-    this.nix.logger.debug(`Adding mod log entry`);
+    this.chaos.logger.debug(`Adding mod log entry`);
 
     let logType = this.getLogType(logTypeName);
     if (!logType) { throw new Error(ERRORS.INVALID_LOG_TYPE); }
 
-    return this.nix
+    return this.chaos
       .getGuildData(guild.id, logType.channelDatakey)
       .filter((channelId) => typeof channelId !== 'undefined')
       .map((channelId) => guild.channels.find((c) => c.id === channelId))
@@ -269,7 +269,7 @@ class ModLogService extends Service {
       limit: 1,
     }, options);
 
-    let canViewAuditLog = guild.member(this.nix.discord.user).hasPermission(Discord.Permissions.FLAGS.VIEW_AUDIT_LOG);
+    let canViewAuditLog = guild.member(this.chaos.discord.user).hasPermission(Discord.Permissions.FLAGS.VIEW_AUDIT_LOG);
     if (!canViewAuditLog) {
       let error = new Error(`Unable to view audit log. I need the 'View Audit Log' permission in '${guild.name}'`);
       error.name = "AuditLogReadError";

@@ -3,7 +3,7 @@ module.exports = {
   description: 'Enables autobanning of users',
 
   run(context) {
-    let autoBanService = context.nix.getService('modTools', 'autoBanService');
+    let autoBanService = context.chaos.getService('modTools', 'autoBanService');
 
     let guild = context.guild;
 

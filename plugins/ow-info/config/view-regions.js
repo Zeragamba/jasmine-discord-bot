@@ -5,7 +5,7 @@ module.exports = {
   description: 'Displays a list of all configured regions, and their aliases',
 
   configureAction() {
-    this.regionService = this.nix.getService('ow-info', 'regionService');
+    this.regionService = this.chaos.getService('ow-info', 'regionService');
   },
 
   run(context) {

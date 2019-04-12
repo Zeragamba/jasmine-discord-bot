@@ -1,5 +1,5 @@
 const Rx = require('rx');
-const Service = require('nix-core').Service;
+const Service = require('chaos-core').Service;
 
 const DATAKEYS = require('../datakeys');
 const {
@@ -13,7 +13,7 @@ const {
 const defaultRegions = require('../data/regions');
 
 class RegionService extends Service {
-  onNixJoinGuild(guild) {
+  onJoinGuild(guild) {
     let mapRoles$ = this.getRegions(guild)
       .filter((roles) => roles === null)
       .flatMap(() => this.setRegions(guild, this.mapDefaultRoles(guild)));
@@ -55,19 +55,19 @@ class RegionService extends Service {
   }
 
   getRegions(guild) {
-    return this.nix.getGuildData(guild.id, DATAKEYS.REGION_REGIONS);
+    return this.chaos.getGuildData(guild.id, DATAKEYS.REGION_REGIONS);
   }
 
   setRegions(guild, roles) {
-    return this.nix.setGuildData(guild.id, DATAKEYS.REGION_REGIONS, roles);
+    return this.chaos.setGuildData(guild.id, DATAKEYS.REGION_REGIONS, roles);
   }
 
   getAliases(guild) {
-    return this.nix.getGuildData(guild.id, DATAKEYS.REGION_ALIASES);
+    return this.chaos.getGuildData(guild.id, DATAKEYS.REGION_ALIASES);
   }
 
   setAliases(guild, aliases) {
-    return this.nix.setGuildData(guild.id, DATAKEYS.REGION_ALIASES, aliases);
+    return this.chaos.setGuildData(guild.id, DATAKEYS.REGION_ALIASES, aliases);
   }
 
   mapRegion(guild, region, role) {

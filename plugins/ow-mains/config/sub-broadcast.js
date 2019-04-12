@@ -37,7 +37,7 @@ module.exports = {
     }
 
     let datakey = BROADCAST_TYPES[broadcastType];
-    return this.nix
+    return this.chaos
       .setGuildData(guild.id, datakey, channel.id)
       .flatMap(() => channel.send(`I will send ${broadcastType} broadcasts here.`))
       .map(() => ({

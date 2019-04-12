@@ -15,14 +15,14 @@ module.exports = {
   ],
 
   configureCommand() {
-    this.topicService = this.nix.getService('topics', 'topicService');
+    this.topicService = this.chaos.getService('topics', 'topicService');
   },
 
   run(context, response) {
     let guild = context.guild;
     let channelName = this.topicService.channelNameSafeString(context.args.channelName);
 
-    context.nix.logger.debug(`attempting to open topic channel: ${channelName}`);
+    context.chaos.logger.debug(`attempting to open topic channel: ${channelName}`);
 
     let openCategory = this.topicService.getOpenTopicsCategory(guild);
     if (!openCategory) {
@@ -53,7 +53,7 @@ module.exports = {
           }
           else {
             response.content = `I'm sorry, Discord returned an unexpected error when I tried to create the channel.`;
-            context.nix.handleError(error, [
+            context.chaos.handleError(error, [
               {name: "command", value: "topic"},
               {name: "guild", value: context.guild.name},
               {name: "channel", value: context.channel.name},
@@ -64,7 +64,7 @@ module.exports = {
         }
         else {
           response.content = `I'm sorry, I ran into an unexpected problem.`;
-          context.nix.handleError(error, [
+          context.chaos.handleError(error, [
             {name: "command", value: "topic"},
             {name: "guild", value: context.guild.name},
             {name: "channel", value: context.channel.name},

@@ -14,7 +14,7 @@ module.exports = {
   ],
 
   configureAction() {
-    this.streamingService = this.nix.getService('streaming', 'streamingService');
+    this.streamingService = this.chaos.getService('streaming', 'streamingService');
   },
 
   run(context) {

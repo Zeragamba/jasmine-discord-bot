@@ -1,6 +1,6 @@
 const Rx = require('rx');
 const Discord = require('discord.js');
-const Service = require('nix-core').Service;
+const Service = require('chaos-core').Service;
 
 const {
   BroadcastingNotAllowedError,
@@ -20,7 +20,7 @@ const FALLBACK_NO = "👎";
 
 class BroadcastService extends Service {
   broadcastAllowed(guild, broadcastType) {
-    return this.nix
+    return this.chaos
       .getGuildData(guild.id, DATAKEYS.BROADCAST_TOKENS)
       .map((allowedTokens) => {
         if (allowedTokens[broadcastType] !== BROADCAST_TOKENS[broadcastType]) {
@@ -42,7 +42,7 @@ class BroadcastService extends Service {
   removeOwnReactions(message) {
     return Rx.Observable
       .from(message.reactions.values())
-      .filter((reaction) => reaction.remove(this.nix.discord.user));
+      .filter((reaction) => reaction.remove(this.chaos.discord.user));
   }
 
   getConfirmEmoji(guild) {
@@ -112,7 +112,7 @@ class BroadcastService extends Service {
 
   broadcastMessage(broadcastType, broadcastBody) {
     return Rx.Observable
-      .from(this.nix.discord.guilds.values())
+      .from(this.chaos.discord.guilds.values())
       .flatMap((guild) =>
         this.getBroadcastChannel(broadcastType, guild)
           .flatMap((channel) => channel.send(broadcastBody)),
@@ -122,11 +122,11 @@ class BroadcastService extends Service {
   getBroadcastChannel(broadcastType, guild) {
     let broadcastChannelDatakey = BROADCAST_TYPES[broadcastType];
 
-    return this.nix
+    return this.chaos
       .getGuildData(guild.id, broadcastChannelDatakey)
       .filter((channelId) => channelId !== null)
       .map((channelId) => guild.channels.get(channelId))
-      .filter((channel) => channel.permissionsFor(this.nix.discord.user).has(Discord.Permissions.FLAGS.SEND_MESSAGES));
+      .filter((channel) => channel.permissionsFor(this.chaos.discord.user).has(Discord.Permissions.FLAGS.SEND_MESSAGES));
   }
 }
 

@@ -3,7 +3,7 @@ module.exports = {
   description: `Stop assigning a role when a user goes live`,
 
   configureAction() {
-    this.streamingService = this.nix.getService('streaming', 'StreamingService');
+    this.streamingService = this.chaos.getService('streaming', 'StreamingService');
   },
 
   run(context) {

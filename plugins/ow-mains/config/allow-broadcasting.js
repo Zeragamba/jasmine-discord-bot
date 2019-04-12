@@ -39,9 +39,9 @@ module.exports = {
       };
     }
 
-    return this.nix.getGuildData(guild.id, DATAKEYS.BROADCAST_TOKENS)
+    return this.chaos.getGuildData(guild.id, DATAKEYS.BROADCAST_TOKENS)
       .do((savedData) => savedData[broadcastType] = token)
-      .flatMap((savedData) => this.nix.setGuildData(guild.id, DATAKEYS.BROADCAST_TOKENS, savedData))
+      .flatMap((savedData) => this.chaos.setGuildData(guild.id, DATAKEYS.BROADCAST_TOKENS, savedData))
       .map(() => ({
         status: 200,
         content: `This server is now allowed to send ${broadcastType} broadcasts.`,

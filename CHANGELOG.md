@@ -1,6 +1,6 @@
 # 6.0.0
 **Major Features:**
-- Update Nix-Core to v3.0.0
+- Update Chaos-Core to v3.0.0
   - renames modules to plugins
   - Merged all core plugins together
 

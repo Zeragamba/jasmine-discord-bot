@@ -15,7 +15,7 @@ module.exports = {
   ],
 
   run(context) {
-    let modLogService = context.nix.getService('modTools', 'ModLogService');
+    let modLogService = context.chaos.getService('modTools', 'ModLogService');
 
     let guild = context.guild;
     let logTypeName = context.inputs.type;
@@ -28,7 +28,7 @@ module.exports = {
       };
     }
 
-    return this.nix
+    return this.chaos
       .setGuildData(guild.id, logType.channelDatakey, null)
       .map(() => ({
         status: 200,

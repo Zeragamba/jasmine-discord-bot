@@ -24,7 +24,7 @@ describe('Feature: !platform', function () {
           commandService.handleCmdError = (error) => Rx.Observable.throw(error);
 
           return Rx.Observable.of('')
-            .flatMap(() => this.jasmine.onNixJoinGuild(this.message.guild))
+            .flatMap(() => this.jasmine.onJoinGuild(this.message.guild))
             .flatMap(() => pluginService.enablePlugin(this.message.guild.id, 'ow-info'));
         })
         .flatMap(() => tests)

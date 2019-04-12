@@ -1,5 +1,5 @@
 const Rx = require('rx');
-const Service = require('nix-core').Service;
+const Service = require('chaos-core').Service;
 const DiscordAPIError = require('discord.js').DiscordAPIError;
 
 const DATAKEYS = require('../lib/datakeys');
@@ -11,36 +11,36 @@ function logPrefix(member) {
 
 class StreamingService extends Service {
   configureService() {
-    this.pluginService = this.nix.getService('core', 'PluginService');
+    this.pluginService = this.chaos.getService('core', 'PluginService');
   }
 
-  onNixListen() {
-    this.nix.streams
+  onListen() {
+    this.chaos.streams
       .presenceUpdate$
       .flatMap(([oldMember, newMember]) => this.handlePresenceUpdate(oldMember, newMember))
       .subscribe();
   }
 
   handlePresenceUpdate(oldMember, newMember) {
-    this.nix.logger.debug(`${logPrefix(newMember)} Handling presence update for ${newMember.user.tag} in ${newMember.guild.name}`);
+    this.chaos.logger.debug(`${logPrefix(newMember)} Handling presence update for ${newMember.user.tag} in ${newMember.guild.name}`);
     return Rx.Observable.merge(
         this.pluginService.isPluginEnabled(newMember.guild.id, 'streaming')
-          .do((moduleEnabled) => this.nix.logger.debug(`${logPrefix(newMember)} Module is ${moduleEnabled ? "enabled" : "disabled"} in ${newMember.guild.name}`)),
+          .do((moduleEnabled) => this.chaos.logger.debug(`${logPrefix(newMember)} Module is ${moduleEnabled ? "enabled" : "disabled"} in ${newMember.guild.name}`)),
         this.getLiveRole(newMember.guild)
-          .do((liveRole) => this.nix.logger.debug(`${logPrefix(newMember)} Live role in ${newMember.guild.name} is ${liveRole ? liveRole.name : "<none>"}`)),
+          .do((liveRole) => this.chaos.logger.debug(`${logPrefix(newMember)} Live role in ${newMember.guild.name} is ${liveRole ? liveRole.name : "<none>"}`)),
         this.memberIsStreamer(newMember)
-          .do((isStreamer) => this.nix.logger.debug(`${logPrefix(newMember)} ${newMember.user.tag} ${isStreamer ? "is" : "is not"} a streamer.`)),
+          .do((isStreamer) => this.chaos.logger.debug(`${logPrefix(newMember)} ${newMember.user.tag} ${isStreamer ? "is" : "is not"} a streamer.`)),
       )
       .every((checkPassed) => checkPassed)
       .filter(Boolean)
       .flatMap(() => this.updateMemberRoles(newMember))
       .catch((error) => {
         if (error instanceof DiscordAPIError) {
-          this.nix.logger.debug(`${logPrefix(newMember)} Ignored discord error: ${error.toString()}`);
+          this.chaos.logger.debug(`${logPrefix(newMember)} Ignored discord error: ${error.toString()}`);
           return Rx.Observable.empty();
         }
 
-        return this.nix.handleError(error, [
+        return this.chaos.handleError(error, [
           { name: "Service", value: "StreamingService" },
           { name: "Hook", value: "presenceUpdate$" },
           { name: "Guild", value: newMember.guild.toString() },
@@ -57,10 +57,10 @@ class StreamingService extends Service {
   }
 
   updateMemberRoles(member) {
-    this.nix.logger.debug(`${logPrefix(member)} Will update roles for ${member.user.tag}`);
+    this.chaos.logger.debug(`${logPrefix(member)} Will update roles for ${member.user.tag}`);
     return Rx.Observable.of('')
       .map(() => this.memberIsStreaming(member))
-      .do((isStreaming) => this.nix.logger.debug(`${logPrefix(member)} ${member.user.tag} ${isStreaming ? "is" : "is not"} Streaming`))
+      .do((isStreaming) => this.chaos.logger.debug(`${logPrefix(member)} ${member.user.tag} ${isStreaming ? "is" : "is not"} Streaming`))
       .flatMap((isStreaming) =>
         Rx.Observable.if(
           () => isStreaming,
@@ -75,7 +75,7 @@ class StreamingService extends Service {
       .flatMap(() => this.getLiveRole(member.guild))
       .filter((liveRole) => liveRole)
       .filter((liveRole) => !member.roles.has(liveRole.id))
-      .do((liveRole) => this.nix.logger.debug(`${logPrefix(member)} Adding role ${liveRole.name} to ${member.user.tag}`))
+      .do((liveRole) => this.chaos.logger.debug(`${logPrefix(member)} Adding role ${liveRole.name} to ${member.user.tag}`))
       .flatMap((liveRole) => member.addRole(liveRole));
   }
 
@@ -84,17 +84,17 @@ class StreamingService extends Service {
       .flatMap(() => this.getLiveRole(member.guild))
       .filter((liveRole) => liveRole)
       .filter((liveRole) => member.roles.has(liveRole.id))
-      .do((liveRole) => this.nix.logger.debug(`${logPrefix(member)} Removing role ${liveRole.name} from ${member.user.tag}`))
+      .do((liveRole) => this.chaos.logger.debug(`${logPrefix(member)} Removing role ${liveRole.name} from ${member.user.tag}`))
       .flatMap((liveRole) => member.removeRole(liveRole));
   }
 
   setLiveRole(guild, role) {
-    return this.nix.setGuildData(guild.id, DATAKEYS.LIVE_ROLE, role ? role.id : null)
+    return this.chaos.setGuildData(guild.id, DATAKEYS.LIVE_ROLE, role ? role.id : null)
       .flatMap(() => this.getLiveRole(guild));
   }
 
   getLiveRole(guild) {
-    return this.nix.getGuildData(guild.id, DATAKEYS.LIVE_ROLE)
+    return this.chaos.getGuildData(guild.id, DATAKEYS.LIVE_ROLE)
       .map((roleId) => guild.roles.get(roleId));
   }
 
@@ -119,12 +119,12 @@ class StreamingService extends Service {
   }
 
   setStreamerRole(guild, role) {
-    return this.nix.setGuildData(guild.id, DATAKEYS.STREAMER_ROLE, role ? role.id : null)
+    return this.chaos.setGuildData(guild.id, DATAKEYS.STREAMER_ROLE, role ? role.id : null)
       .flatMap(() => this.getStreamerRole(guild));
   }
 
   getStreamerRole(guild) {
-    return this.nix.getGuildData(guild.id, DATAKEYS.STREAMER_ROLE)
+    return this.chaos.getGuildData(guild.id, DATAKEYS.STREAMER_ROLE)
       .map((roleId) => guild.roles.get(roleId));
   }
 

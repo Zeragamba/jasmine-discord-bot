@@ -23,8 +23,8 @@ module.exports = {
   ],
 
   run(context, response) {
-    let modLogService = context.nix.getService('modTools', 'ModLogService');
-    let userService = context.nix.getService('core', 'UserService');
+    let modLogService = context.chaos.getService('modTools', 'ModLogService');
+    let userService = context.chaos.getService('core', 'UserService');
 
     let guild = context.guild;
     let userString = context.args.user;
@@ -68,10 +68,10 @@ module.exports = {
               break;
             default:
               response.content = `Err... Discord returned an unexpected error when I tried to ban that user.`;
-              context.nix.messageOwner(
+              context.chaos.messageOwner(
                 "I got this error when I tried to ban a user:",
                 {
-                  embed: context.nix.createEmbedForError(error, [
+                  embed: context.chaos.createEmbedForError(error, [
                     {name: "guild", inline: true, value: context.guild.name},
                     {name: "channel", inline: true, value: context.channel.name},
                     {name: "command", inline: true, value: "ban"},

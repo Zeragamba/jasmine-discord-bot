@@ -15,7 +15,7 @@ module.exports = {
   ],
 
   configureCommand() {
-    this.topicService = this.nix.getService('topics', 'topicService');
+    this.topicService = this.chaos.getService('topics', 'topicService');
   },
 
   run(context, response) {
@@ -80,7 +80,7 @@ module.exports = {
           }
           else {
             response.content = `I'm sorry, Discord returned an unexpected error when I tried to move the channel.`;
-            context.nix.handleError(error, [
+            context.chaos.handleError(error, [
               {name: "command", value: "reopen"},
               {name: "guild", value: context.guild.name},
               {name: "channel", value: context.channel.name},
@@ -91,7 +91,7 @@ module.exports = {
         }
         else {
           response.content = `I'm sorry, I ran into an unexpected problem.`;
-          context.nix.handleError(error, [
+          context.chaos.handleError(error, [
             {name: "command", value: "reopen"},
             {name: "guild", value: context.guild.name},
             {name: "channel", value: context.channel.name},

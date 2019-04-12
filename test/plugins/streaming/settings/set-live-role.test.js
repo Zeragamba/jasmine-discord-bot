@@ -1,6 +1,6 @@
 const Rx = require('rx');
 const Collection = require('discord.js').Collection;
-const ConfigAction = require('nix-core/lib/models/config-action');
+const ConfigAction = require('chaos-core').ConfigAction;
 
 const StreamingService = require('../../../../plugins/streaming/services/streaming-service');
 
@@ -12,7 +12,7 @@ describe('!config streaming setLiveRole', function () {
     this.jasmine.stubService('streaming', 'StreamingService', this.streamingService);
 
     this.setLiveRole = new ConfigAction(require('../../../../plugins/streaming/config/set-live-role'));
-    this.setLiveRole.nix = this.jasmine;
+    this.setLiveRole.chaos = this.jasmine;
   });
 
   describe('properties', function () {

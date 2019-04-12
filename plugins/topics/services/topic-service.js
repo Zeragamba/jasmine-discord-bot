@@ -1,23 +1,23 @@
 const Rx = require('rx');
-const Service = require("nix-core").Service;
+const Service = require("chaos-core").Service;
 
 class TopicService extends Service {
-  constructor(nix) {
-    super(nix);
+  constructor(chaos) {
+    super(chaos);
 
     this.watchedChannels = {};
   }
 
-  onNixListen() {
-    this.nix.streams
+  onListen() {
+    this.chaos.streams
       .message$
       .filter((message) => !message.system)
       .filter((message) => this.watchedChannels[message.channel.id])
       .do((message) => delete this.watchedChannels[message.channel.id])
-      .do((message) => this.nix.logger.debug(`Message in ${message.channel.name}: ${message.content}`))
+      .do((message) => this.chaos.logger.debug(`Message in ${message.channel.name}: ${message.content}`))
       .flatMap((message) => message.pin())
       .catch((error) => {
-        this.nix.logger.error(error);
+        this.chaos.logger.error(error);
         return Rx.Observable.of('');
       })
       .subscribe();
@@ -26,7 +26,7 @@ class TopicService extends Service {
   }
 
   watchChannel(channel) {
-    this.nix.logger.debug(`Watching for messages in ${channel.name}`);
+    this.chaos.logger.debug(`Watching for messages in ${channel.name}`);
     this.watchedChannels[channel.id] = true;
   }
 

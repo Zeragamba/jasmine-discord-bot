@@ -1,6 +1,6 @@
 const Rx = require('rx');
 const Collection = require('discord.js').Collection;
-const ConfigAction = require('nix-core/lib/models/config-action');
+const ConfigAction = require('chaos-core').ConfigAction;
 
 const StreamingService = require('../../../../plugins/streaming/services/streaming-service');
 
@@ -12,7 +12,7 @@ describe('!config streaming viewSettings', function () {
     this.jasmine.stubService('streaming', 'StreamingService', this.streamingService);
 
     this.viewSettings = new ConfigAction(require('../../../../plugins/streaming/config/view-settings'));
-    this.viewSettings.nix = this.jasmine;
+    this.viewSettings.chaos = this.jasmine;
   });
 
   describe('properties', function () {

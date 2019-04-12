@@ -1,10 +1,10 @@
-const Nix = require('nix-core');
+const ChaosCore = require('chaos-core');
 const Path = require('path');
 const fs = require('fs');
 
 const packageJson = require('./package');
 
-class Jasmine extends Nix {
+class Jasmine extends ChaosCore {
   constructor(config) {
     super({
       ...Jasmine.defaultConfig,
@@ -40,16 +40,13 @@ class Jasmine extends Nix {
       });
   }
 
-  listen(next = undefined, error = undefined, complete = undefined) {
-    let listen$ = super.listen(next, error, complete);
-
-    listen$.subscribe(() => this.discord.user.setPresence({
-      game: {
-        name: `v${packageJson.version}`,
-      },
-    }));
-
-    return listen$;
+  listen() {
+    return super.listen()
+      .do(() => this.discord.user.setPresence({
+        game: {
+          name: `v${packageJson.version}`,
+        },
+      }));
   }
 }
 

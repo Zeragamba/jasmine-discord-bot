@@ -23,7 +23,7 @@ module.exports = {
   ],
 
   run(context) {
-    let autoBanService = context.nix.getService('modTools', 'autoBanService');
+    let autoBanService = context.chaos.getService('modTools', 'autoBanService');
     let guild = context.guild;
 
     let rule = context.inputs.rule;

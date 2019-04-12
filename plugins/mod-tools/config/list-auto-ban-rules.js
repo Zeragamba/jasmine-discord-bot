@@ -5,7 +5,7 @@ module.exports = {
   description: 'List current auto ban rules',
 
   run(context) {
-    let autoBanService = context.nix.getService('modTools', 'autoBanService');
+    let autoBanService = context.chaos.getService('modTools', 'autoBanService');
 
     let guild = context.guild;
 

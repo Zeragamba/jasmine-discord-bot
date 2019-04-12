@@ -23,7 +23,7 @@ module.exports = {
   ],
 
   configureCommand() {
-    this.regionService = this.nix.getService('ow-info', 'regionService');
+    this.regionService = this.chaos.getService('ow-info', 'regionService');
   },
 
   run(context, response) {
@@ -100,10 +100,10 @@ function handleDiscordApiError(error, context, response) {
         type: 'message',
         content: `Err... Discord returned an unexpected error when I tried to update your roles.`,
       }),
-      context.nix.messageOwner(
+      context.chaos.messageOwner(
         `I got this error when I tried to update ${context.author.tag}'s platform:`,
         {
-          embed: context.nix.createEmbedForError(error, [
+          embed: context.chaos.createEmbedForError(error, [
             {name: "guild", value: context.guild.name},
             {name: "channel", value: context.channel.name},
             {name: "command", value: "region"},

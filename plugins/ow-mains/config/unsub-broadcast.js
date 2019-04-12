@@ -24,7 +24,7 @@ module.exports = {
     }
 
     let datakey = BROADCAST_TYPES[broadcastType];
-    return this.nix
+    return this.chaos
       .setGuildData(guild.id, datakey, null)
       .map(() => ({
         status: 200,

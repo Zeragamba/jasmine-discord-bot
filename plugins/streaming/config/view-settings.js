@@ -6,7 +6,7 @@ module.exports = {
   description: `View the current settings for the streaming module`,
 
   configureAction() {
-    this.streamingService = this.nix.getService('streaming', 'streamingService');
+    this.streamingService = this.chaos.getService('streaming', 'streamingService');
   },
 
   run(context) {

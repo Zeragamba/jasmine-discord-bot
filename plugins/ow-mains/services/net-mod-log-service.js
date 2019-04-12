@@ -1,6 +1,6 @@
 const Rx = require('rx');
 const Discord = require('discord.js');
-const Service = require('nix-core').Service;
+const Service = require('chaos-core').Service;
 
 const AuditLogActions = Discord.GuildAuditLogs.Actions;
 
@@ -11,18 +11,18 @@ const {
 
 class NetModLogService extends Service {
   configureService() {
-    this.modLogService = this.nix.getService('modTools', 'ModLogService');
+    this.modLogService = this.chaos.getService('modTools', 'ModLogService');
   }
 
-  onNixListen() {
-    this.nix.logger.debug('Adding listener for netModLog guildBanAdd$ events');
-    this.nix.streams
+  onListen() {
+    this.chaos.logger.debug('Adding listener for netModLog guildBanAdd$ events');
+    this.chaos.streams
       .guildBanAdd$
       .flatMap(([guild, user]) => this.handleGuildBanAdd(guild, user))
       .subscribe();
 
-    this.nix.logger.debug('Adding listener for netModLog guildBanRemove$ events');
-    this.nix.streams
+    this.chaos.logger.debug('Adding listener for netModLog guildBanRemove$ events');
+    this.chaos.streams
       .guildBanRemove$
       .flatMap(([guild, user]) => this.handleGuildBanRemove(guild, user))
       .subscribe();
@@ -57,17 +57,17 @@ class NetModLogService extends Service {
       .map((log) => {
         let reason = log.reason;
 
-        if (log.executor.id === this.nix.discord.user.id) {
+        if (log.executor.id === this.chaos.discord.user.id) {
           //the ban was made by Jasmine, strip the moderator from the reason
           reason = reason.replace(/\| Banned.*$/, '');
         }
 
         return {...log, reason};
       })
-      .do((log) => this.nix.logger.debug(`NetModLog: User ${user.tag} banned in ${guild.id} for reason: ${log.reason}`))
+      .do((log) => this.chaos.logger.debug(`NetModLog: User ${user.tag} banned in ${guild.id} for reason: ${log.reason}`))
       .flatMap((log) => this.addBanEntry(guild, user, log.reason))
       .catch((error) => {
-        this.nix.handleError(error, [
+        this.chaos.handleError(error, [
           {name: 'Service', value: 'NetModLogService'},
           {name: 'Hook', value: 'guildBanAdd$'},
           {name: 'Guild Name', value: guild.name},
@@ -81,10 +81,10 @@ class NetModLogService extends Service {
   handleGuildBanRemove(guild, user) {
     return Rx.Observable
       .of('')
-      .do(() => this.nix.logger.debug(`NetModLog: User ${user.tag} unbanned in ${guild.id}`))
+      .do(() => this.chaos.logger.debug(`NetModLog: User ${user.tag} unbanned in ${guild.id}`))
       .flatMap(() => this.addUnbanEntry(guild, user))
       .catch((error) => {
-        this.nix.handleError(error, [
+        this.chaos.handleError(error, [
           {name: 'Service', value: 'NetModLogService'},
           {name: 'Hook', value: 'guildBanRemove$'},
           {name: 'Guild Name', value: guild.name},
@@ -118,17 +118,17 @@ class NetModLogService extends Service {
   }
 
   addAuditEntry(fromGuild, embed) {
-    this.nix.logger.debug(`Adding network mod log entry`);
+    this.chaos.logger.debug(`Adding network mod log entry`);
 
-    return Rx.Observable.from(this.nix.discord.guilds.array())
+    return Rx.Observable.from(this.chaos.discord.guilds.array())
       .flatMap((netGuild) =>
-        this.nix
+        this.chaos
           .getGuildData(netGuild.id, DATAKEYS.NET_MOD_LOG_TOKEN)
           .filter((token) => token === NET_MOD_LOG_TOKEN)
           .map(netGuild),
       )
       .flatMap((netGuild) =>
-        this.nix
+        this.chaos
           .getGuildData(netGuild.id, DATAKEYS.NET_MOD_LOG)
           .map((channelId) => netGuild.channels.find((c) => c.id === channelId)),
       )

@@ -7,7 +7,7 @@ module.exports = {
   description: `Removes the limit on who can receive the live role`,
 
   configureAction() {
-    this.streamingService = this.nix.getService('streaming', 'streamingService');
+    this.streamingService = this.chaos.getService('streaming', 'streamingService');
   },
 
   run(context) {

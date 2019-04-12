@@ -38,8 +38,8 @@ module.exports = {
       };
     }
 
-    return this.nix.setGuildData(guild.id, DATAKEYS.NET_MOD_LOG_TOKEN, token)
-      .flatMap(() => this.nix.setGuildData(guild.id, DATAKEYS.NET_MOD_LOG, channel.id))
+    return this.chaos.setGuildData(guild.id, DATAKEYS.NET_MOD_LOG_TOKEN, token)
+      .flatMap(() => this.chaos.setGuildData(guild.id, DATAKEYS.NET_MOD_LOG, channel.id))
       .flatMap(() => channel.send('I will post the network moderation log here now.'))
       .flatMap(() => ({
         status: 200,

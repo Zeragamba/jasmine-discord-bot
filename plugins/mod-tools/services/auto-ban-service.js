@@ -1,5 +1,5 @@
 const Rx = require('rx');
-const Service = require('nix-core').Service;
+const Service = require('chaos-core').Service;
 
 const {
   RuleNotFoundError,
@@ -18,7 +18,7 @@ class AutoBanService extends Service {
         name: AUTO_BAN_RULES.BAN_DISCORD_INVITE,
         test: (member) => {
           let hasLink = this.memberNameMatches(member, /discord\.gg[/\\]/i);
-          this.nix.logger.debug(`${member.user.tag} has Discord invite in name: ${hasLink}`);
+          this.chaos.logger.debug(`${member.user.tag} has Discord invite in name: ${hasLink}`);
           return hasLink;
         },
         reason: "Username contains or was changed to a Discord invite",
@@ -27,7 +27,7 @@ class AutoBanService extends Service {
         name: AUTO_BAN_RULES.BAN_TWITCH_LINK,
         test: (member) => {
           let hasLink = this.memberNameMatches(member, /twitch\.tv[/\\]/i);
-          this.nix.logger.debug(`${member.user.tag} has Twitch link in name: ${hasLink}`);
+          this.chaos.logger.debug(`${member.user.tag} has Twitch link in name: ${hasLink}`);
           return hasLink;
         },
         reason: "Username contains or was changed to a Twitch link",
@@ -35,12 +35,12 @@ class AutoBanService extends Service {
     ];
   }
 
-  onNixListen() {
-    this.nix.streams.guildMemberAdd$
+  onListen() {
+    this.chaos.streams.guildMemberAdd$
       .flatMap((member) => this.handleGuildMemberAdd(member))
       .subscribe();
 
-    this.nix.streams.guildMemberUpdate$
+    this.chaos.streams.guildMemberUpdate$
       .flatMap(([oldMember, newMember]) => this.handleGuildMemberUpdate(oldMember, newMember))
       .subscribe();
   }
@@ -50,7 +50,7 @@ class AutoBanService extends Service {
       .of('')
       .flatMap(() => this.doAutoBans(member))
       .catch((error) => {
-        this.nix.handleError(error, [
+        this.chaos.handleError(error, [
           {name: "Service", value: "AutoBanService"},
           {name: "Hook", value: "guildMemberAdd$"},
           {name: "Member", value: member.toString()},
@@ -65,7 +65,7 @@ class AutoBanService extends Service {
       .of('')
       .flatMap(() => this.doAutoBans(newMember))
       .catch((error) => {
-        this.nix.handleError(error, [
+        this.chaos.handleError(error, [
           {name: "Service", value: "AutoBanService"},
           {name: "Hook", value: "guildMemberUpdate$"},
           {name: "Member", value: error.member.toString()},
@@ -84,14 +84,14 @@ class AutoBanService extends Service {
   }
 
   setAutoBansEnabled(guild, newValue) {
-    return this.nix
+    return this.chaos
       .setGuildData(guild.id, DATAKEYS.AUTO_BAN_ENABLED, newValue);
   }
 
   setAutoBanRule(guild, rule, newValue) {
     rule = this.getAutoBanRule(rule);
 
-    return this.nix
+    return this.chaos
       .setGuildData(guild.id, DATAKEYS.AUTO_BAN_RULE(rule), newValue)
       .map((enabled) => ([rule, enabled]));
   }
@@ -100,12 +100,12 @@ class AutoBanService extends Service {
     return Rx.Observable
       .of('')
       .flatMap(() => this.isAutoBanEnabled(member.guild).filter(Boolean))
-      .do(() => this.nix.logger.info(`Checking if ${member.user.tag} should be auto banned...`))
+      .do(() => this.chaos.logger.info(`Checking if ${member.user.tag} should be auto banned...`))
       .flatMap(() => Rx.Observable.from(this.rules))
       .flatMap((rule) => this.runRule(rule, member))
       .filter((reason) => reason)
       .take(1)
-      .do((reason) => this.nix.logger.info(`Auto banning ${member.user.tag}; reason: ${reason}`))
+      .do((reason) => this.chaos.logger.info(`Auto banning ${member.user.tag}; reason: ${reason}`))
       .flatMap((reason) =>
         member.guild.ban(member, {
           days: 1,
@@ -124,14 +124,14 @@ class AutoBanService extends Service {
   }
 
   isAutoBanEnabled(guild) {
-    return this.nix
+    return this.chaos
       .getGuildData(guild.id, DATAKEYS.AUTO_BAN_ENABLED);
   }
 
   isAutoBanRuleEnabled(guild, rule) {
     rule = this.getAutoBanRule(rule);
 
-    return this.nix
+    return this.chaos
       .getGuildData(guild.id, DATAKEYS.AUTO_BAN_RULE(rule));
   }
 

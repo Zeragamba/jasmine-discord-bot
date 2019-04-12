@@ -1,5 +1,5 @@
 const Rx = require('rx');
-const NixDataMemory = require('nix-data-memory');
+const ChaosDataMemory = require('chaos-data-memory');
 const Collection = require('discord.js').Collection;
 const DiscordAPIError = require('discord.js').DiscordAPIError;
 
@@ -9,7 +9,7 @@ const {RoleNotFoundError} = require('../../../../plugins/streaming/lib/errors');
 
 describe('StreamingService', function () {
   beforeEach(function () {
-    this.dataSource = new NixDataMemory();
+    this.dataSource = new ChaosDataMemory();
     this.presenceUpdate$ = new Rx.Subject();
 
     this.jasmine = stubJasmine();
@@ -36,16 +36,16 @@ describe('StreamingService', function () {
     });
   });
 
-  describe('#onNixListen', function () {
+  describe('#onListen', function () {
     it('subscribes to the presence update event stream', function () {
-      this.streamingService.onNixListen();
+      this.streamingService.onListen();
       expect(this.presenceUpdate$.observers.length).to.eq(1);
     });
   });
 
   describe('on presence update', function () {
     beforeEach(function () {
-      this.streamingService.onNixListen();
+      this.streamingService.onListen();
 
       this.oldMember = {name: 'oldMember'};
       this.newMember = {name: 'newMember'};
@@ -195,7 +195,7 @@ describe('StreamingService', function () {
               this.jasmine.handleError.returns(Rx.Observable.empty());
             });
 
-            it('lets nix handle the error', function (done) {
+            it('lets chaos handle the error', function (done) {
               expect(this.streamingService.handlePresenceUpdate(this.oldMember, this.newMember))
                 .to.complete(done, () => {
                 expect(this.jasmine.handleError).to.have.been.calledWith(this.error);

@@ -1,6 +1,6 @@
 const Rx = require('rx');
 const Collection = require('discord.js').Collection;
-const ConfigAction = require('nix-core/lib/models/config-action');
+const ConfigAction = require('chaos-core').ConfigAction;
 
 const StreamingService = require('../../../../plugins/streaming/services/streaming-service');
 const {RoleNotFoundError} = require('../../../../plugins/streaming/lib/errors');
@@ -14,7 +14,7 @@ describe('!config streaming removeStreamerRole', function () {
     this.jasmine.stubService('streaming', 'StreamingService', this.streamingService);
 
     this.removeStreamerRole = new ConfigAction(require('../../../../plugins/streaming/config/remove-streamer-role'));
-    this.removeStreamerRole.nix = this.jasmine;
+    this.removeStreamerRole.chaos = this.jasmine;
   });
 
   describe('properties', function () {
