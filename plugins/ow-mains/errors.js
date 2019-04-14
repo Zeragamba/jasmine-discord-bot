@@ -6,8 +6,9 @@ class BroadcastError extends Error {
 }
 
 class BroadcastingNotAllowedError extends BroadcastError {
-  constructor(broadcastType) {
-    super(`Sending ${broadcastType} broadcasts from this server is not allowed.`);
+  constructor(message) {
+    super(message);
+    this.name = "BroadcastingNotAllowedError";
   }
 }
 
@@ -17,8 +18,16 @@ class BroadcastCanceledError extends BroadcastError {
   }
 }
 
+class InvalidBroadcastError extends BroadcastError {
+  constructor(message) {
+    super(message);
+    this.name = "InvalidBroadcastError";
+  }
+}
+
 module.exports = {
   BroadcastError,
   BroadcastingNotAllowedError,
   BroadcastCanceledError,
+  InvalidBroadcastError,
 };

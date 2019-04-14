@@ -2,14 +2,14 @@ const Rx = require('rx');
 const Discord = require('discord.js');
 const Service = require('chaos-core').Service;
 
+const {InvalidBroadcastError} = require("../errors");
+
 const {
   BroadcastingNotAllowedError,
   BroadcastCanceledError,
 } = require('../errors');
 const {
-  DATAKEYS,
   BROADCAST_TYPES,
-  BROADCAST_TOKENS,
 } = require('../utility');
 
 const CONFIRM_YES_EMOJI_NAME = "voteyea";
@@ -19,15 +19,40 @@ const FALLBACK_YES = "👍";
 const FALLBACK_NO = "👎";
 
 class BroadcastService extends Service {
-  broadcastAllowed(guild, broadcastType) {
-    return this.chaos
-      .getGuildData(guild.id, DATAKEYS.BROADCAST_TOKENS)
-      .map((allowedTokens) => {
-        if (allowedTokens[broadcastType] !== BROADCAST_TOKENS[broadcastType]) {
-          throw new BroadcastingNotAllowedError();
-        }
-        return true;
-      });
+  get broadcastTypes() {
+    return this.chaos.config.broadcastTypes;
+  }
+
+  onListen() {
+    this.owmnService = this.chaos.getService('owMains', 'OwmnService');
+  }
+
+  isValidType(broadcastType) {
+    return this.broadcastTypes.includes(broadcastType.toLowerCase());
+  }
+
+  checkBroadcastAllowed(fromGuild) {
+    if (!this.owmnService.isOwmnGuild(fromGuild)) {
+      throw new BroadcastingNotAllowedError(
+        `Broadcasting from this server is not allowed.`,
+      );
+    }
+  }
+
+  checkValidBroadcast(broadcastType, broadcastBody) {
+    if (!this.isValidType(broadcastType)) {
+      throw new InvalidBroadcastError(
+        `Broadcast type ${broadcastType} is not valid. Valid types: ${this.broadcastTypes.join(', ')}`,
+      );
+    } else if (broadcastBody.indexOf('@everyone') !== -1) {
+      throw new InvalidBroadcastError(
+        `Pinging @ everyone is not allowed. Please remove the ping from your message.`,
+      );
+    } else if (broadcastBody.indexOf('@here') !== -1) {
+      throw new InvalidBroadcastError(
+        `Pinging @ here is not allowed. Please remove the ping from your message.`,
+      );
+    }
   }
 
   addConfirmReactions(message) {
@@ -61,7 +86,7 @@ class BroadcastService extends Service {
       .map(() => (new Discord.RichEmbed()).setDescription(broadcastBody))
       .flatMap((broadcastEmbed) => context.message.channel.send(
         `Broadcast this to "${broadcastType}"?`,
-        { embed: broadcastEmbed },
+        {embed: broadcastEmbed},
       ))
       .flatMap((confirmMessage) =>
         this.addConfirmReactions(confirmMessage)
@@ -81,18 +106,17 @@ class BroadcastService extends Service {
               (reaction, user) =>
                 allowedEmojiNames.includes(reaction.emoji.name.toLowerCase()) &&
                 user.id === context.message.author.id,
-              { max: 1 },
+              {max: 1},
             ),
           )
-          .map((reactions) => ({ confirmMessage, reactions }));
+          .map((reactions) => ({confirmMessage, reactions}));
       })
       .flatMap(({confirmMessage, reactions}) => {
         let yesEmojiNames = [CONFIRM_YES_EMOJI_NAME, FALLBACK_YES];
 
         if (reactions.find((r) => yesEmojiNames.includes(r.emoji.name.toLowerCase()))) {
           return Rx.Observable.of({confirmMessage, result: true});
-        }
-        else {
+        } else {
           return Rx.Observable.of({confirmMessage, result: false});
         }
       })
