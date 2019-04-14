@@ -25,16 +25,16 @@ describe('!config streaming viewSettings', function () {
     });
   });
 
-  describe('#configureAction', function () {
+  describe('#onListen', function () {
     it('gets PluginService from Nix', function () {
-      this.viewSettings.configureAction();
+      this.viewSettings.onListen();
       expect(this.viewSettings.streamingService).to.eq(this.streamingService);
     });
   });
 
   describe('#run', function () {
     beforeEach(function () {
-      this.viewSettings.configureAction();
+      this.viewSettings.onListen();
 
       this.guild = {
         id: 'guild-00001',

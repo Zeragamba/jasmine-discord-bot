@@ -7,7 +7,7 @@ function stubJasmine(config = {}) {
 
   const stubConfig = {
     ownerUserId: ownerUserId,
-    logger: {silent: true},
+    logger: {level: 'warn'},
     dataSource: {type: 'memory'},
   };
 

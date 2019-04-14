@@ -27,16 +27,16 @@ describe('!config streaming removeStreamerRole', function () {
     });
   });
 
-  describe('#configureAction', function () {
+  describe('#onListen', function () {
     it('gets PluginService from Nix', function () {
-      this.removeStreamerRole.configureAction();
+      this.removeStreamerRole.onListen();
       expect(this.removeStreamerRole.streamingService).to.eq(this.streamingService);
     });
   });
 
   describe('#run', function () {
     beforeEach(function () {
-      this.removeStreamerRole.configureAction();
+      this.removeStreamerRole.onListen();
 
       this.guild = {
         id: 'guild-00001',

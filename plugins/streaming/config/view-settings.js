@@ -5,7 +5,7 @@ module.exports = {
   name: 'viewSettings',
   description: `View the current settings for the streaming module`,
 
-  configureAction() {
+  onListen() {
     this.streamingService = this.chaos.getService('streaming', 'streamingService');
   },
 

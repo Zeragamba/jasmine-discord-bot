@@ -10,11 +10,9 @@ const {
 } = require('../utility');
 
 class NetModLogService extends Service {
-  configureService() {
-    this.modLogService = this.chaos.getService('modTools', 'ModLogService');
-  }
-
   onListen() {
+    this.modLogService = this.chaos.getService('modTools', 'ModLogService');
+
     this.chaos.logger.debug('Adding listener for netModLog guildBanAdd$ events');
     this.chaos.streams
       .guildBanAdd$

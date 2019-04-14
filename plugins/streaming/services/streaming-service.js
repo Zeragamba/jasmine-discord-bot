@@ -10,11 +10,9 @@ function logPrefix(member) {
 }
 
 class StreamingService extends Service {
-  configureService() {
-    this.pluginService = this.chaos.getService('core', 'PluginService');
-  }
-
   onListen() {
+    this.pluginService = this.chaos.getService('core', 'PluginService');
+
     this.chaos.streams
       .presenceUpdate$
       .flatMap(([oldMember, newMember]) => this.handlePresenceUpdate(oldMember, newMember))

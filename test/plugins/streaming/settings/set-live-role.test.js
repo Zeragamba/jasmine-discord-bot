@@ -25,16 +25,16 @@ describe('!config streaming setLiveRole', function () {
     });
   });
 
-  describe('#configureAction', function () {
+  describe('#onListen', function () {
     it('gets PluginService from Nix', function () {
-      this.setLiveRole.configureAction();
+      this.setLiveRole.onListen();
       expect(this.setLiveRole.streamingService).to.eq(this.streamingService);
     });
   });
 
   describe('#run', function () {
     beforeEach(function () {
-      this.setLiveRole.configureAction();
+      this.setLiveRole.onListen();
 
       this.guild = {
         id: 'guild-00001',

@@ -13,7 +13,7 @@ module.exports = {
     },
   ],
 
-  configureAction() {
+  onListen() {
     this.streamingService = this.chaos.getService('streaming', 'streamingService');
   },
 

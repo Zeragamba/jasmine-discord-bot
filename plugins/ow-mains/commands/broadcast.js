@@ -27,7 +27,7 @@ module.exports = {
     },
   ],
 
-  configureCommand() {
+  onListen() {
     this.broadcastService = this.chaos.getService('owMains', 'broadcastService');
   },
 

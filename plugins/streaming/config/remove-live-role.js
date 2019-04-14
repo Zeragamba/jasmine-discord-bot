@@ -2,7 +2,7 @@ module.exports = {
   name: 'removeLiveRole',
   description: `Stop assigning a role when a user goes live`,
 
-  configureAction() {
+  onListen() {
     this.streamingService = this.chaos.getService('streaming', 'StreamingService');
   },
 

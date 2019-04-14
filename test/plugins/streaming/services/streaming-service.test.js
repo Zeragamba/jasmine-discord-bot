@@ -24,14 +24,14 @@ describe('StreamingService', function () {
     this.presenceUpdate$.onCompleted();
   });
 
-  describe('#configureService', function () {
+  describe('#onListen', function () {
     beforeEach(function () {
       this.pluginService = {};
       this.jasmine.stubService('core', 'PluginService', this.pluginService);
     });
 
     it('gets PluginService from Nix', function () {
-      this.streamingService.configureService();
+      this.streamingService.onListen();
       expect(this.streamingService.pluginService).to.eq(this.pluginService);
     });
   });

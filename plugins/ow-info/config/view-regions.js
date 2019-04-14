@@ -4,7 +4,7 @@ module.exports = {
   name: 'viewRegions',
   description: 'Displays a list of all configured regions, and their aliases',
 
-  configureAction() {
+  onListen() {
     this.regionService = this.chaos.getService('ow-info', 'regionService');
   },
 

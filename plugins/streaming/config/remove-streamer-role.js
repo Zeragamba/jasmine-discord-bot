@@ -6,7 +6,7 @@ module.exports = {
   name: 'removeStreamerRole',
   description: `Removes the limit on who can receive the live role`,
 
-  configureAction() {
+  onListen() {
     this.streamingService = this.chaos.getService('streaming', 'streamingService');
   },
 

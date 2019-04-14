@@ -14,7 +14,7 @@ module.exports = {
     },
   ],
 
-  configureCommand() {
+  onListen() {
     this.topicService = this.chaos.getService('topics', 'topicService');
   },
 

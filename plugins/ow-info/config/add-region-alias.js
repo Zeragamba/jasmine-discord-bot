@@ -19,7 +19,7 @@ module.exports = {
     },
   ],
 
-  configureAction() {
+  onListen() {
     this.regionService = this.chaos.getService('ow-info', 'regionService');
   },
 

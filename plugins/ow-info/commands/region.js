@@ -22,7 +22,7 @@ module.exports = {
     },
   ],
 
-  configureCommand() {
+  onListen() {
     this.regionService = this.chaos.getService('ow-info', 'regionService');
   },
 
