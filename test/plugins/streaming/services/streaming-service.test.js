@@ -177,7 +177,7 @@ describe('StreamingService', function () {
               this.error.message = 'Example Error';
               this.streamingService.memberIsStreamer.returns(Rx.Observable.throw(this.error));
 
-              this.jasmine.handleError.returns(Rx.Observable.empty());
+              this.jasmine.handleError = sinon.fake.returns(Rx.Observable.empty());
             });
 
             it('does not crash the stream', function (done) {
@@ -192,7 +192,7 @@ describe('StreamingService', function () {
               this.error.message = 'Example Error';
               this.streamingService.memberIsStreamer.returns(Rx.Observable.throw(this.error));
 
-              this.jasmine.handleError.returns(Rx.Observable.empty());
+              this.jasmine.handleError = sinon.fake.returns(Rx.Observable.empty());
             });
 
             it('lets chaos handle the error', function (done) {

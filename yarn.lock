@@ -369,7 +369,7 @@ chalk@^2.0.0, chalk@^2.1.0, chalk@^2.4.1:
 
 "chaos-core@github:chaos-core/chaos-core#v3.0.0-dev":
   version "3.0.0-dev"
-  resolved "https://codeload.github.com/chaos-core/chaos-core/tar.gz/a8080638a277366af851b4ced12f120452a487c0"
+  resolved "https://codeload.github.com/chaos-core/chaos-core/tar.gz/49e56b64ca59981e6dd5185444c4765803d82ef6"
   dependencies:
     winston "^3.0.0"
 
@@ -377,9 +377,9 @@ chalk@^2.0.0, chalk@^2.1.0, chalk@^2.4.1:
   version "0.0.0"
   resolved "https://codeload.github.com/chaos-core/chaos-data-disk/tar.gz/b44ab7815e65e4d2a65816c0c6f029e599880a71"
 
-"chaos-data-memory@github:chaos-core/chaos-data-memory#v0.0.3":
+"chaos-data-memory@github:chaos-core/chaos-data-memory#RxJS-4":
   version "0.0.3"
-  resolved "https://codeload.github.com/chaos-core/chaos-data-memory/tar.gz/72b6390f2d112581a0c4a13bde0a27f1d04a60b6"
+  resolved "https://codeload.github.com/chaos-core/chaos-data-memory/tar.gz/b985508819522bb3d203c7a8ca394616f70f4e99"
 
 chardet@^0.4.0:
   version "0.4.2"
