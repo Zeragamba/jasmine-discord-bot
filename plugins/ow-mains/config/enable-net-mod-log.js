@@ -33,7 +33,7 @@ module.exports = {
 
     return this.chaos.setGuildData(guild.id, DataKeys.netModLogChannelId, channel.id)
       .flatMap(() => channel.send('I will post the network moderation log here now.'))
-      .flatMap(() => ({
+      .map(() => ({
         status: 200,
         content: `This server will now receive the network moderation log.`,
       }))
