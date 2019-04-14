@@ -14,6 +14,7 @@ module.exports = {
     { keyword: DATAKEYS.NET_MOD_LOG_TOKEN, data: null },
   ],
   services: [
+    require('./services/owmn-service'),
     require('./services/net-mod-log-service'),
     require('./services/broadcast-service'),
   ],

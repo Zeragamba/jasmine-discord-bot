@@ -29,12 +29,17 @@ module.exports = {
 
   onListen() {
     this.broadcastService = this.chaos.getService('owMains', 'broadcastService');
+    this.owmnService = this.chaos.getService('owMains', 'OwmnService');
   },
 
   run(context, response) {
     let guild = context.guild;
     let broadcastType = context.args.type.toLowerCase();
     let broadcastBody = context.args.message + `\n*- ${context.member.displayName}*`;
+
+    if (!this.owmnService.isOwmnGuild(guild)) {
+      return;
+    }
 
     if (!BROADCAST_TYPES[broadcastType]) {
       return response.send({
