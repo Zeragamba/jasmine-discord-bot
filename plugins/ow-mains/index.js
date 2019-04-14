@@ -6,12 +6,12 @@ module.exports = {
     'broadcaster',
   ],
   defaultData: [
-    { keyword: DataKeys.BROADCAST('blizzard'), data: null },
-    { keyword: DataKeys.BROADCAST('network'), data: null },
-    { keyword: DataKeys.BROADCAST('esports'), data: null },
-    { keyword: DataKeys.BROADCAST_TOKENS, data: {} },
-    { keyword: DataKeys.NET_MOD_LOG, data: null },
-    { keyword: DataKeys.NET_MOD_LOG_TOKEN, data: null },
+    { keyword: DataKeys.broadcastChannelId('blizzard'), data: null },
+    { keyword: DataKeys.broadcastChannelId('network'), data: null },
+    { keyword: DataKeys.broadcastChannelId('esports'), data: null },
+    { keyword: DataKeys.broadcastToken, data: {} },
+    { keyword: DataKeys.netModLogChannel, data: null },
+    { keyword: DataKeys.netModLogToken, data: null },
   ],
   services: [
     require('./services/owmn-service'),

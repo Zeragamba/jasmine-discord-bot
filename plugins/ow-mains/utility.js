@@ -2,9 +2,9 @@ const config = require('../../config.js');
 const DataKeys = require('./datakeys');
 
 const BROADCAST_TYPES = {
-  'blizzard': DataKeys.BROADCAST('blizzard'),
-  'network': DataKeys.BROADCAST('network'),
-  'esports': DataKeys.BROADCAST('esports'),
+  'blizzard': DataKeys.broadcastChannelId('blizzard'),
+  'network': DataKeys.broadcastChannelId('network'),
+  'esports': DataKeys.broadcastChannelId('esports'),
 };
 
 const BROADCAST_TOKENS = config.broadcastTokens;

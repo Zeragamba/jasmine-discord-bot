@@ -119,13 +119,13 @@ class NetModLogService extends Service {
     return Rx.Observable.from(this.chaos.discord.guilds.array())
       .flatMap((netGuild) =>
         this.chaos
-          .getGuildData(netGuild.id, DataKeys.NET_MOD_LOG_TOKEN)
+          .getGuildData(netGuild.id, DataKeys.netModLogToken)
           .filter((token) => token === NET_MOD_LOG_TOKEN)
           .map(netGuild),
       )
       .flatMap((netGuild) =>
         this.chaos
-          .getGuildData(netGuild.id, DataKeys.NET_MOD_LOG)
+          .getGuildData(netGuild.id, DataKeys.netModLogChannel)
           .map((channelId) => netGuild.channels.find((c) => c.id === channelId)),
       )
       .filter((channel) => channel !== null)
