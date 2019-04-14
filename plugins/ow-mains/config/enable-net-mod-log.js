@@ -21,7 +21,7 @@ module.exports = {
     let channelString = context.inputs.channel;
 
     if (!this.owmnService.isOwmnGuild(guild)) {
-      return;
+      return { content: "NetModLog can only be enabled on the OWMN server." };
     }
 
     let channel = guild.channels.find((c) => c.toString() === channelString || c.id.toString() === channelString);
