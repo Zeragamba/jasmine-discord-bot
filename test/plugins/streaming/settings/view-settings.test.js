@@ -53,15 +53,11 @@ describe('!config streaming viewSettings', function () {
       });
 
       it('Says the live role is not set', function (done) {
-        let stream = this.viewSettings
-          .run(this.context)
-          .map((response) => {
-            expect(response.embed.fields).to.containSubset([
-              {name: 'Live Role:', value: '[Not set]'},
-            ]);
-          });
-
-        expect(stream).to.complete(done);
+        this.viewSettings.run(this.context)
+          .do(({embed}) => expect(embed.fields).to.containSubset([
+            {name: 'Live Role:', value: '[Not set]'},
+          ]))
+          .subscribe(() => done(), (error) => done(error));
       });
     });
 
@@ -72,16 +68,11 @@ describe('!config streaming viewSettings', function () {
       });
 
       it('Says the live role is not set', function (done) {
-        let stream = this.viewSettings
-          .run(this.context)
-          .map((response) => response.embed)
-          .map((embed) => {
-            expect(embed.fields).to.containSubset([
-              {name: 'Live Role:', value: 'liveRole'},
-            ]);
-          });
-
-        expect(stream).to.complete(done);
+        this.viewSettings.run(this.context)
+          .do(({embed}) => expect(embed.fields).to.containSubset([
+            {name: 'Live Role:', value: 'liveRole'},
+          ]))
+          .subscribe(() => done(), (error) => done(error));
       });
     });
 
@@ -91,15 +82,11 @@ describe('!config streaming viewSettings', function () {
       });
 
       it('Says the live role is not set', function (done) {
-        let stream = this.viewSettings
-          .run(this.context)
-          .map((response) => {
-            expect(response.embed.fields).to.containSubset([
-              {name: 'Streamer Role:', value: '[Not set]'},
-            ]);
-          });
-
-        expect(stream).to.complete(done);
+        this.viewSettings.run(this.context)
+          .do(({embed}) => expect(embed.fields).to.containSubset([
+            {name: 'Streamer Role:', value: '[Not set]'},
+          ]))
+          .subscribe(() => done(), (error) => done(error));
       });
     });
 
@@ -110,16 +97,11 @@ describe('!config streaming viewSettings', function () {
       });
 
       it('Says the live role is not set', function (done) {
-        let stream = this.viewSettings
-          .run(this.context)
-          .map((response) => response.embed)
-          .map((embed) => {
-            expect(embed.fields).to.containSubset([
-              {name: 'Streamer Role:', value: 'streamerRole'},
-            ]);
-          });
-
-        expect(stream).to.complete(done);
+        this.viewSettings.run(this.context)
+          .do(({embed}) => expect(embed.fields).to.containSubset([
+            {name: 'Streamer Role:', value: 'streamerRole'},
+          ]))
+          .subscribe(() => done(), (error) => done(error));
       });
     });
   });

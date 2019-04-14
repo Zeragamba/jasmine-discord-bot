@@ -21,7 +21,7 @@ describe('!config streaming setStreamerRole', function () {
     });
 
     it('has a required rule input', function () {
-      expect(this.setStreamerRole.inputs).to.containSubset([ { name: 'role', required: true } ]);
+      expect(this.setStreamerRole.inputs).to.containSubset([{name: 'role', required: true}]);
     });
   });
 
@@ -53,9 +53,12 @@ describe('!config streaming setStreamerRole', function () {
       });
 
       it('returns a user readable error', function (done) {
-        expect(this.setStreamerRole.run(this.context))
-          .to.emit([ { status: 400, content: `A role to watch is required` } ])
-          .and.complete(done);
+        this.setStreamerRole.run(this.context)
+          .toArray()
+          .do((emitted) => expect(emitted).to.deep.eq([
+            {status: 400, content: `A role to watch is required`},
+          ]))
+          .subscribe(() => done(), (error) => done(error));
       });
     });
 
@@ -65,9 +68,12 @@ describe('!config streaming setStreamerRole', function () {
       });
 
       it('returns a user readable error', function (done) {
-        expect(this.setStreamerRole.run(this.context))
-          .to.emit([ { status: 400, content: `The role 'role-not-found' could not be found.` } ])
-          .and.complete(done);
+        this.setStreamerRole.run(this.context)
+          .toArray()
+          .do((emitted) => expect(emitted).to.deep.eq([
+            {status: 400, content: `The role 'role-not-found' could not be found.`},
+          ]))
+          .subscribe(() => done(), (error) => done(error));
       });
     });
 
@@ -88,7 +94,7 @@ describe('!config streaming setStreamerRole', function () {
         'a mention (with &)': `<@&${roleId}>`,
         'an id': roleId,
         'a name': roleName,
-      }).forEach(([ inputType, value ]) => {
+      }).forEach(([inputType, value]) => {
         context(`when a role is given as ${inputType}`, function () {
           beforeEach(function () {
             this.context.inputs.role = value;
@@ -96,20 +102,22 @@ describe('!config streaming setStreamerRole', function () {
           });
 
           it('sets the live role to the correct role', function (done) {
-            expect(this.setStreamerRole.run(this.context))
-              .and.complete(() => {
-                expect(this.streamingService.setStreamerRole).to.have.been.calledWith(this.guild, this.role);
-                done();
-              });
+            this.setStreamerRole.run(this.context)
+              .toArray()
+              .do(() => expect(this.streamingService.setStreamerRole).to.have.been.calledWith(this.guild, this.role))
+              .subscribe(() => done(), (error) => done(error));
           });
 
           it('returns a success message', function (done) {
-            expect(this.setStreamerRole.run(this.context))
-              .to.emit([ {
-                status: 200,
-                content: `I will now only give the live role to users with the ${this.role.name} role`,
-              } ])
-              .and.complete(done);
+            this.setStreamerRole.run(this.context)
+              .toArray()
+              .do((emitted) => expect(emitted).to.deep.eq([
+                {
+                  status: 200,
+                  content: `I will now only give the live role to users with the ${this.role.name} role`,
+                },
+              ]))
+              .subscribe(() => done(), (error) => done(error));
           });
         });
       });

@@ -51,16 +51,19 @@ describe('!config streaming removeLiveRole', function () {
     });
 
     it('removes the live role from the guild', function (done) {
-      expect(this.removeLiveRole.run(this.context))
-        .and.complete(done, () => {
-        expect(this.streamingService.removeLiveRole).to.have.been.calledWith(this.guild);
-      });
+      this.removeLiveRole.run(this.context)
+        .toArray()
+        .do(() => expect(this.streamingService.removeLiveRole).to.have.been.calledWith(this.guild))
+        .subscribe(() => done(), (error) => done(error));
     });
 
     it('returns a success message', function (done) {
-      expect(this.removeLiveRole.run(this.context))
-        .to.emit([{status: 200, content: `Live streamers will no longer receive a role`}])
-        .and.complete(done);
+      this.removeLiveRole.run(this.context)
+        .toArray()
+        .do((emitted) => expect(emitted).to.deep.eq([
+          {status: 200, content: `Live streamers will no longer receive a role`},
+        ]))
+        .subscribe(() => done(), (error) => done(error));
     });
   });
 });

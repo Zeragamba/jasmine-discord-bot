@@ -52,20 +52,22 @@ describe('!config streaming removeStreamerRole', function () {
     });
 
     it('removes the streamer role from the guild', function (done) {
-      expect(this.removeStreamerRole.run(this.context))
-        .and.complete(() => {
-        expect(this.streamingService.removeStreamerRole).to.have.been.calledWith(this.guild);
-        done();
-      });
+      this.removeStreamerRole.run(this.context)
+        .toArray()
+        .do(() => expect(this.streamingService.removeStreamerRole).to.have.been.calledWith(this.guild))
+        .subscribe(() => done(), (error) => done(error));
     });
 
     it('returns a success message', function (done) {
-      expect(this.removeStreamerRole.run(this.context))
-        .to.emit([{
-        status: 200,
-        content: `I will no longer limit adding the live role to users with the role ${this.role.name}`,
-      }])
-        .and.complete(done);
+      this.removeStreamerRole.run(this.context)
+        .toArray()
+        .do((emitted) => expect(emitted).to.deep.eq([
+          {
+            status: 200,
+            content: `I will no longer limit adding the live role to users with the role ${this.role.name}`,
+          },
+        ]))
+        .subscribe(() => done(), (error) => done(error));
     });
 
     context('when there was no previous streamer role', function () {
@@ -74,12 +76,15 @@ describe('!config streaming removeStreamerRole', function () {
       });
 
       it('gives a user readable error', function (done) {
-        expect(this.removeStreamerRole.run(this.context))
-          .to.emit([{
-          status: 400,
-          content: `No streamer role was set.`,
-        }])
-          .and.complete(done);
+        this.removeStreamerRole.run(this.context)
+          .toArray()
+          .do((emitted) => expect(emitted).to.deep.eq([
+            {
+              status: 400,
+              content: `No streamer role was set.`,
+            },
+          ]))
+          .subscribe(() => done(), (error) => done(error));
       });
     });
   });
