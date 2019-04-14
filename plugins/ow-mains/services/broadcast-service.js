@@ -51,6 +51,15 @@ class BroadcastService extends Service {
         `Pinging @ here is not allowed. Please remove the ping from your message.`,
       );
     }
+
+    if (broadcastType === "blizzard") {
+      if (broadcastBody.search(/https?:/) === -1) {
+        this.chaos.logger.debug(`Broadcast body ${broadcastBody} did not contain link.`);
+        throw new InvalidBroadcastError(
+          `A link is required for Blizzard broadcasts.`,
+        );
+      }
+    }
   }
 
   addConfirmReactions(message) {
