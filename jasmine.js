@@ -11,6 +11,10 @@ class Jasmine extends ChaosCore {
       ...config,
     });
 
+    if (!this.config.owmnServerId) {
+      throw new Error("owmnServerId is required");
+    }
+
     this.loadPlugins();
   }
 
