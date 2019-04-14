@@ -1,4 +1,4 @@
-const {DATAKEYS} = require('./utility');
+const DataKeys = require('./datakeys');
 
 module.exports = {
   name: 'owMains',
@@ -6,12 +6,12 @@ module.exports = {
     'broadcaster',
   ],
   defaultData: [
-    { keyword: DATAKEYS.BROADCAST('blizzard'), data: null },
-    { keyword: DATAKEYS.BROADCAST('network'), data: null },
-    { keyword: DATAKEYS.BROADCAST('esports'), data: null },
-    { keyword: DATAKEYS.BROADCAST_TOKENS, data: {} },
-    { keyword: DATAKEYS.NET_MOD_LOG, data: null },
-    { keyword: DATAKEYS.NET_MOD_LOG_TOKEN, data: null },
+    { keyword: DataKeys.BROADCAST('blizzard'), data: null },
+    { keyword: DataKeys.BROADCAST('network'), data: null },
+    { keyword: DataKeys.BROADCAST('esports'), data: null },
+    { keyword: DataKeys.BROADCAST_TOKENS, data: {} },
+    { keyword: DataKeys.NET_MOD_LOG, data: null },
+    { keyword: DataKeys.NET_MOD_LOG_TOKEN, data: null },
   ],
   services: [
     require('./services/owmn-service'),

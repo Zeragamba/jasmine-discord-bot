@@ -2,12 +2,10 @@ const Rx = require('rx');
 const Discord = require('discord.js');
 const Service = require('chaos-core').Service;
 
-const AuditLogActions = Discord.GuildAuditLogs.Actions;
+const DataKeys = require('../datakeys');
+const { NET_MOD_LOG_TOKEN } = require('../utility');
 
-const {
-  DATAKEYS,
-  NET_MOD_LOG_TOKEN,
-} = require('../utility');
+const AuditLogActions = Discord.GuildAuditLogs.Actions;
 
 class NetModLogService extends Service {
   onListen() {
@@ -121,13 +119,13 @@ class NetModLogService extends Service {
     return Rx.Observable.from(this.chaos.discord.guilds.array())
       .flatMap((netGuild) =>
         this.chaos
-          .getGuildData(netGuild.id, DATAKEYS.NET_MOD_LOG_TOKEN)
+          .getGuildData(netGuild.id, DataKeys.NET_MOD_LOG_TOKEN)
           .filter((token) => token === NET_MOD_LOG_TOKEN)
           .map(netGuild),
       )
       .flatMap((netGuild) =>
         this.chaos
-          .getGuildData(netGuild.id, DATAKEYS.NET_MOD_LOG)
+          .getGuildData(netGuild.id, DataKeys.NET_MOD_LOG)
           .map((channelId) => netGuild.channels.find((c) => c.id === channelId)),
       )
       .filter((channel) => channel !== null)
