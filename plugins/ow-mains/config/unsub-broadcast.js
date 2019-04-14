@@ -1,8 +1,9 @@
-const {BROADCAST_TYPES} = require('../utility');
+const Rx = require('rx');
+const DataKeys = require('../datakeys');
 
 module.exports = {
   name: 'unsubBroadcast',
-  description: `Unsubscribe from a type of broadcast. Broadcast types are: ${Object.keys(BROADCAST_TYPES).join(', ')}`,
+  description: `Unsubscribe from a type of broadcast.`,
 
   inputs: [
     {
@@ -13,19 +14,16 @@ module.exports = {
 
   run(context) {
     let guild = context.guild;
-    let typeString = context.inputs.type;
+    let broadcastType = context.inputs.type;
 
-    let broadcastType = Object.keys(BROADCAST_TYPES).find((t) => t.toLowerCase() === typeString.toLowerCase());
-    if (!broadcastType) {
-      return {
-        status: 400,
-        content: `${typeString} is not a valid broadcast type. Valid types: ${Object.keys(BROADCAST_TYPES).join(', ')}`,
-      };
+    if (!this.broadcastService.isValidType(broadcastType)) {
+      return Rx.Observable.of({
+        content: `${broadcastType} is not a valid broadcast type. Valid types: ${this.broadcastService.broadcastTypes.join(', ')}`,
+      });
     }
 
-    let datakey = BROADCAST_TYPES[broadcastType];
     return this.chaos
-      .setGuildData(guild.id, datakey, null)
+      .setGuildData(guild.id, DataKeys.broadcastChannelId(broadcastType), null)
       .map(() => ({
         status: 200,
         content: `I have disabled ${broadcastType} broadcasts`,

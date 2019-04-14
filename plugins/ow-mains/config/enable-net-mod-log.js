@@ -1,32 +1,28 @@
 const Rx = require('rx');
 const DataKeys = require('../datakeys');
 
-const { NET_MOD_LOG_TOKEN } = require('../utility');
-
 module.exports = {
   name: 'enableNetModLog',
   description: `Enable network mod log reporting to this server.`,
 
   inputs: [
     {
-      name: 'token',
-      required: true,
-    },
-    {
       name: 'channel',
       required: true,
     },
   ],
+
+  onListen() {
+    this.owmnService = this.chaos.getService('owMains', 'OwmnService');
+  },
 
   run(context) {
     let guild = context.guild;
     let token = context.inputs.token;
     let channelString = context.inputs.channel;
 
-    if (token !== NET_MOD_LOG_TOKEN) {
-      return {
-        content: `I'm sorry, but that token is not valid for the network mod log`,
-      };
+    if (!this.owmnService.isOwmnGuild(guild)) {
+      return;
     }
 
     let channel = guild.channels.find((c) => c.toString() === channelString || c.id.toString() === channelString);

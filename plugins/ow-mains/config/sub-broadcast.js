@@ -1,10 +1,10 @@
 const Rx = require('rx');
 
-const {BROADCAST_TYPES} = require('../utility');
+const DataKeys = require('../datakeys');
 
 module.exports = {
   name: 'subBroadcast',
-  description: `Subscribe to a type of broadcast in a channel. Broadcast types are: ${Object.keys(BROADCAST_TYPES).join(', ')}`,
+  description: `Subscribe to a type of broadcast in a channel.`,
 
   inputs: [
     {
@@ -19,13 +19,12 @@ module.exports = {
 
   run(context) {
     let guild = context.guild;
-    let typeString = context.inputs.type;
+    let broadcastType = context.inputs.type;
     let channelString = context.inputs.channel;
 
-    let broadcastType = Object.keys(BROADCAST_TYPES).find((t) => t.toLowerCase() === typeString.toLowerCase());
-    if (!broadcastType) {
+    if (!this.broadcastService.isValidType(broadcastType)) {
       return Rx.Observable.of({
-        content: `${typeString} is not a valid broadcast type. Valid types: ${Object.keys(BROADCAST_TYPES).join(', ')}`,
+        content: `${broadcastType} is not a valid broadcast type. Valid types: ${this.broadcastService.broadcastTypes.join(', ')}`,
       });
     }
 
@@ -36,9 +35,8 @@ module.exports = {
       });
     }
 
-    let datakey = BROADCAST_TYPES[broadcastType];
     return this.chaos
-      .setGuildData(guild.id, datakey, channel.id)
+      .setGuildData(guild.id, DataKeys.broadcastChannelId(broadcastType), channel.id)
       .flatMap(() => channel.send(`I will send ${broadcastType} broadcasts here.`))
       .map(() => ({
         content: `I have enabled ${broadcastType} broadcasts in the channel ${channel}`,

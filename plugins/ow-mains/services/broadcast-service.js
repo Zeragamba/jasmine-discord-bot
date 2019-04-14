@@ -3,14 +3,12 @@ const Discord = require('discord.js');
 const Service = require('chaos-core').Service;
 
 const {InvalidBroadcastError} = require("../errors");
+const DataKeys = require('../datakeys');
 
 const {
   BroadcastingNotAllowedError,
   BroadcastCanceledError,
 } = require('../errors');
-const {
-  BROADCAST_TYPES,
-} = require('../utility');
 
 const CONFIRM_YES_EMOJI_NAME = "voteyea";
 const CONFIRM_NO_EMOJI_NAME = "votenay";
@@ -144,10 +142,8 @@ class BroadcastService extends Service {
   }
 
   getBroadcastChannel(broadcastType, guild) {
-    let broadcastChannelDatakey = BROADCAST_TYPES[broadcastType];
-
     return this.chaos
-      .getGuildData(guild.id, broadcastChannelDatakey)
+      .getGuildData(guild.id, DataKeys.broadcastChannelId(broadcastType))
       .filter((channelId) => channelId !== null)
       .map((channelId) => guild.channels.get(channelId))
       .filter((channel) => channel.permissionsFor(this.chaos.discord.user).has(Discord.Permissions.FLAGS.SEND_MESSAGES));

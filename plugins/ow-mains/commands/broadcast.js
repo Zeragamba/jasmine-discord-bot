@@ -5,9 +5,6 @@ const {
   BroadcastCanceledError,
   InvalidBroadcastError,
 } = require('../errors');
-const {
-  BROADCAST_TYPES,
-} = require('../utility');
 
 module.exports = {
   name: 'broadcast',
@@ -17,12 +14,12 @@ module.exports = {
   args: [
     {
       name: 'type',
-      description: `the type of broadcast message. Types: ${Object.keys(BROADCAST_TYPES).join(', ')}`,
+      description: `the type of broadcast message.`,
       required: true,
     },
     {
       name: 'message',
-      description: 'the message to broadcast. @ everyone and @ here are currently not allowed.',
+      description: 'the message to broadcast.',
       required: true,
       greedy: true,
     },

@@ -3,13 +3,12 @@ const Discord = require('discord.js');
 const Service = require('chaos-core').Service;
 
 const DataKeys = require('../datakeys');
-const { NET_MOD_LOG_TOKEN } = require('../utility');
-
 const AuditLogActions = Discord.GuildAuditLogs.Actions;
 
 class NetModLogService extends Service {
   onListen() {
     this.modLogService = this.chaos.getService('modTools', 'ModLogService');
+    this.owmnService = this.chaos.getService('owMains', 'owmnService');
 
     this.chaos.logger.debug('Adding listener for netModLog guildBanAdd$ events');
     this.chaos.streams
@@ -117,12 +116,7 @@ class NetModLogService extends Service {
     this.chaos.logger.debug(`Adding network mod log entry`);
 
     return Rx.Observable.from(this.chaos.discord.guilds.array())
-      .flatMap((netGuild) =>
-        this.chaos
-          .getGuildData(netGuild.id, DataKeys.netModLogToken)
-          .filter((token) => token === NET_MOD_LOG_TOKEN)
-          .map(netGuild),
-      )
+      .map(() => this.owmnService.owmnServer)
       .flatMap((netGuild) =>
         this.chaos
           .getGuildData(netGuild.id, DataKeys.netModLogChannel)
