@@ -119,7 +119,7 @@ class NetModLogService extends Service {
       .map(() => this.owmnService.owmnServer)
       .flatMap((netGuild) =>
         this.chaos
-          .getGuildData(netGuild.id, DataKeys.netModLogChannel)
+          .getGuildData(netGuild.id, DataKeys.netModLogChannelId)
           .map((channelId) => netGuild.channels.find((c) => c.id === channelId)),
       )
       .filter((channel) => channel !== null)

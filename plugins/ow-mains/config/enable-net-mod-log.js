@@ -18,7 +18,6 @@ module.exports = {
 
   run(context) {
     let guild = context.guild;
-    let token = context.inputs.token;
     let channelString = context.inputs.channel;
 
     if (!this.owmnService.isOwmnGuild(guild)) {
@@ -32,8 +31,7 @@ module.exports = {
       };
     }
 
-    return this.chaos.setGuildData(guild.id, DataKeys.netModLogToken, token)
-      .flatMap(() => this.chaos.setGuildData(guild.id, DataKeys.netModLogChannel, channel.id))
+    return this.chaos.setGuildData(guild.id, DataKeys.netModLogChannelId, channel.id)
       .flatMap(() => channel.send('I will post the network moderation log here now.'))
       .flatMap(() => ({
         status: 200,

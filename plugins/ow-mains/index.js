@@ -9,9 +9,7 @@ module.exports = {
     { keyword: DataKeys.broadcastChannelId('blizzard'), data: null },
     { keyword: DataKeys.broadcastChannelId('network'), data: null },
     { keyword: DataKeys.broadcastChannelId('esports'), data: null },
-    { keyword: DataKeys.broadcastToken, data: {} },
-    { keyword: DataKeys.netModLogChannel, data: null },
-    { keyword: DataKeys.netModLogToken, data: null },
+    { keyword: DataKeys.netModLogChannelId, data: null },
   ],
   services: [
     require('./services/owmn-service'),
