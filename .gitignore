@@ -5,3 +5,4 @@
 config.js
 pm2.sh
 .idea/workspace.xml
+yarn-error.log
