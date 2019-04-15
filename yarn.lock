@@ -369,7 +369,7 @@ chalk@^2.0.0, chalk@^2.1.0, chalk@^2.4.1:
 
 "chaos-core@github:chaos-core/chaos-core#v3.0.0-dev":
   version "3.0.0-dev"
-  resolved "https://codeload.github.com/chaos-core/chaos-core/tar.gz/dd17327fae3df8b9aef5d6b9495f5dd64d003145"
+  resolved "https://codeload.github.com/chaos-core/chaos-core/tar.gz/a3bffd071b89023129661a0df42d5536a846a6c2"
   dependencies:
     winston "^3.0.0"
 
@@ -380,6 +380,12 @@ chalk@^2.0.0, chalk@^2.1.0, chalk@^2.4.1:
 "chaos-data-memory@github:chaos-core/chaos-data-memory#RxJS-4":
   version "0.0.3"
   resolved "https://codeload.github.com/chaos-core/chaos-data-memory/tar.gz/b985508819522bb3d203c7a8ca394616f70f4e99"
+
+"chaos-plugin-auto-role@github:chaos-core/chaos-plugin-auto-role#master":
+  version "1.0.0"
+  resolved "https://codeload.github.com/chaos-core/chaos-plugin-auto-role/tar.gz/0da8794e0d906693f54f11fc2762ce28ce06eb6e"
+  dependencies:
+    rx "^4.1.0"
 
 chardet@^0.4.0:
   version "0.4.2"

@@ -4,6 +4,8 @@ const fs = require('fs');
 
 const packageJson = require('./package');
 
+const ChaosPluginAutoRole = require('chaos-plugin-auto-role');
+
 class Jasmine extends ChaosCore {
   constructor(config) {
     super({
@@ -38,6 +40,8 @@ class Jasmine extends ChaosCore {
   }
 
   loadPlugins() {
+    this.addPlugin(ChaosPluginAutoRole);
+
     fs.readdirSync(Path.join(__dirname, './plugins'))
       .forEach((file) => {
         this.addPlugin(require('./plugins/' + file));
