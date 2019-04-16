@@ -11,19 +11,11 @@ function stubJasmine(config = {}) {
     dataSource: {type: 'memory'},
   };
 
-  const jasmine = ChaosCore.test.stubChaosBot(new Jasmine({
+  return ChaosCore.test.stubChaosBot(new Jasmine({
     ...localConfig,
     ...stubConfig,
     ...config,
   }));
-
-  ChaosCore.test.mocks.discord.build('User', {
-    client: jasmine.discord,
-    id: ownerUserId,
-    setPresence: sinon.fake.resolves(true),
-  });
-
-  return jasmine;
 }
 
 module.exports = stubJasmine;
