@@ -3,6 +3,13 @@
 - Update Chaos-Core to v3.0.0
   - renames modules to plugins
   - Merged all core plugins together
+  - All plugins are now disabled by default on new servers
+    - use `!config core enablePlugin <plugin>` to re-enable plugins 
+  - added `!config core listPlugins` to view all available plugins
+- Added the AutoRoles plugin
+  - allows for setting a role that Jasmine should automatically grant to users when they join.
+  
+**Minor changes:**
 
 **Updated config commands**
 

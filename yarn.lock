@@ -369,7 +369,7 @@ chalk@^2.0.0, chalk@^2.1.0, chalk@^2.4.1:
 
 "chaos-core@github:chaos-core/chaos-core#v3.0.0-dev":
   version "3.0.0-dev"
-  resolved "https://codeload.github.com/chaos-core/chaos-core/tar.gz/c285d9c14932a77b116f50106e20a16986f11133"
+  resolved "https://codeload.github.com/chaos-core/chaos-core/tar.gz/5f874e07c2dd0511024b66fa7710704ee4e444b8"
   dependencies:
     winston "^3.0.0"
 

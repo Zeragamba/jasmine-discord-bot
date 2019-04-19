@@ -8,15 +8,14 @@ const platforms = require('./../../plugins/ow-info/data/platforms');
 
 describe('Feature: !platform', function () {
   beforeEach(function () {
-    this.jasmine = stubJasmine();
+    this.jasmine = stubJasmine({logger: {level: 'debug'}});
 
     this.message = new MockMessage({
       content: '!platform',
     });
 
-    this.listen = (done, tests) => {
-      this.jasmine
-        .listen(() => {}, (error) => done(error))
+    this.listen = () => {
+      return this.jasmine.listen()
         .flatMap(() => {
           let pluginService = this.jasmine.getService('core', 'PluginService');
           let commandService = this.jasmine.getService('core', 'CommandService');
@@ -26,9 +25,7 @@ describe('Feature: !platform', function () {
           return Rx.Observable.of('')
             .flatMap(() => this.jasmine.onJoinGuild(this.message.guild))
             .flatMap(() => pluginService.enablePlugin(this.message.guild.id, 'ow-info'));
-        })
-        .flatMap(() => tests)
-        .subscribe(() => done(), (error) => done(error));
+        });
     };
   });
 
@@ -46,14 +43,13 @@ describe('Feature: !platform', function () {
     });
 
     it('responds with an error message', function (done) {
-      this.listen(done, Rx.Observable.of('')
+      this.listen()
         .map(() => this.jasmine.discord.emit('message', this.message))
         .flatMap(() => this.jasmine.shutdown())
-        .map(() => {
-          expect(this.message.channel.send).to.have.been.calledWith(
-            `I'm sorry, but I'm missing some information for that command:`,
-          );
-        }));
+        .do(() => expect(this.message.channel.send).to.have.been.calledWith(
+          `I'm sorry, but I'm missing some information for that command:`,
+        ))
+        .subscribe(() => done(), (error) => done(error));
     });
   });
 
@@ -64,25 +60,27 @@ describe('Feature: !platform', function () {
       });
 
       it(`responds with a success message`, function (done) {
-        this.listen(done, Rx.Observable.of('')
+        this.listen()
           .map(() => this.jasmine.discord.emit('message', this.message))
           .flatMap(() => this.jasmine.shutdown())
           .map(() => {
             expect(this.message.reply).to.have.been.calledWith(
               `I've updated your platform to ${name}`,
             );
-          }));
+          })
+          .subscribe(() => done(), (error) => done(error));
       });
 
       it(`adds the tag [${tag}] to the username`, function (done) {
-        this.listen(done, Rx.Observable.of('')
+        this.listen()
           .map(() => this.jasmine.discord.emit('message', this.message))
           .flatMap(() => this.jasmine.shutdown())
           .map(() => {
             expect(this.message.member.setNickname).to.have.been.calledWith(
               `TestUser [${tag}]`,
             );
-          }));
+          })
+          .subscribe(() => done(), (error) => done(error));
       });
 
       alias.forEach((alias) => {
@@ -92,14 +90,15 @@ describe('Feature: !platform', function () {
           });
 
           it(`sets the platform tag to [${tag}]`, function (done) {
-            this.listen(done, Rx.Observable.of('')
+            this.listen()
               .map(() => this.jasmine.discord.emit('message', this.message))
               .flatMap(() => this.jasmine.shutdown())
               .map(() => {
                 expect(this.message.member.setNickname).to.have.been.calledWith(
                   `TestUser [${tag}]`,
                 );
-              }));
+              })
+              .subscribe(() => done(), (error) => done(error));
           });
         });
       });
@@ -110,14 +109,15 @@ describe('Feature: !platform', function () {
         });
 
         it(`adds the tag [${tag}] to the nickname`, function (done) {
-          this.listen(done, Rx.Observable.of('')
+          this.listen()
             .map(() => this.jasmine.discord.emit('message', this.message))
             .flatMap(() => this.jasmine.shutdown())
             .map(() => {
               expect(this.message.member.setNickname).to.have.been.calledWith(
                 `UserNickname [${tag}]`,
               );
-            }));
+            })
+            .subscribe(() => done(), (error) => done(error));
         });
       });
     });
@@ -130,14 +130,15 @@ describe('Feature: !platform', function () {
     });
 
     it(`replaces the tag`, function (done) {
-      this.listen(done, Rx.Observable.of('')
+      this.listen()
         .map(() => this.jasmine.discord.emit('message', this.message))
         .flatMap(() => this.jasmine.shutdown())
         .map(() => {
           expect(this.message.member.setNickname).to.have.been.calledWith(
             `UserNickname [PC]`,
           );
-        }));
+        })
+        .subscribe(() => done(), (error) => done(error));
     });
   });
 
@@ -153,7 +154,7 @@ describe('Feature: !platform', function () {
     });
 
     it('fetches the member and works normally', function (done) {
-      this.listen(done, Rx.Observable.of('')
+      this.listen()
         .map(() => this.jasmine.discord.emit('message', this.message))
         .flatMap(() => this.jasmine.shutdown())
         .map(() => {
@@ -166,7 +167,8 @@ describe('Feature: !platform', function () {
           expect(this.member.setNickname).to.have.been.calledWith(
             `TestUser [PC]`,
           );
-        }));
+        })
+        .subscribe(() => done(), (error) => done(error));
     });
   });
 });
