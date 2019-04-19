@@ -367,9 +367,9 @@ chalk@^2.0.0, chalk@^2.1.0, chalk@^2.4.1:
     escape-string-regexp "^1.0.5"
     supports-color "^5.3.0"
 
-"chaos-core@github:chaos-core/chaos-core#v3.0.0-dev":
-  version "3.0.0-dev"
-  resolved "https://codeload.github.com/chaos-core/chaos-core/tar.gz/5f874e07c2dd0511024b66fa7710704ee4e444b8"
+"chaos-core@github:chaos-core/chaos-core#v3.0.0":
+  version "3.0.0"
+  resolved "https://codeload.github.com/chaos-core/chaos-core/tar.gz/24507e7eaa3ee9db8582a6220d6759a3d80d72c0"
   dependencies:
     winston "^3.0.0"
 

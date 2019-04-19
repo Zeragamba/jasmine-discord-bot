@@ -1,6 +1,6 @@
 {
   "name": "jasmine-discord-bot",
-  "version": "5.0.0",
+  "version": "6.0.0",
   "description": "",
   "homepage": "",
   "author": {
@@ -39,7 +39,7 @@
   "repository": "https://github.com/SpyMaster356/jasmine-discord-bot",
   "license": "MIT",
   "dependencies": {
-    "chaos-core": "github:chaos-core/chaos-core#v3.0.0-dev",
+    "chaos-core": "github:chaos-core/chaos-core#v3.0.0",
     "chaos-data-disk": "github:chaos-core/chaos-data-disk#v0.0.0",
     "chaos-plugin-auto-role": "github:chaos-core/chaos-plugin-auto-role#master",
     "discord.js": "11.4.2",
