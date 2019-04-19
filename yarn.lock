@@ -381,9 +381,9 @@ chalk@^2.0.0, chalk@^2.1.0, chalk@^2.4.1:
   version "0.0.3"
   resolved "https://codeload.github.com/chaos-core/chaos-data-memory/tar.gz/b985508819522bb3d203c7a8ca394616f70f4e99"
 
-"chaos-plugin-auto-role@github:chaos-core/chaos-plugin-auto-role#master":
-  version "1.0.0"
-  resolved "https://codeload.github.com/chaos-core/chaos-plugin-auto-role/tar.gz/0da8794e0d906693f54f11fc2762ce28ce06eb6e"
+"chaos-plugin-auto-role@github:chaos-core/chaos-plugin-auto-role#v1.1.0":
+  version "1.1.0"
+  resolved "https://codeload.github.com/chaos-core/chaos-plugin-auto-role/tar.gz/0be79306da3be190ed494026d0bc5bfdbb99b98f"
   dependencies:
     rx "^4.1.0"
 

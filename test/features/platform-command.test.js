@@ -8,7 +8,7 @@ const platforms = require('./../../plugins/ow-info/data/platforms');
 
 describe('Feature: !platform', function () {
   beforeEach(function () {
-    this.jasmine = stubJasmine({logger: {level: 'debug'}});
+    this.jasmine = stubJasmine();
 
     this.message = new MockMessage({
       content: '!platform',
