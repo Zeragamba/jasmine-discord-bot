@@ -6,7 +6,8 @@ const NOT_TEST_FILES_REGEX = /^(?!.*test\.js).*\.js$/;
 
 module.exports = {
   name: 'streaming',
-  enabledByDefault: false,
+  description: "Automatically assigns a role when a user starts streaming.",
+
   defaultData: [
     { keyword: DATAKEYS.LIVE_ROLE, data: null },
     { keyword: DATAKEYS.STREAMER_ROLE, data: null },

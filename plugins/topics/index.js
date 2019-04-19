@@ -1,6 +1,7 @@
 module.exports = {
   name: 'topics',
-  enabledByDefault: false,
+  description: "Allow users to create new channels to discuss topics",
+
   services: [
     require('./services/topic-service'),
   ],

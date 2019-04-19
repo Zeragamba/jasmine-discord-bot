@@ -7,6 +7,8 @@ const {
 
 module.exports = {
   name: 'modTools',
+  description: "Provides server moderation tools like !ban, !kick, and !warn, and can log joins and leaves to a channel.",
+
   permissions: ['mod'],
   defaultData: [
     {

@@ -2,6 +2,11 @@ const DataKeys = require('./datakeys');
 
 module.exports = {
   name: 'owMains',
+  description:
+    "Overwatch Mains Network features:\n" +
+    "- News broadcasts\n" +
+    "- Network ban reports\n",
+
   permissions: [
     'broadcaster',
   ],

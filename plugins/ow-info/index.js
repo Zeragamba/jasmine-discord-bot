@@ -2,7 +2,8 @@ const DATAKEYS = require('./datakeys');
 
 module.exports = {
   name: 'ow-info',
-  enabledByDefault: false,
+  description: "Allows users to set their Overwatch Region and Platform",
+
   defaultData: [
     {
       keyword: DATAKEYS.REGION_REGIONS,
