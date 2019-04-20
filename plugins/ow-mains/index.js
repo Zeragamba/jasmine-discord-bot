@@ -1,4 +1,5 @@
 const DataKeys = require('./datakeys');
+const configActions = require('./config');
 
 module.exports = {
   name: 'owMains',
@@ -21,11 +22,7 @@ module.exports = {
     require('./services/net-mod-log-service'),
     require('./services/broadcast-service'),
   ],
-  configActions: [
-    require('./config/sub-broadcast'),
-    require('./config/unsub-broadcast'),
-    require('./config/enable-net-mod-log'),
-  ],
+  configActions: Object.values(configActions),
   commands: [
     require('./commands/broadcast'),
   ],

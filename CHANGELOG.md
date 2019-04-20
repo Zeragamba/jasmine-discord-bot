@@ -1,3 +1,7 @@
+# 6.0.2
+
+- add `!config owMains broadcastSettings`
+
 # 6.0.0
 **Major Features:**
 - Update Chaos-Core to v3.0.0
