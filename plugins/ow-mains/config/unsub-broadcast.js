@@ -12,6 +12,10 @@ module.exports = {
     },
   ],
 
+  onListen() {
+    this.broadcastService = this.chaos.getService('owMains', 'BroadcastService');
+  },
+
   run(context) {
     let guild = context.guild;
     let broadcastType = context.inputs.type;
