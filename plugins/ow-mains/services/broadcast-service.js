@@ -155,6 +155,7 @@ class BroadcastService extends Service {
       .getGuildData(guild.id, DataKeys.broadcastChannelId(broadcastType))
       .filter((channelId) => channelId !== null)
       .map((channelId) => guild.channels.get(channelId))
+      .filter((channel) => typeof channel !== "undefined")
       .filter((channel) => channel.permissionsFor(this.chaos.discord.user).has(Discord.Permissions.FLAGS.SEND_MESSAGES));
   }
 }
