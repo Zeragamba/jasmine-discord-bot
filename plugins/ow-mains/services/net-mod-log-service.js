@@ -115,13 +115,9 @@ class NetModLogService extends Service {
   addAuditEntry(fromGuild, embed) {
     this.chaos.logger.debug(`Adding network mod log entry`);
 
-    return Rx.Observable.from(this.chaos.discord.guilds.array())
-      .map(() => this.owmnService.owmnServer)
-      .flatMap((netGuild) =>
-        this.chaos
-          .getGuildData(netGuild.id, DataKeys.netModLogChannelId)
-          .map((channelId) => netGuild.channels.find((c) => c.id === channelId)),
-      )
+    return Rx.Observable.of('')
+      .flatMap(() => this.chaos.getGuildData(this.owmnService.owmnServer.id, DataKeys.netModLogChannelId))
+      .map((channelId) => this.owmnService.owmnServer.channels.get(channelId))
       .filter((channel) => channel !== null)
       .flatMap((channel) => channel.send({embed}))
       .catch((error) => {
