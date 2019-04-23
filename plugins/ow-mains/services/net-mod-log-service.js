@@ -48,7 +48,7 @@ class NetModLogService extends Service {
             }
           });
       })
-      .filter((log) => !log.reason.match(/\[AutoBan]/i))
+      .filter((log) => !log.reason || !log.reason.match(/\[AutoBan]/i))
       .map((log) => {
         let reason = log.reason;
 
