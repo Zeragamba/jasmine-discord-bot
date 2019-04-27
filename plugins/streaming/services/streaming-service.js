@@ -3,7 +3,7 @@ const Service = require('chaos-core').Service;
 const DiscordAPIError = require('discord.js').DiscordAPIError;
 
 const DATAKEYS = require('../lib/datakeys');
-const { RoleNotFoundError } = require('../lib/errors');
+const {RoleNotFoundError} = require('../lib/errors');
 
 function logPrefix(member) {
   return `[Streaming:${member.guild.name}:${member.user.tag}]`;
@@ -22,13 +22,13 @@ class StreamingService extends Service {
   handlePresenceUpdate(oldMember, newMember) {
     this.chaos.logger.debug(`${logPrefix(newMember)} Handling presence update for ${newMember.user.tag} in ${newMember.guild.name}`);
     return Rx.Observable.merge(
-        this.pluginService.isPluginEnabled(newMember.guild.id, 'streaming')
-          .do((moduleEnabled) => this.chaos.logger.debug(`${logPrefix(newMember)} Module is ${moduleEnabled ? "enabled" : "disabled"} in ${newMember.guild.name}`)),
-        this.getLiveRole(newMember.guild)
-          .do((liveRole) => this.chaos.logger.debug(`${logPrefix(newMember)} Live role in ${newMember.guild.name} is ${liveRole ? liveRole.name : "<none>"}`)),
-        this.memberIsStreamer(newMember)
-          .do((isStreamer) => this.chaos.logger.debug(`${logPrefix(newMember)} ${newMember.user.tag} ${isStreamer ? "is" : "is not"} a streamer.`)),
-      )
+      this.pluginService.isPluginEnabled(newMember.guild.id, 'streaming')
+        .do((moduleEnabled) => this.chaos.logger.debug(`${logPrefix(newMember)} Module is ${moduleEnabled ? "enabled" : "disabled"} in ${newMember.guild.name}`)),
+      this.getLiveRole(newMember.guild)
+        .do((liveRole) => this.chaos.logger.debug(`${logPrefix(newMember)} Live role in ${newMember.guild.name} is ${liveRole ? liveRole.name : "<none>"}`)),
+      this.memberIsStreamer(newMember)
+        .do((isStreamer) => this.chaos.logger.debug(`${logPrefix(newMember)} ${newMember.user.tag} ${isStreamer ? "is" : "is not"} a streamer.`)),
+    )
       .every((checkPassed) => checkPassed)
       .filter(Boolean)
       .flatMap(() => this.updateMemberRoles(newMember))
@@ -39,10 +39,10 @@ class StreamingService extends Service {
         }
 
         return this.chaos.handleError(error, [
-          { name: "Service", value: "StreamingService" },
-          { name: "Hook", value: "presenceUpdate$" },
-          { name: "Guild", value: newMember.guild.toString() },
-          { name: "Member", value: newMember.toString() },
+          {name: "Service", value: "StreamingService"},
+          {name: "Hook", value: "presenceUpdate$"},
+          {name: "Guild", value: newMember.guild.toString()},
+          {name: "Member", value: newMember.toString()},
         ]).ignoreElements();
       });
   }
@@ -65,7 +65,19 @@ class StreamingService extends Service {
           this.addLiveRoleToMember(member),
           this.removeLiveRoleFromMember(member),
         ),
-      );
+      )
+      .catch((error) => {
+        if (error instanceof DiscordAPIError) {
+          switch (error.message) {
+            case "Adding the role timed out.":
+            case "Removing the role timed out.":
+              //Ignore timeout errors
+              return Rx.Observable.of('');
+          }
+        }
+
+        return Rx.Observable.throw(error);
+      });
   }
 
   addLiveRoleToMember(member) {
@@ -131,8 +143,7 @@ class StreamingService extends Service {
       .map((oldRole) => {
         if (oldRole) {
           return oldRole;
-        }
-        else {
+        } else {
           throw new RoleNotFoundError('No streamer role set.');
         }
       })
