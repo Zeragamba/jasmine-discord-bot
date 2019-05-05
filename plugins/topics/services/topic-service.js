@@ -1,4 +1,5 @@
-const Rx = require('rx');
+const {of} = require('rxjs');
+const {flatMap, tap, catchError, filter} = require('rxjs/operators');
 const Service = require("chaos-core").Service;
 
 class TopicService extends Service {
@@ -9,20 +10,19 @@ class TopicService extends Service {
   }
 
   onListen() {
-    this.chaos.streams
-      .message$
-      .filter((message) => !message.system)
-      .filter((message) => this.watchedChannels[message.channel.id])
-      .do((message) => delete this.watchedChannels[message.channel.id])
-      .do((message) => this.chaos.logger.debug(`Message in ${message.channel.name}: ${message.content}`))
-      .flatMap((message) => message.pin())
-      .catch((error) => {
+    this.chaos.streams.message$.pipe(
+      filter((message) => !message.system),
+      filter((message) => this.watchedChannels[message.channel.id]),
+      tap((message) => delete this.watchedChannels[message.channel.id]),
+      tap((message) => this.chaos.logger.debug(`Message in ${message.channel.name}: ${message.content}`)),
+      flatMap((message) => message.pin()),
+      catchError((error) => {
         this.chaos.logger.error(error);
-        return Rx.Observable.of('');
-      })
-      .subscribe();
+        return of('');
+      }),
+    ).subscribe();
 
-    return Rx.Observable.of(true);
+    return of(true);
   }
 
   watchChannel(channel) {
@@ -38,8 +38,7 @@ class TopicService extends Service {
     if (channelIdMatches) {
       let channelId = channelIdMatches[1] || channelIdMatches[2];
       foundChannel = textChannels.find((channel) => channel.id === channelId);
-    }
-    else {
+    } else {
       let searchName = this.channelNameSafeString(channelName).toLowerCase();
       foundChannel = textChannels.find((channel) => channel.name.toLowerCase() === searchName);
     }

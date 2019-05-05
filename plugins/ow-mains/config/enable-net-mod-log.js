@@ -1,4 +1,5 @@
-const Rx = require('rx');
+const {of, throwError} = require('rxjs');
+const {flatMap, map, catchError} = require('rxjs/operators');
 const DataKeys = require('../datakeys');
 
 module.exports = {
@@ -21,7 +22,7 @@ module.exports = {
     let channelString = context.inputs.channel;
 
     if (!this.owmnService.isOwmnGuild(guild)) {
-      return { content: "NetModLog can only be enabled on the OWMN server." };
+      return {content: "NetModLog can only be enabled on the OWMN server."};
     }
 
     let channel = guild.channels.find((c) => c.toString() === channelString || c.id.toString() === channelString);
@@ -31,27 +32,27 @@ module.exports = {
       };
     }
 
-    return this.chaos.setGuildData(guild.id, DataKeys.netModLogChannelId, channel.id)
-      .flatMap(() => channel.send('I will post the network moderation log here now.'))
-      .map(() => ({
+    return this.chaos.setGuildData(guild.id, DataKeys.netModLogChannelId, channel.id).pipe(
+      flatMap(() => channel.send('I will post the network moderation log here now.')),
+      map(() => ({
         status: 200,
         content: `This server will now receive the network moderation log.`,
-      }))
-      .catch((error) => {
+      })),
+      catchError((error) => {
         switch (error.name) {
           case 'DiscordAPIError':
             if (error.message === "Missing Permissions") {
-              return Rx.Observable.return({
+              return of({
                 status: 400,
                 content: `Whoops, I do not have permission to talk in that channel.`,
               });
-            }
-            else {
-              return Rx.Observable.throw(error);
+            } else {
+              return throwError(error);
             }
           default:
-            return Rx.Observable.throw(error);
+            return throwError(error);
         }
-      });
+      }),
+    );
   },
 };

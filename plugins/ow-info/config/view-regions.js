@@ -1,4 +1,5 @@
-const Rx = require('rx');
+const {zip} = require('rxjs');
+const {map} = require('rxjs/operators');
 
 module.exports = {
   name: 'viewRegions',
@@ -11,12 +12,11 @@ module.exports = {
   run(context) {
     let guild = context.guild;
 
-    return Rx.Observable
-      .zip(
-        this.regionService.getRegions(guild),
-        this.regionService.getAliases(guild),
-      )
-      .map(([regions, aliases]) => {
+    return zip(
+      this.regionService.getRegions(guild),
+      this.regionService.getAliases(guild),
+    ).pipe(
+      map(([regions, aliases]) => {
         let data = {
           regions: [],
         };
@@ -35,8 +35,8 @@ module.exports = {
         });
 
         return data;
-      })
-      .map((data) => {
+      }),
+      map((data) => {
         let embed = {fields: []};
 
         data.regions.forEach((region) => {
@@ -53,6 +53,7 @@ module.exports = {
           content: 'Here are all the currently configured regions:',
           embed,
         };
-      });
+      }),
+    );
   },
 };

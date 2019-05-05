@@ -1,3 +1,5 @@
+const {map} = require('rxjs/operators');
+
 const {LOG_TYPES} = require('../utility');
 
 const VALID_LOG_TYPES_NAMES = LOG_TYPES.map((t) => t.name);
@@ -28,11 +30,11 @@ module.exports = {
       };
     }
 
-    return this.chaos
-      .setGuildData(guild.id, logType.channelDatakey, null)
-      .map(() => ({
+    return this.chaos.setGuildData(guild.id, logType.channelDatakey, null).pipe(
+      map(() => ({
         status: 200,
         content: `I have disabled the ${logType.name}.`,
-      }));
+      })),
+    );
   },
 };

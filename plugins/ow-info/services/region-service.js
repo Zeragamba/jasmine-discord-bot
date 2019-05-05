@@ -1,4 +1,5 @@
-const Rx = require('rx');
+const {of, from, merge, zip, throwError} = require('rxjs');
+const {flatMap, map, last, toArray, filter, mapTo} = require('rxjs/operators');
 const Service = require('chaos-core').Service;
 
 const DATAKEYS = require('../datakeys');
@@ -14,19 +15,20 @@ const defaultRegions = require('../data/regions');
 
 class RegionService extends Service {
   onJoinGuild(guild) {
-    let mapRoles$ = this.getRegions(guild)
-      .filter((roles) => roles === null)
-      .flatMap(() => this.setRegions(guild, this.mapDefaultRoles(guild)));
+    let mapRoles$ = this.getRegions(guild).pipe(
+      filter((roles) => roles === null),
+      flatMap(() => this.setRegions(guild, this.mapDefaultRoles(guild))),
+    );
 
-    let mapAliases$ = this.getAliases(guild)
-      .filter((aliases) => aliases === null)
-      .flatMap(() => this.setAliases(guild, this.mapDefaultAliases()));
+    let mapAliases$ = this.getAliases(guild).pipe(
+      filter((aliases) => aliases === null),
+      flatMap(() => this.setAliases(guild, this.mapDefaultAliases())),
+    );
 
-    return Rx.Observable
-      .merge(mapRoles$, mapAliases$)
-      .defaultIfEmpty('')
-      .last()
-      .map(() => true);
+    return merge(mapRoles$, mapAliases$).pipe(
+      last(null, ''),
+      map(() => true),
+    );
   }
 
   mapDefaultRoles(guild) {
@@ -71,27 +73,27 @@ class RegionService extends Service {
   }
 
   mapRegion(guild, region, role) {
-    return this.getRegions(guild)
-      .map((regions) => {
+    return this.getRegions(guild).pipe(
+      map((regions) => {
         regions[region.toLowerCase()] = {
           name: region,
           roleId: role.id,
         };
         return regions;
-      })
-      .flatMap((regions) => this.setRegions(guild, regions))
-      .map((regions) => regions[region.toLowerCase()]);
+      }),
+      flatMap((regions) => this.setRegions(guild, regions)),
+      map((regions) => regions[region.toLowerCase()]),
+    );
   }
 
   removeRegion(guild, regionName) {
     regionName = regionName.toLowerCase();
 
-    return Rx.Observable
-      .zip(
-        this.getAliases(guild),
-        this.getRegions(guild),
-      )
-      .map(([aliases, regions]) => {
+    return zip(
+      this.getAliases(guild),
+      this.getRegions(guild),
+    ).pipe(
+      map(([aliases, regions]) => {
         let regionData = regions[regionName.toLowerCase()];
         if (!regionData) {
           throw new RegionNotFoundError(regionName);
@@ -106,25 +108,24 @@ class RegionService extends Service {
         delete regions[regionName];
 
         return [aliases, regions, regionData];
-      })
-      .flatMap(([aliases, regions, regionData]) =>
-        Rx.Observable
-          .merge(
-            this.setAliases(guild, aliases),
-            this.setRegions(guild, regions),
-          )
-          .last()
-          .map(() => regionData.name),
-      );
+      }),
+      flatMap(([aliases, regions, regionData]) =>
+        zip(
+          this.setAliases(guild, aliases),
+          this.setRegions(guild, regions),
+        ).pipe(
+          mapTo(regionData.name),
+        ),
+      ),
+    );
   }
 
   mapAlias(guild, aliasName, regionName) {
-    return Rx.Observable
-      .zip(
-        this.getAliases(guild),
-        this.getRegions(guild),
-      )
-      .map(([aliases, regions]) => {
+    return zip(
+      this.getAliases(guild),
+      this.getRegions(guild),
+    ).pipe(
+      map(([aliases, regions]) => {
         let regionData = regions[regionName.toLowerCase()];
         if (!regionData) {
           throw new RegionNotFoundError(regionName);
@@ -136,18 +137,18 @@ class RegionService extends Service {
         };
 
         return aliases;
-      })
-      .flatMap((aliases) => this.setAliases(guild, aliases))
-      .map((aliases) => aliases[aliasName.toLowerCase()]);
+      }),
+      flatMap((aliases) => this.setAliases(guild, aliases)),
+      map((aliases) => aliases[aliasName.toLowerCase()]),
+    );
   }
 
   removeAlias(guild, aliasName) {
     aliasName = aliasName.toLowerCase();
 
-    return Rx.Observable
-      .of('')
-      .flatMap(() => this.getAliases(guild))
-      .map((aliases) => {
+    return of('').pipe(
+      flatMap(() => this.getAliases(guild)),
+      map((aliases) => {
         let aliasData = aliases[aliasName];
         if (!aliasData) {
           throw new AliasNotFoundError(aliasName);
@@ -156,22 +157,21 @@ class RegionService extends Service {
         delete aliases[aliasName];
 
         return [aliases, aliasData];
-      })
-      .flatMap(([aliases, aliasData]) =>
-        this.setAliases(guild, aliases)
-          .map(() => aliasData.name),
-      );
+      }),
+      flatMap(([aliases, aliasData]) => this.setAliases(guild, aliases).pipe(
+        map(() => aliasData.name),
+      )),
+    );
   }
 
   getRegion(guild, regionOrAlias) {
     regionOrAlias = regionOrAlias.toLowerCase();
 
-    return Rx.Observable
-      .zip(
-        this.getRegions(guild),
-        this.getAliases(guild),
-      )
-      .map(([regions, alias]) => {
+    return zip(
+      this.getRegions(guild),
+      this.getAliases(guild),
+    ).pipe(
+      map(([regions, alias]) => {
         if (regions[regionOrAlias]) {
           return regions[regionOrAlias];
         }
@@ -188,51 +188,54 @@ class RegionService extends Service {
         }
 
         throw new RegionNotFoundError(regionOrAlias);
-      });
+      }),
+    );
   }
 
   getRegionRole(guild, regionOrAlias) {
-    return this.getRegion(guild, regionOrAlias)
-      .map((regionData) => {
+    return this.getRegion(guild, regionOrAlias).pipe(
+      map((regionData) => {
         let regionRole = guild.roles.get(regionData.roleId);
         if (!regionRole) {
           throw new UnmappedRegionError(regionData.name);
         }
         return regionRole;
-      });
+      }),
+    );
   }
 
   setUserRegion(member, regionOrAlias) {
     let guild = member.guild;
 
-    let rolesToRemove$ = this.getRegions(guild)
-      .flatMap((regions) => Rx.Observable.from(Object.values(regions)))
-      .map((region) => region.roleId)
-      .map((roleId) => guild.roles.get(roleId))
-      .filter((role) => role)
-      .toArray();
+    let rolesToRemove$ = this.getRegions(guild).pipe(
+      flatMap((regions) => from(Object.values(regions))),
+      map((region) => region.roleId),
+      map((roleId) => guild.roles.get(roleId)),
+      filter((role) => role),
+      toArray(),
+    );
 
-    return this.getRegion(guild, regionOrAlias)
-      .flatMap((region) => {
+    return this.getRegion(guild, regionOrAlias).pipe(
+      flatMap((region) => {
         if (member.roles.get(region.roleId)) {
-          throw new RegionAlreadyAssigned(member, region.name);
+          return throwError(new RegionAlreadyAssigned(member, region.name));
         }
 
         let regionRole = guild.roles.get(region.roleId);
         if (!regionRole) {
-          throw new UnmappedRegionError(region.name);
+          return throwError(new UnmappedRegionError(region.name));
         }
 
-        return rolesToRemove$
-          .map((rolesToRemove) => [region, rolesToRemove, regionRole]);
-      })
-      .flatMap(([region, rolesToRemove, regionRole]) => {
-        return Rx.Observable
-          .of('')
-          .flatMap(() => member.removeRoles(rolesToRemove))
-          .flatMap(() => member.addRole(regionRole))
-          .map(() => region.name);
-      });
+        return rolesToRemove$.pipe(
+          map((rolesToRemove) => [region, rolesToRemove, regionRole]),
+        );
+      }),
+      flatMap(([region, rolesToRemove, regionRole]) => of('').pipe(
+        flatMap(() => member.removeRoles(rolesToRemove)),
+        flatMap(() => member.addRole(regionRole)),
+        map(() => region.name),
+      )),
+    );
   }
 }
 

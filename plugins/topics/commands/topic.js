@@ -1,4 +1,5 @@
-const Rx = require('rx');
+const {of} = require('rxjs');
+const {flatMap, tap, catchError} = require('rxjs/operators');
 
 module.exports = {
   name: 'topic',
@@ -32,26 +33,24 @@ module.exports = {
       return response.send();
     }
 
-    return Rx.Observable
-      .fromPromise(context.guild.createChannel(channelName))
-      .flatMap((channel) => channel.setParent(openCategory).then(() => channel))
-      .do((channel) => this.topicService.watchChannel(channel))
-      .flatMap((channel) => {
+    return of('').pipe(
+      flatMap(context.guild.createChannel(channelName)),
+      flatMap((channel) => channel.setParent(openCategory).then(() => channel)),
+      tap((channel) => this.topicService.watchChannel(channel)),
+      flatMap((channel) => {
         response.type = 'reply';
         response.content = 'I have opened the channel ' + channel.toString() + '.';
         return response.send();
-      })
-      .catch((error) => {
+      }),
+      catchError((error) => {
         response.type = 'message';
 
         if (error.name === 'DiscordAPIError') {
           if (error.message === "Missing Permissions") {
             response.content = `I'm sorry, but I do not have permission to create channels. I need the "Manage Channels" permission.`;
-          }
-          else if (error.message.includes("Invalid Form Body")) {
+          } else if (error.message.includes("Invalid Form Body")) {
             response.content = `I'm sorry, Discord does not allow that channel name.`;
-          }
-          else {
+          } else {
             response.content = `I'm sorry, Discord returned an unexpected error when I tried to create the channel.`;
             context.chaos.handleError(error, [
               {name: "command", value: "topic"},
@@ -61,8 +60,7 @@ module.exports = {
               {name: "flags", value: JSON.stringify(context.flags)},
             ]);
           }
-        }
-        else {
+        } else {
           response.content = `I'm sorry, I ran into an unexpected problem.`;
           context.chaos.handleError(error, [
             {name: "command", value: "topic"},
@@ -74,6 +72,7 @@ module.exports = {
         }
 
         return response.send();
-      });
+      }),
+    );
   },
 };

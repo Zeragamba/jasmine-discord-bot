@@ -26,7 +26,7 @@
   "devDependencies": {
     "chai": "^4.1.2",
     "chai-subset": "^1.6.0",
-    "chaos-data-memory": "github:chaos-core/chaos-data-memory#RxJS-4",
+    "chaos-data-memory": "github:chaos-core/chaos-data-memory#RxJs-6",
     "eslint": "^4.14.0",
     "eslint-plugin-chai-expect": "^2.0.1",
     "eslint-watch": "^4.0.2",
@@ -39,14 +39,14 @@
   "repository": "https://github.com/SpyMaster356/jasmine-discord-bot",
   "license": "MIT",
   "dependencies": {
-    "chaos-core": "github:chaos-core/chaos-core#v3.0.0",
-    "chaos-data-disk": "github:chaos-core/chaos-data-disk#v0.0.0",
-    "chaos-plugin-auto-role": "github:chaos-core/chaos-plugin-auto-role#v1.1.0",
+    "chaos-core": "github:chaos-core/chaos-core#RxJS-6",
+    "chaos-data-disk": "github:chaos-core/chaos-data-disk#RxJs-6",
+    "chaos-plugin-auto-role": "github:chaos-core/chaos-plugin-auto-role#RxJs-6",
     "discord.js": "11.4.2",
     "git-rev": "^0.2.1",
     "glob": "^7.1.3",
     "node-glob": "^1.2.0",
-    "rx": "^4.1.0",
+    "rxjs": "^6.5.1",
     "yarn": "^1.13.0"
   }
 }

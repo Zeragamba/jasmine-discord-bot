@@ -1,4 +1,5 @@
-const Rx = require('rx');
+const {of, throwError} = require('rxjs');
+const {tap, toArray} = require('rxjs/operators');
 const Collection = require('discord.js').Collection;
 const ConfigAction = require('chaos-core').ConfigAction;
 
@@ -48,43 +49,43 @@ describe('!config streaming removeStreamerRole', function () {
         guild: this.guild,
       };
 
-      this.streamingService.removeStreamerRole.returns(Rx.Observable.of(this.role));
+      this.streamingService.removeStreamerRole.returns(of(this.role));
     });
 
     it('removes the streamer role from the guild', function (done) {
-      this.removeStreamerRole.run(this.context)
-        .toArray()
-        .do(() => expect(this.streamingService.removeStreamerRole).to.have.been.calledWith(this.guild))
-        .subscribe(() => done(), (error) => done(error));
+      this.removeStreamerRole.run(this.context).pipe(
+        toArray(),
+        tap(() => expect(this.streamingService.removeStreamerRole).to.have.been.calledWith(this.guild)),
+      ).subscribe(() => done(), (error) => done(error));
     });
 
     it('returns a success message', function (done) {
-      this.removeStreamerRole.run(this.context)
-        .toArray()
-        .do((emitted) => expect(emitted).to.deep.eq([
+      this.removeStreamerRole.run(this.context).pipe(
+        toArray(),
+        tap((emitted) => expect(emitted).to.deep.eq([
           {
             status: 200,
             content: `I will no longer limit adding the live role to users with the role ${this.role.name}`,
           },
-        ]))
-        .subscribe(() => done(), (error) => done(error));
+        ])),
+      ).subscribe(() => done(), (error) => done(error));
     });
 
     context('when there was no previous streamer role', function () {
       beforeEach(function () {
-        this.streamingService.removeStreamerRole.returns(Rx.Observable.throw(new RoleNotFoundError('The role could not be found')));
+        this.streamingService.removeStreamerRole.returns(throwError(new RoleNotFoundError('The role could not be found')));
       });
 
       it('gives a user readable error', function (done) {
-        this.removeStreamerRole.run(this.context)
-          .toArray()
-          .do((emitted) => expect(emitted).to.deep.eq([
+        this.removeStreamerRole.run(this.context).pipe(
+          toArray(),
+          tap((emitted) => expect(emitted).to.deep.eq([
             {
               status: 400,
               content: `No streamer role was set.`,
             },
-          ]))
-          .subscribe(() => done(), (error) => done(error));
+          ])),
+        ).subscribe(() => done(), (error) => done(error));
       });
     });
   });

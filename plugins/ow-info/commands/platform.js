@@ -1,4 +1,5 @@
-const Rx = require('rx');
+const {of, from, throwError, iif} = require('rxjs');
+const {flatMap, map, catchError} = require('rxjs/operators');
 
 const platforms = require('../data/platforms');
 
@@ -28,19 +29,20 @@ module.exports = {
       return response.send();
     }
 
-    return Rx.Observable
-      .if(
-        () => context.member,
-        Rx.Observable.of(context.member),
-        Rx.Observable.of('').flatMap((context.guild.fetchMember(context.author))),
-      )
-      .flatMap((member) => setPlatformTag(member, foundPlatform))
-      .map((platform) => {
+    return iif(
+      () => context.member,
+      of(context.member),
+      of('').pipe(
+        flatMap(() => context.guild.fetchMember(context.author)),
+      ),
+    ).pipe(
+      flatMap((member) => setPlatformTag(member, foundPlatform)),
+      map((platform) => {
         response.type = 'reply';
         response.content = 'I\'ve updated your platform to ' + platform.name;
         return response.send();
-      })
-      .catch((error) => {
+      }),
+      catchError((error) => {
         if (error.name === 'DiscordAPIError') {
           response.type = 'message';
 
@@ -72,8 +74,9 @@ module.exports = {
           return response.send();
         }
 
-        return Rx.Observable.throw(error);
-      });
+        return throwError(error);
+      }),
+    );
   },
 };
 
@@ -82,8 +85,7 @@ function findPlatformWithName(name) {
 }
 
 function platformHasName(platform, name) {
-  let platformNames = platform.alias
-    .map((alias) => alias.toLowerCase());
+  let platformNames = platform.alias.map((alias) => alias.toLowerCase());
   platformNames.push(platform.name.toLowerCase());
 
   return platformNames.indexOf(name.toLowerCase()) !== -1;
@@ -101,6 +103,7 @@ function setPlatformTag(member, newPlatform) {
     newNickname = currentNickname + ' ' + platformTag;
   }
 
-  return Rx.Observable.fromPromise(member.setNickname(newNickname))
-    .map(() => newPlatform);
+  return from(member.setNickname(newNickname)).pipe(
+    map(() => newPlatform),
+  );
 }

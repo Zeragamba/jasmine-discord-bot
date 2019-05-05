@@ -1,4 +1,5 @@
-const Rx = require('rx');
+const {of, throwError} = require('rxjs');
+const {map, catchError} = require('rxjs/operators');
 
 const {RegionNotFoundError} = require('../errors');
 
@@ -24,25 +25,24 @@ module.exports = {
     let regionName = context.inputs.regionName;
 
     if (!regionName) {
-      return Rx.Observable.of({
+      return of({
         status: 400,
         content: `the region to remove is required`,
       });
     }
 
-    return this.regionService
-      .removeRegion(guild, regionName)
-      .map((removedRegion) => ({
+    return this.regionService.removeRegion(guild, regionName).pipe(
+      map((removedRegion) => ({
         status: 200,
         content: `Removed region '${removedRegion}'`,
-      }))
-      .catch((error) => {
+      })),
+      catchError((error) => {
         if (error instanceof RegionNotFoundError) {
-          return Rx.Observable.of({status: 400, content: error.message});
+          return of({status: 400, content: error.message});
+        } else {
+          return throwError(error);
         }
-        else {
-          return Rx.Observable.throw(error);
-        }
-      });
+      }),
+    );
   },
 };

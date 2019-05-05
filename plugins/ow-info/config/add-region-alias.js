@@ -1,4 +1,5 @@
-const Rx = require('rx');
+const {of, throwError} = require('rxjs');
+const {map, catchError} = require('rxjs/operators');
 
 const {RegionNotFoundError} = require('../errors');
 
@@ -30,32 +31,31 @@ module.exports = {
     let regionName = context.inputs.regionName;
 
     if (!aliasName) {
-      return Rx.Observable.of({
+      return of({
         status: 400,
         content: `an alias is required`,
       });
     }
 
     if (!regionName) {
-      return Rx.Observable.of({
+      return of({
         status: 400,
         content: `the region to map the alias to is required`,
       });
     }
 
-    return this.regionService
-      .mapAlias(guild, aliasName, regionName)
-      .map((mappedAlias) => ({
+    return this.regionService.mapAlias(guild, aliasName, regionName).pipe(
+      map((mappedAlias) => ({
         status: 200,
         content: `Added alias ${mappedAlias.name} for ${mappedAlias.region}`,
-      }))
-      .catch((error) => {
+      })),
+      catchError((error) => {
         if (error instanceof RegionNotFoundError) {
-          return Rx.Observable.of({status: 400, content: error.message});
+          return of({status: 400, content: error.message});
+        } else {
+          return throwError(error);
         }
-        else {
-          return Rx.Observable.throw(error);
-        }
-      });
+      }),
+    );
   },
 };

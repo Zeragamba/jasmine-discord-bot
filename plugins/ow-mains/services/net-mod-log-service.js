@@ -1,4 +1,5 @@
-const Rx = require('rx');
+const {of, throwError, EMPTY} = require('rxjs');
+const {flatMap, tap, map, defaultIfEmpty, catchError, filter} = require('rxjs/operators');
 const Discord = require('discord.js');
 const Service = require('chaos-core').Service;
 
@@ -11,45 +12,42 @@ class NetModLogService extends Service {
     this.owmnService = this.chaos.getService('owMains', 'owmnService');
 
     this.chaos.logger.debug('Adding listener for netModLog guildBanAdd$ events');
-    this.chaos.streams
-      .guildBanAdd$
-      .flatMap(([guild, user]) => this.handleGuildBanAdd(guild, user))
-      .subscribe();
+    this.chaos.streams.guildBanAdd$.pipe(
+      flatMap(([guild, user]) => this.handleGuildBanAdd(guild, user)),
+    ).subscribe();
 
     this.chaos.logger.debug('Adding listener for netModLog guildBanRemove$ events');
-    this.chaos.streams
-      .guildBanRemove$
-      .flatMap(([guild, user]) => this.handleGuildBanRemove(guild, user))
-      .subscribe();
+    this.chaos.streams.guildBanRemove$.pipe(
+      flatMap(([guild, user]) => this.handleGuildBanRemove(guild, user)),
+    ).subscribe();
 
-    return Rx.Observable.of(true);
+    return of(true);
   }
 
   handleGuildBanAdd(guild, user) {
-    return Rx.Observable
-      .of('')
-      .flatMap(() => {
+    return of('').pipe(
+      flatMap(() => {
         return this.modLogService
           .findReasonAuditLog(guild, user, {type: AuditLogActions.MEMBER_BAN_ADD})
-          .catch((error) => {
+          .catchError((error) => {
             switch (error.name) {
               case "TargetMatchError":
-                return Rx.Observable.of({
+                return of({
                   executor: {id: null},
                   reason: `ERROR: Unable to find matching log entry`,
                 });
               case "AuditLogReadError":
-                return Rx.Observable.of({
+                return of({
                   executor: {id: null},
                   reason: `ERROR: ${error.message}`,
                 });
               default:
-                return Rx.Observable.throw(error);
+                return throwError(error);
             }
           });
-      })
-      .filter((log) => !log.reason || !log.reason.match(/\[AutoBan]/i))
-      .map((log) => {
+      }),
+      filter((log) => !log.reason || !log.reason.match(/\[AutoBan]/i)),
+      map((log) => {
         let reason = log.reason;
 
         if (log.executor.id === this.chaos.discord.user.id) {
@@ -58,10 +56,10 @@ class NetModLogService extends Service {
         }
 
         return {...log, reason};
-      })
-      .do((log) => this.chaos.logger.debug(`NetModLog: User ${user.tag} banned in ${guild.id} for reason: ${log.reason}`))
-      .flatMap((log) => this.addBanEntry(guild, user, log.reason))
-      .catch((error) => {
+      }),
+      tap((log) => this.chaos.logger.debug(`NetModLog: User ${user.tag} banned in ${guild.id} for reason: ${log.reason}`)),
+      flatMap((log) => this.addBanEntry(guild, user, log.reason)),
+      catchError((error) => {
         this.chaos.handleError(error, [
           {name: 'Service', value: 'NetModLogService'},
           {name: 'Hook', value: 'guildBanAdd$'},
@@ -69,16 +67,16 @@ class NetModLogService extends Service {
           {name: 'Guild ID', value: guild.id},
           {name: 'Banned User', value: user.tag.toString()},
         ]);
-        return Rx.Observable.empty();
-      });
+        return EMPTY;
+      }),
+    );
   }
 
   handleGuildBanRemove(guild, user) {
-    return Rx.Observable
-      .of('')
-      .do(() => this.chaos.logger.debug(`NetModLog: User ${user.tag} unbanned in ${guild.id}`))
-      .flatMap(() => this.addUnbanEntry(guild, user))
-      .catch((error) => {
+    return of('').pipe(
+      tap(() => this.chaos.logger.debug(`NetModLog: User ${user.tag} unbanned in ${guild.id}`)),
+      flatMap(() => this.addUnbanEntry(guild, user)),
+      catchError((error) => {
         this.chaos.handleError(error, [
           {name: 'Service', value: 'NetModLogService'},
           {name: 'Hook', value: 'guildBanRemove$'},
@@ -86,8 +84,9 @@ class NetModLogService extends Service {
           {name: 'Guild ID', value: guild.id},
           {name: 'Unbanned User', value: user.tag.toString()},
         ]);
-        return Rx.Observable.empty();
-      });
+        return EMPTY;
+      }),
+    );
   }
 
   addBanEntry(guild, user, reason) {
@@ -115,24 +114,25 @@ class NetModLogService extends Service {
   addAuditEntry(fromGuild, embed) {
     this.chaos.logger.debug(`Adding network mod log entry`);
 
-    return Rx.Observable.of('')
-      .flatMap(() => this.chaos.getGuildData(this.owmnService.owmnServer.id, DataKeys.netModLogChannelId))
-      .map((channelId) => this.owmnService.owmnServer.channels.get(channelId))
-      .filter((channel) => channel !== null)
-      .flatMap((channel) => channel.send({embed}))
-      .catch((error) => {
+    return of('').pipe(
+      flatMap(() => this.chaos.getGuildData(this.owmnService.owmnServer.id, DataKeys.netModLogChannelId)),
+      map((channelId) => this.owmnService.owmnServer.channels.get(channelId)),
+      filter((channel) => channel !== null),
+      flatMap((channel) => channel.send({embed})),
+      catchError((error) => {
         if (error.name === 'DiscordAPIError') {
           if (error.message === "Missing Access" || error.message === "Missing Permissions") {
             // Bot does not have permission to send messages, we can ignore.
-            return Rx.Observable.empty();
+            return EMPTY;
           }
         }
 
         // Error was not handled, rethrow it
-        return Rx.Observable.throw(error);
-      })
-      .map(true)
-      .defaultIfEmpty(true);
+        return throwError(error);
+      }),
+      map(true),
+      defaultIfEmpty(true),
+    );
   }
 }
 

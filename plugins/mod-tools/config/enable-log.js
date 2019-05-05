@@ -1,5 +1,7 @@
-const Rx = require('rx');
-const { LOG_TYPES } = require('../utility');
+const {of, throwError} = require('rxjs');
+const {flatMap, map, catchError} = require('rxjs/operators');
+
+const {LOG_TYPES} = require('../utility');
 
 const VALID_LOG_TYPES_NAMES = LOG_TYPES.map((t) => t.name);
 
@@ -29,38 +31,37 @@ module.exports = {
 
     let channel = guild.channels.find((c) => c.toString() === channelString || c.id.toString() === channelString);
     if (!channel) {
-      return Rx.Observable.of({
+      return of({
         content: "I was not able to find that channel",
       });
     }
 
     let logType = modLogService.getLogType(logTypeName);
     if (!logType) {
-      return Rx.Observable.of({
+      return of({
         content: `${logTypeName} is not a valid log type. Valid types: ${VALID_LOG_TYPES_NAMES.join(', ')}`,
       });
     }
 
-    return this.chaos
-      .setGuildData(guild.id, logType.channelDatakey, channel.id)
-      .flatMap(() => channel.send(`I will post the ${logType.name} here now.`))
-      .map(() => ({
+    return this.chaos.setGuildData(guild.id, logType.channelDatakey, channel.id).pipe(
+      flatMap(() => channel.send(`I will post the ${logType.name} here now.`)),
+      map(() => ({
         content: `I have enabled the ${logType.name} in the channel ${channel}`,
-      }))
-      .catch((error) => {
+      })),
+      catchError((error) => {
         switch (error.name) {
           case 'DiscordAPIError':
             if (error.message === "Missing Access") {
-              return Rx.Observable.of({
+              return of({
                 content: `Whoops, I do not have permission to talk in that channel.`,
               });
-            }
-            else {
-              return Rx.Observable.throw(error);
+            } else {
+              return throwError(error);
             }
           default:
-            return Rx.Observable.throw(error);
+            return throwError(error);
         }
-      });
+      }),
+    );
   },
 };

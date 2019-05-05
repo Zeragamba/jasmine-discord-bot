@@ -1,4 +1,5 @@
-const Rx = require('rx');
+const {of} = require('rxjs');
+const {flatMap, catchError} = require('rxjs/operators');
 
 module.exports = {
   name: 'reopen',
@@ -41,8 +42,7 @@ module.exports = {
 
     if (channelName) {
       topicChannel = this.topicService.findChannel(guild, channelName);
-    }
-    else {
+    } else {
       topicChannel = context.channel;
     }
 
@@ -60,25 +60,24 @@ module.exports = {
       return response.send();
     }
 
-    return Rx.Observable
-      .fromPromise(topicChannel.setParent(openCategory))
-      .flatMap((topicChannel) => topicChannel.send('===== Reopened =====').then(() => topicChannel))
-      .flatMap((topicChannel) => {
+    return of('').pipe(
+      flatMap(topicChannel.setParent(openCategory)),
+      flatMap((topicChannel) => topicChannel.send('===== Reopened =====').then(() => topicChannel)),
+      flatMap((topicChannel) => {
         if (topicChannel.id !== context.channel.id) {
           response.type = 'reply';
           response.content = `I have reopened the channel ${topicChannel.toString()}.`;
           return response.send();
         }
-        return Rx.Observable.return(topicChannel);
-      })
-      .catch((error) => {
+        return of(topicChannel);
+      }),
+      catchError((error) => {
         response.type = 'message';
 
         if (error.name === 'DiscordAPIError') {
           if (error.message === "Missing Permissions") {
             response.content = `I'm sorry, but I do not have permission to move channels. I need the "Manage Channels" permission.`;
-          }
-          else {
+          } else {
             response.content = `I'm sorry, Discord returned an unexpected error when I tried to move the channel.`;
             context.chaos.handleError(error, [
               {name: "command", value: "reopen"},
@@ -88,8 +87,7 @@ module.exports = {
               {name: "flags", value: JSON.stringify(context.flags)},
             ]);
           }
-        }
-        else {
+        } else {
           response.content = `I'm sorry, I ran into an unexpected problem.`;
           context.chaos.handleError(error, [
             {name: "command", value: "reopen"},
@@ -101,6 +99,7 @@ module.exports = {
         }
 
         return response.send();
-      });
+      }),
+    );
   },
 };

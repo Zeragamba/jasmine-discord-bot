@@ -1,4 +1,5 @@
-const Rx = require('rx');
+const {of, throwError} = require('rxjs');
+const {flatMap, map, catchError, mapTo} = require('rxjs/operators');
 const Discord = require('discord.js');
 
 const {ERRORS} = require('../utility');
@@ -41,30 +42,30 @@ module.exports = {
       warningEmbed.setDescription(reason);
     }
 
-    return userService
-      .findUser(userString)
-      .map((member) => {
+    return userService.findUser(userString).pipe(
+      map((member) => {
         if (!member) { throw new Error(ERRORS.USER_NOT_FOUND); }
         return member;
-      })
-      .flatMap((user) =>
-        Rx.Observable
-          .fromPromise(user.send({
-            content: 'You have been issued a warning.',
-            embed: warningEmbed,
-          }))
-          .map(user),
-      )
-      .flatMap((user) => modLogService.addWarnEntry(guild, user, reason, context.author).map(user))
-      .flatMap((user) => {
+      }),
+      flatMap((user) => of('').pipe(
+        flatMap(() => user.send({
+          content: 'You have been issued a warning.',
+          embed: warningEmbed,
+        })),
+        map(user),
+      )),
+      flatMap((user) => modLogService.addWarnEntry(guild, user, reason, context.author).pipe(
+        mapTo(user),
+      )),
+      flatMap((user) => {
         response.content = `${user.tag} has been warned`;
         return response.send();
-      })
-      .catch((error) => {
+      }),
+      catchError((error) => {
         if (error.name === 'DiscordAPIError') {
           switch (error.message) {
             case "Cannot send messages to this user":
-              response.content =`Sorry, I'm not able to direct message that user.`;
+              response.content = `Sorry, I'm not able to direct message that user.`;
               break;
             default:
               response.content = `Err... Discord returned an unexpected error when I tried to ban that user.`;
@@ -93,8 +94,9 @@ module.exports = {
                 `another guild I'm on. If you know their User ID I can find them by that.`,
             });
           default:
-            return Rx.Observable.throw(error);
+            return throwError(error);
         }
-      });
+      }),
+    );
   },
 };

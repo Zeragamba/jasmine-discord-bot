@@ -1,4 +1,5 @@
-const Rx = require('rx');
+const {of, throwError} = require('rxjs');
+const {flatMap, tap, catchError, count, filter} = require('rxjs/operators');
 
 const {
   BroadcastingNotAllowedError,
@@ -34,16 +35,16 @@ module.exports = {
     let broadcastType = context.args.type.toLowerCase();
     let broadcastBody = context.args.message + `\n*- ${context.member.displayName}*`;
 
-    return Rx.Observable
-      .of('')
-      .do(() => this.broadcastService.checkBroadcastAllowed(guild))
-      .do(() => this.broadcastService.checkValidBroadcast(broadcastType, broadcastBody))
-      .flatMap(() => this.broadcastService.confirmBroadcast(context, broadcastType, broadcastBody).filter(Boolean))
-      .flatMap(() => response.send({content: `Ok, let me broadcast that then.`}))
-      .flatMap(() => this.broadcastService.broadcastMessage(broadcastType, broadcastBody))
-      .count(() => true)
-      .flatMap((sentMessages) => response.send({content: `Done. Broadcasted to ${sentMessages} servers`}))
-      .catch((error) => {
+    return of('').pipe(
+      tap(() => this.broadcastService.checkBroadcastAllowed(guild)),
+      tap(() => this.broadcastService.checkValidBroadcast(broadcastType, broadcastBody)),
+      flatMap(() => this.broadcastService.confirmBroadcast(context, broadcastType, broadcastBody)),
+      filter(Boolean),
+      flatMap(() => response.send({content: `Ok, let me broadcast that then.`})),
+      flatMap(() => this.broadcastService.broadcastMessage(broadcastType, broadcastBody)),
+      count(() => true),
+      flatMap((sentMessages) => response.send({content: `Done. Broadcasted to ${sentMessages} servers`})),
+      catchError((error) => {
         if (error instanceof InvalidBroadcastError) {
           return response.send({
             content: error.message,
@@ -57,8 +58,9 @@ module.exports = {
             content: `Ok. Broadcast canceled`,
           });
         } else {
-          return Rx.Observable.throw(error);
+          return throwError(error);
         }
-      });
+      }),
+    );
   },
 };

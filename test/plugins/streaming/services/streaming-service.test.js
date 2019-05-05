@@ -1,4 +1,6 @@
-const Rx = require('rx');
+const {of, from, throwError, Subject, EMPTY} = require('rxjs');
+const {tap, toArray, catchError} = require('rxjs/operators');
+
 const ChaosDataMemory = require('chaos-data-memory');
 const Collection = require('discord.js').Collection;
 const DiscordAPIError = require('discord.js').DiscordAPIError;
@@ -10,7 +12,7 @@ const {RoleNotFoundError} = require('../../../../plugins/streaming/lib/errors');
 describe('StreamingService', function () {
   beforeEach(function () {
     this.dataSource = new ChaosDataMemory();
-    this.presenceUpdate$ = new Rx.Subject();
+    this.presenceUpdate$ = new Subject();
 
     this.jasmine = stubJasmine();
     this.jasmine.streams = {
@@ -21,7 +23,7 @@ describe('StreamingService', function () {
   });
 
   afterEach(function () {
-    this.presenceUpdate$.onCompleted();
+    this.presenceUpdate$.complete();
   });
 
   describe('#onListen', function () {
@@ -51,7 +53,7 @@ describe('StreamingService', function () {
       this.newMember = {name: 'newMember'};
       this.eventPayload = [this.oldMember, this.newMember];
 
-      sinon.stub(this.streamingService, 'handlePresenceUpdate').returns(Rx.Observable.of(''));
+      sinon.stub(this.streamingService, 'handlePresenceUpdate').returns(of(''));
 
       this.triggerEvent = (done, callback) => {
         this.presenceUpdate$.subscribe(() => {}, (error) => done(error), () => {
@@ -59,8 +61,8 @@ describe('StreamingService', function () {
           done();
         });
 
-        this.presenceUpdate$.onNext(this.eventPayload);
-        this.presenceUpdate$.onCompleted();
+        this.presenceUpdate$.next(this.eventPayload);
+        this.presenceUpdate$.complete();
       };
     });
 
@@ -98,80 +100,80 @@ describe('StreamingService', function () {
       this.pluginService = this.jasmine.getService('core', 'pluginService');
       this.streamingService.pluginService = this.pluginService;
 
-      sinon.stub(this.pluginService, 'isPluginEnabled').returns(Rx.Observable.of(false));
-      sinon.stub(this.streamingService, 'getLiveRole').returns(Rx.Observable.from([undefined]));
-      sinon.stub(this.streamingService, 'memberIsStreamer').returns(Rx.Observable.of(true));
+      sinon.stub(this.pluginService, 'isPluginEnabled').returns(of(false));
+      sinon.stub(this.streamingService, 'getLiveRole').returns(from([undefined]));
+      sinon.stub(this.streamingService, 'memberIsStreamer').returns(of(true));
 
-      sinon.stub(this.streamingService, 'updateMemberRoles').returns(Rx.Observable.of(''));
+      sinon.stub(this.streamingService, 'updateMemberRoles').returns(of(''));
     });
 
     context('when the module is enabled', function () {
       beforeEach(function () {
-        this.streamingService.pluginService.isPluginEnabled.returns(Rx.Observable.of(true));
+        this.streamingService.pluginService.isPluginEnabled.returns(of(true));
       });
 
       context('when a live role is not set', function () {
         beforeEach(function () {
-          this.streamingService.getLiveRole.returns(Rx.Observable.from([undefined]));
+          this.streamingService.getLiveRole.returns(from([undefined]));
         });
 
         it('does not call #updateMemberRoles', function (done) {
-          this.streamingService.handlePresenceUpdate(this.oldMember, this.newMember)
-            .toArray()
-            .do(() => expect(this.streamingService.updateMemberRoles).not.to.have.been.called)
-            .subscribe(() => done(), (error) => done(error));
+          this.streamingService.handlePresenceUpdate(this.oldMember, this.newMember).pipe(
+            toArray(),
+            tap(() => expect(this.streamingService.updateMemberRoles).not.to.have.been.called),
+          ).subscribe(() => done(), (error) => done(error));
         });
       });
 
       context('when a live role is set', function () {
         beforeEach(function () {
           this.liveRole = {id: 'role-00001', name: 'liveRole'};
-          this.streamingService.getLiveRole.returns(Rx.Observable.of(this.liveRole));
+          this.streamingService.getLiveRole.returns(of(this.liveRole));
         });
 
         context('when the user is not a streamer', function () {
           beforeEach(function () {
-            this.streamingService.memberIsStreamer.returns(Rx.Observable.of(false));
+            this.streamingService.memberIsStreamer.returns(of(false));
           });
 
           it('does not call #updateMemberRoles', function (done) {
-            this.streamingService.handlePresenceUpdate(this.oldMember, this.newMember)
-              .toArray()
-              .do(() => expect(this.streamingService.updateMemberRoles).not.to.have.been.called)
-              .subscribe(() => done(), (error) => done(error));
+            this.streamingService.handlePresenceUpdate(this.oldMember, this.newMember).pipe(
+              toArray(),
+              tap(() => expect(this.streamingService.updateMemberRoles).not.to.have.been.called),
+            ).subscribe(() => done(), (error) => done(error));
           });
         });
 
         context('when the user is a streamer', function () {
           beforeEach(function () {
-            this.streamingService.memberIsStreamer.returns(Rx.Observable.of(true));
+            this.streamingService.memberIsStreamer.returns(of(true));
           });
 
           it('calls #updateMemberRoles', function (done) {
-            this.streamingService.handlePresenceUpdate(this.oldMember, this.newMember)
-              .toArray()
-              .do(() => expect(this.streamingService.updateMemberRoles).to.have.been.called)
-              .subscribe(() => done(), (error) => done(error));
+            this.streamingService.handlePresenceUpdate(this.oldMember, this.newMember).pipe(
+              toArray(),
+              tap(() => expect(this.streamingService.updateMemberRoles).to.have.been.called),
+            ).subscribe(() => done(), (error) => done(error));
           });
 
           it('passes the new member to #updateMemberRoles', function (done) {
-            this.streamingService.handlePresenceUpdate(this.oldMember, this.newMember)
-              .toArray()
-              .do(() => expect(this.streamingService.updateMemberRoles).to.have.been.calledWith(this.newMember))
-              .subscribe(() => done(), (error) => done(error));
+            this.streamingService.handlePresenceUpdate(this.oldMember, this.newMember).pipe(
+              toArray(),
+              tap(() => expect(this.streamingService.updateMemberRoles).to.have.been.calledWith(this.newMember)),
+            ).subscribe(() => done(), (error) => done(error));
           });
 
           context('when #updateMemberRoles raises an Discord "Missing Permissions" error', function () {
             beforeEach(function () {
               this.error = sinon.createStubInstance(DiscordAPIError);
               this.error.message = 'Missing Permissions';
-              this.streamingService.memberIsStreamer.returns(Rx.Observable.throw(this.error));
+              this.streamingService.memberIsStreamer.returns(throwError(this.error));
             });
 
             it('silences the error', function (done) {
-              this.streamingService.handlePresenceUpdate(this.oldMember, this.newMember)
-                .toArray()
-                .subscribe(() => done(), (error) => done(error));
+              this.streamingService.handlePresenceUpdate(this.oldMember, this.newMember).pipe(
+                toArray(),
+              ).subscribe(() => done(), (error) => done(error));
             });
           });
 
@@ -179,16 +181,16 @@ describe('StreamingService', function () {
             beforeEach(function () {
               this.error = sinon.createStubInstance(DiscordAPIError);
               this.error.message = 'Example Error';
-              this.streamingService.memberIsStreamer.returns(Rx.Observable.throw(this.error));
+              this.streamingService.memberIsStreamer.returns(throwError(this.error));
 
-              this.jasmine.handleError = sinon.fake.returns(Rx.Observable.empty());
+              this.jasmine.handleError = sinon.fake.returns(EMPTY);
             });
 
             it('does not crash the stream', function (done) {
-              this.streamingService.handlePresenceUpdate(this.oldMember, this.newMember)
-                .toArray()
-                .do((emitted) => expect(emitted).to.deep.eq([]))
-                .subscribe(() => done(), (error) => done(error));
+              this.streamingService.handlePresenceUpdate(this.oldMember, this.newMember).pipe(
+                toArray(),
+                tap((emitted) => expect(emitted).to.deep.eq([])),
+              ).subscribe(() => done(), (error) => done(error));
             });
           });
 
@@ -196,22 +198,22 @@ describe('StreamingService', function () {
             beforeEach(function () {
               this.error = sinon.createStubInstance(Error);
               this.error.message = 'Example Error';
-              this.streamingService.memberIsStreamer.returns(Rx.Observable.throw(this.error));
+              this.streamingService.memberIsStreamer.returns(throwError(this.error));
 
-              this.jasmine.handleError = sinon.fake.returns(Rx.Observable.empty());
+              this.jasmine.handleError = sinon.fake.returns(EMPTY);
             });
 
             it('lets chaos handle the error', function (done) {
-              this.streamingService.handlePresenceUpdate(this.oldMember, this.newMember)
-                .toArray()
-                .do(() => expect(this.jasmine.handleError).to.have.been.calledWith(this.error))
-                .subscribe(() => done(), (error) => done(error));
+              this.streamingService.handlePresenceUpdate(this.oldMember, this.newMember).pipe(
+                toArray(),
+                tap(() => expect(this.jasmine.handleError).to.have.been.calledWith(this.error)),
+              ).subscribe(() => done(), (error) => done(error));
             });
 
             it('does not crash the stream', function (done) {
-              this.streamingService.handlePresenceUpdate(this.oldMember, this.newMember)
-                .toArray()
-                .subscribe(() => done(), (error) => done(error));
+              this.streamingService.handlePresenceUpdate(this.oldMember, this.newMember).pipe(
+                toArray(),
+              ).subscribe(() => done(), (error) => done(error));
             });
           });
         });
@@ -226,22 +228,22 @@ describe('StreamingService', function () {
         user: {tag: 'member#0001'},
       };
       sinon.stub(this.streamingService, 'memberIsStreaming').returns(false);
-      sinon.stub(this.streamingService, 'addLiveRoleToMember').returns(Rx.Observable.of(''));
-      sinon.stub(this.streamingService, 'removeLiveRoleFromMember').returns(Rx.Observable.of(''));
+      sinon.stub(this.streamingService, 'addLiveRoleToMember').returns(of(''));
+      sinon.stub(this.streamingService, 'removeLiveRoleFromMember').returns(of(''));
     });
 
     it('calls #memberIsStreaming', function (done) {
-      this.streamingService.updateMemberRoles(this.member)
-        .toArray()
-        .do(() => expect(this.streamingService.memberIsStreaming).to.have.been.called)
-        .subscribe(() => done(), (error) => done(error));
+      this.streamingService.updateMemberRoles(this.member).pipe(
+        toArray(),
+        tap(() => expect(this.streamingService.memberIsStreaming).to.have.been.called),
+      ).subscribe(() => done(), (error) => done(error));
     });
 
     it('passes the member to #memberIsStreaming', function (done) {
-      this.streamingService.updateMemberRoles(this.member)
-        .toArray()
-        .do(() => expect(this.streamingService.memberIsStreaming).to.have.been.calledWith(this.member))
-        .subscribe(() => done(), (error) => done(error));
+      this.streamingService.updateMemberRoles(this.member).pipe(
+        toArray(),
+        tap(() => expect(this.streamingService.memberIsStreaming).to.have.been.calledWith(this.member)),
+      ).subscribe(() => done(), (error) => done(error));
     });
 
     context('when member is streaming', function () {
@@ -250,17 +252,17 @@ describe('StreamingService', function () {
       });
 
       it('calls #addLiveRoleToMember', function (done) {
-        this.streamingService.updateMemberRoles(this.member)
-          .toArray()
-          .do(() => expect(this.streamingService.addLiveRoleToMember).to.have.been.called)
-          .subscribe(() => done(), (error) => done(error));
+        this.streamingService.updateMemberRoles(this.member).pipe(
+          toArray(),
+          tap(() => expect(this.streamingService.addLiveRoleToMember).to.have.been.called),
+        ).subscribe(() => done(), (error) => done(error));
       });
 
       it('passes the member to #addLiveRoleToMember', function (done) {
-        this.streamingService.updateMemberRoles(this.member)
-          .toArray()
-          .do(() => expect(this.streamingService.addLiveRoleToMember).to.have.been.calledWith(this.member))
-          .subscribe(() => done(), (error) => done(error));
+        this.streamingService.updateMemberRoles(this.member).pipe(
+          toArray(),
+          tap(() => expect(this.streamingService.addLiveRoleToMember).to.have.been.calledWith(this.member)),
+        ).subscribe(() => done(), (error) => done(error));
       });
     });
 
@@ -270,17 +272,17 @@ describe('StreamingService', function () {
       });
 
       it('calls #removeLiveRoleFromMember', function (done) {
-        this.streamingService.updateMemberRoles(this.member)
-          .toArray()
-          .do(() => expect(this.streamingService.removeLiveRoleFromMember).to.have.been.called)
-          .subscribe(() => done(), (error) => done(error));
+        this.streamingService.updateMemberRoles(this.member).pipe(
+          toArray(),
+          tap(() => expect(this.streamingService.removeLiveRoleFromMember).to.have.been.called),
+        ).subscribe(() => done(), (error) => done(error));
       });
 
       it('passes the member to #removeLiveRoleFromMember', function (done) {
-        this.streamingService.updateMemberRoles(this.member)
-          .toArray()
-          .do(() => expect(this.streamingService.removeLiveRoleFromMember).to.have.been.calledWith(this.member))
-          .subscribe(() => done(), (error) => done(error));
+        this.streamingService.updateMemberRoles(this.member).pipe(
+          toArray(),
+          tap(() => expect(this.streamingService.removeLiveRoleFromMember).to.have.been.calledWith(this.member)),
+        ).subscribe(() => done(), (error) => done(error));
       });
     });
   });
@@ -291,27 +293,27 @@ describe('StreamingService', function () {
         guild: {name: 'testGuild'},
         user: {tag: 'member#0001'},
         roles: new Collection(),
-        addRole: sinon.fake.returns(Rx.Observable.of('')),
+        addRole: sinon.fake.returns(of('')),
       };
     });
 
     context('when there is no live role set', function () {
       beforeEach(function () {
-        sinon.stub(this.streamingService, 'getLiveRole').returns(Rx.Observable.from([undefined]));
+        sinon.stub(this.streamingService, 'getLiveRole').returns(from([undefined]));
       });
 
       it('does not emit anything', function (done) {
-        this.streamingService.addLiveRoleToMember(this.member)
-          .toArray()
-          .do((emitted) => expect(emitted).to.deep.eq([]))
-          .subscribe(() => done(), (error) => done(error));
+        this.streamingService.addLiveRoleToMember(this.member).pipe(
+          toArray(),
+          tap((emitted) => expect(emitted).to.deep.eq([])),
+        ).subscribe(() => done(), (error) => done(error));
       });
     });
 
     context('when there is a live role set', function () {
       beforeEach(function () {
         this.liveRole = {id: 'role-00001', name: 'liveRole'};
-        sinon.stub(this.streamingService, 'getLiveRole').returns(Rx.Observable.of(this.liveRole));
+        sinon.stub(this.streamingService, 'getLiveRole').returns(of(this.liveRole));
       });
 
       context('when the user is missing the role', function () {
@@ -320,10 +322,10 @@ describe('StreamingService', function () {
         });
 
         it('assigns the role to the member', function (done) {
-          this.streamingService.addLiveRoleToMember(this.member)
-            .toArray()
-            .do(() => expect(this.member.addRole).to.have.been.calledWith(this.liveRole))
-            .subscribe(() => done(), (error) => done(error));
+          this.streamingService.addLiveRoleToMember(this.member).pipe(
+            toArray(),
+            tap(() => expect(this.member.addRole).to.have.been.calledWith(this.liveRole)),
+          ).subscribe(() => done(), (error) => done(error));
         });
       });
     });
@@ -335,35 +337,35 @@ describe('StreamingService', function () {
         guild: {name: 'testGuild'},
         user: {tag: 'member#0001'},
         roles: new Collection(),
-        removeRole: sinon.fake.returns(Rx.Observable.of('')),
+        removeRole: sinon.fake.returns(of('')),
       };
     });
 
     context('when there is no live role set', function () {
       beforeEach(function () {
-        sinon.stub(this.streamingService, 'getLiveRole').returns(Rx.Observable.from([undefined]));
+        sinon.stub(this.streamingService, 'getLiveRole').returns(from([undefined]));
       });
 
       it('does not emit anything', function (done) {
-        this.streamingService.removeLiveRoleFromMember(this.member)
-          .toArray()
-          .do((emitted) => expect(emitted).to.deep.eq([]))
-          .subscribe(() => done(), (error) => done(error));
+        this.streamingService.removeLiveRoleFromMember(this.member).pipe(
+          toArray(),
+          tap((emitted) => expect(emitted).to.deep.eq([])),
+        ).subscribe(() => done(), (error) => done(error));
       });
     });
 
     context('when there is a live role set', function () {
       beforeEach(function () {
         this.liveRole = {id: 'role-00001', name: 'liveRole'};
-        sinon.stub(this.streamingService, 'getLiveRole').returns(Rx.Observable.of(this.liveRole));
+        sinon.stub(this.streamingService, 'getLiveRole').returns(of(this.liveRole));
       });
 
       context('when the user does not have the role', function () {
         it('does not emit anything', function (done) {
-          this.streamingService.removeLiveRoleFromMember(this.member)
-            .toArray()
-            .do((emitted) => expect(emitted).to.deep.eq([]))
-            .subscribe(() => done(), (error) => done(error));
+          this.streamingService.removeLiveRoleFromMember(this.member).pipe(
+            toArray(),
+            tap((emitted) => expect(emitted).to.deep.eq([])),
+          ).subscribe(() => done(), (error) => done(error));
         });
       });
 
@@ -373,10 +375,10 @@ describe('StreamingService', function () {
         });
 
         it('removes the role', function (done) {
-          this.streamingService.removeLiveRoleFromMember(this.member)
-            .toArray()
-            .do(() => expect(this.member.removeRole).to.have.been.calledWith(this.liveRole))
-            .subscribe(() => done(), (error) => done(error));
+          this.streamingService.removeLiveRoleFromMember(this.member).pipe(
+            toArray(),
+            tap(() => expect(this.member.removeRole).to.have.been.calledWith(this.liveRole)),
+          ).subscribe(() => done(), (error) => done(error));
         });
       });
     });
@@ -402,10 +404,10 @@ describe('StreamingService', function () {
       });
 
       it('returns the role to assign', function (done) {
-        this.streamingService.getLiveRole(this.guild)
-          .toArray()
-          .do((emitted) => expect(emitted).to.deep.eq([this.role]))
-          .subscribe(() => done(), (error) => done(error));
+        this.streamingService.getLiveRole(this.guild).pipe(
+          toArray(),
+          tap((emitted) => expect(emitted).to.deep.eq([this.role])),
+        ).subscribe(() => done(), (error) => done(error));
       });
     });
 
@@ -416,10 +418,10 @@ describe('StreamingService', function () {
       });
 
       it('returns undefined', function (done) {
-        this.streamingService.getLiveRole(this.guild)
-          .toArray()
-          .do((emitted) => expect(emitted.length).to.eq(1))
-          .subscribe(() => done(), (error) => done(error));
+        this.streamingService.getLiveRole(this.guild).pipe(
+          toArray(),
+          tap((emitted) => expect(emitted.length).to.eq(1)),
+        ).subscribe(() => done(), (error) => done(error));
       });
     });
   });
@@ -441,21 +443,21 @@ describe('StreamingService', function () {
       it('saves the role id', function (done) {
         sinon.spy(this.jasmine, 'setGuildData');
 
-        this.streamingService.setLiveRole(this.guild, this.role)
-          .toArray()
-          .do(() => expect(this.jasmine.setGuildData).to.have.been.calledWith(
+        this.streamingService.setLiveRole(this.guild, this.role).pipe(
+          toArray(),
+          tap(() => expect(this.jasmine.setGuildData).to.have.been.calledWith(
             this.guild.id,
             DATAKEYS.LIVE_ROLE,
             this.role.id,
-          ))
-          .subscribe(() => done(), (error) => done(error));
+          )),
+        ).subscribe(() => done(), (error) => done(error));
       });
 
       it('returns the saved role', function (done) {
-        this.streamingService.setLiveRole(this.guild, this.role)
-          .toArray()
-          .do((emitted) => expect(emitted).to.deep.eq([this.role]))
-          .subscribe(() => done(), (error) => done(error));
+        this.streamingService.setLiveRole(this.guild, this.role).pipe(
+          toArray(),
+          tap((emitted) => expect(emitted).to.deep.eq([this.role])),
+        ).subscribe(() => done(), (error) => done(error));
       });
     });
 
@@ -463,21 +465,21 @@ describe('StreamingService', function () {
       it('saves null', function (done) {
         sinon.spy(this.jasmine, 'setGuildData');
 
-        this.streamingService.setLiveRole(this.guild, null)
-          .toArray()
-          .do(() => expect(this.jasmine.setGuildData).to.have.been.calledWith(
+        this.streamingService.setLiveRole(this.guild, null).pipe(
+          toArray(),
+          tap(() => expect(this.jasmine.setGuildData).to.have.been.calledWith(
             this.guild.id,
             DATAKEYS.LIVE_ROLE,
             null,
-          ))
-          .subscribe(() => done(), (error) => done(error));
+          )),
+        ).subscribe(() => done(), (error) => done(error));
       });
 
       it('returns undefined', function (done) {
-        this.streamingService.setLiveRole(this.guild, null)
-          .toArray()
-          .do((emitted) => expect(emitted).to.deep.eq([undefined]))
-          .subscribe(() => done(), (error) => done(error));
+        this.streamingService.setLiveRole(this.guild, null).pipe(
+          toArray(),
+          tap((emitted) => expect(emitted).to.deep.eq([undefined])),
+        ).subscribe(() => done(), (error) => done(error));
       });
     });
   });
@@ -493,14 +495,14 @@ describe('StreamingService', function () {
     it('sets the live role to null', function (done) {
       sinon.spy(this.jasmine, 'setGuildData');
 
-      this.streamingService.removeLiveRole(this.guild, null)
-        .toArray()
-        .do(() => expect(this.jasmine.setGuildData).to.have.been.calledWith(
+      this.streamingService.removeLiveRole(this.guild, null).pipe(
+        toArray(),
+        tap(() => expect(this.jasmine.setGuildData).to.have.been.calledWith(
           this.guild.id,
           DATAKEYS.LIVE_ROLE,
           null,
-        ))
-        .subscribe(() => done(), (error) => done(error));
+        )),
+      ).subscribe(() => done(), (error) => done(error));
     });
 
     context('when a previous role was set', function () {
@@ -513,10 +515,10 @@ describe('StreamingService', function () {
       });
 
       it('returns the previously set role', function (done) {
-        this.streamingService.removeLiveRole(this.guild)
-          .toArray()
-          .do((emitted) => expect(emitted).to.deep.eq([this.role]))
-          .subscribe(() => done(), (error) => done(error));
+        this.streamingService.removeLiveRole(this.guild).pipe(
+          toArray(),
+          tap((emitted) => expect(emitted).to.deep.eq([this.role])),
+        ).subscribe(() => done(), (error) => done(error));
       });
     });
 
@@ -527,10 +529,10 @@ describe('StreamingService', function () {
       });
 
       it('returns the previously set role', function (done) {
-        this.streamingService.removeLiveRole(this.guild)
-          .toArray()
-          .do((emitted) => expect(emitted).to.deep.eq([undefined]))
-          .subscribe(() => done(), (error) => done(error));
+        this.streamingService.removeLiveRole(this.guild).pipe(
+          toArray(),
+          tap((emitted) => expect(emitted).to.deep.eq([undefined])),
+        ).subscribe(() => done(), (error) => done(error));
       });
     });
 
@@ -541,10 +543,10 @@ describe('StreamingService', function () {
       });
 
       it('returns undefined', function (done) {
-        this.streamingService.removeLiveRole(this.guild)
-          .toArray()
-          .do((emitted) => expect(emitted).to.deep.eq([undefined]))
-          .subscribe(() => done(), (error) => done(error));
+        this.streamingService.removeLiveRole(this.guild).pipe(
+          toArray(),
+          tap((emitted) => expect(emitted).to.deep.eq([undefined])),
+        ).subscribe(() => done(), (error) => done(error));
       });
     });
   });
@@ -560,21 +562,21 @@ describe('StreamingService', function () {
 
     context('when there is no streamer role set', function () {
       beforeEach(function () {
-        sinon.stub(this.streamingService, 'getStreamerRole').returns(Rx.Observable.from([undefined]));
+        sinon.stub(this.streamingService, 'getStreamerRole').returns(from([undefined]));
       });
 
       it('emits true', function (done) {
-        this.streamingService.memberIsStreamer(this.member)
-          .toArray()
-          .do((emitted) => expect(emitted).to.deep.eq([true]))
-          .subscribe(() => done(), (error) => done(error));
+        this.streamingService.memberIsStreamer(this.member).pipe(
+          toArray(),
+          tap((emitted) => expect(emitted).to.deep.eq([true])),
+        ).subscribe(() => done(), (error) => done(error));
       });
     });
 
     context('when there is a streamer role set', function () {
       beforeEach(function () {
         this.streamerRole = {id: 'streamerRoleId', name: 'streamerRole'};
-        sinon.stub(this.streamingService, 'getStreamerRole').returns(Rx.Observable.of(this.streamerRole));
+        sinon.stub(this.streamingService, 'getStreamerRole').returns(of(this.streamerRole));
       });
 
       context('when the member does not have the role', function () {
@@ -583,10 +585,10 @@ describe('StreamingService', function () {
         });
 
         it('emits false', function (done) {
-          this.streamingService.memberIsStreamer(this.member)
-            .toArray()
-            .do((emitted) => expect(emitted).to.deep.eq([false]))
-            .subscribe(() => done(), (error) => done(error));
+          this.streamingService.memberIsStreamer(this.member).pipe(
+            toArray(),
+            tap((emitted) => expect(emitted).to.deep.eq([false])),
+          ).subscribe(() => done(), (error) => done(error));
         });
       });
 
@@ -596,10 +598,10 @@ describe('StreamingService', function () {
         });
 
         it('emits true', function (done) {
-          this.streamingService.memberIsStreamer(this.member)
-            .toArray()
-            .do((emitted) => expect(emitted).to.deep.eq([true]))
-            .subscribe(() => done(), (error) => done(error));
+          this.streamingService.memberIsStreamer(this.member).pipe(
+            toArray(),
+            tap((emitted) => expect(emitted).to.deep.eq([true])),
+          ).subscribe(() => done(), (error) => done(error));
         });
       });
     });
@@ -667,10 +669,10 @@ describe('StreamingService', function () {
       });
 
       it('returns the role to assign', function (done) {
-        this.streamingService.getStreamerRole(this.guild)
-          .toArray()
-          .do((emitted) => expect(emitted).to.deep.eq([this.role]))
-          .subscribe(() => done(), (error) => done(error));
+        this.streamingService.getStreamerRole(this.guild).pipe(
+          toArray(),
+          tap((emitted) => expect(emitted).to.deep.eq([this.role])),
+        ).subscribe(() => done(), (error) => done(error));
       });
     });
 
@@ -681,10 +683,10 @@ describe('StreamingService', function () {
       });
 
       it('emits undefined', function (done) {
-        this.streamingService.getStreamerRole(this.guild)
-          .toArray()
-          .do((emitted) => expect(emitted.length).to.eq(1))
-          .subscribe(() => done(), (error) => done(error));
+        this.streamingService.getStreamerRole(this.guild).pipe(
+          toArray(),
+          tap((emitted) => expect(emitted.length).to.eq(1)),
+        ).subscribe(() => done(), (error) => done(error));
       });
     });
   });
@@ -706,21 +708,21 @@ describe('StreamingService', function () {
       it('saves the role id', function (done) {
         sinon.spy(this.jasmine, 'setGuildData');
 
-        this.streamingService.setStreamerRole(this.guild, this.role)
-          .toArray()
-          .do(() => expect(this.jasmine.setGuildData).to.have.been.calledWith(
+        this.streamingService.setStreamerRole(this.guild, this.role).pipe(
+          toArray(),
+          tap(() => expect(this.jasmine.setGuildData).to.have.been.calledWith(
             this.guild.id,
             DATAKEYS.STREAMER_ROLE,
             this.role.id,
-          ))
-          .subscribe(() => done(), (error) => done(error));
+          )),
+        ).subscribe(() => done(), (error) => done(error));
       });
 
       it('returns the saved role', function (done) {
-        this.streamingService.setStreamerRole(this.guild, this.role)
-          .toArray()
-          .do((emitted) => expect(emitted).to.deep.eq([this.role]))
-          .subscribe(() => done(), (error) => done(error));
+        this.streamingService.setStreamerRole(this.guild, this.role).pipe(
+          toArray(),
+          tap((emitted) => expect(emitted).to.deep.eq([this.role])),
+        ).subscribe(() => done(), (error) => done(error));
       });
     });
 
@@ -728,21 +730,21 @@ describe('StreamingService', function () {
       it('saves null', function (done) {
         sinon.spy(this.jasmine, 'setGuildData');
 
-        this.streamingService.setStreamerRole(this.guild, null)
-          .toArray()
-          .do(() => expect(this.jasmine.setGuildData).to.have.been.calledWith(
+        this.streamingService.setStreamerRole(this.guild, null).pipe(
+          toArray(),
+          tap(() => expect(this.jasmine.setGuildData).to.have.been.calledWith(
             this.guild.id,
             DATAKEYS.STREAMER_ROLE,
             null,
-          ))
-          .subscribe(() => done(), (error) => done(error));
+          )),
+        ).subscribe(() => done(), (error) => done(error));
       });
 
       it('returns undefined', function (done) {
-        this.streamingService.setStreamerRole(this.guild, null)
-          .toArray()
-          .do((emitted) => expect(emitted).to.deep.eq([undefined]))
-          .subscribe(() => done(), (error) => done(error));
+        this.streamingService.setStreamerRole(this.guild, null).pipe(
+          toArray(),
+          tap((emitted) => expect(emitted).to.deep.eq([undefined])),
+        ).subscribe(() => done(), (error) => done(error));
       });
     });
   });
@@ -767,21 +769,21 @@ describe('StreamingService', function () {
       it('sets the live role to null', function (done) {
         sinon.spy(this.jasmine, 'setGuildData');
 
-        this.streamingService.removeStreamerRole(this.guild)
-          .toArray()
-          .do(() => expect(this.jasmine.setGuildData).to.have.been.calledWith(
+        this.streamingService.removeStreamerRole(this.guild).pipe(
+          toArray(),
+          tap(() => expect(this.jasmine.setGuildData).to.have.been.calledWith(
             this.guild.id,
             DATAKEYS.STREAMER_ROLE,
             null,
-          ))
-          .subscribe(() => done(), (error) => done(error));
+          )),
+        ).subscribe(() => done(), (error) => done(error));
       });
 
       it('returns the previously set role', function (done) {
-        this.streamingService.removeStreamerRole(this.guild)
-          .toArray()
-          .do((emitted) => expect(emitted).to.deep.eq([this.role]))
-          .subscribe(() => done(), (error) => done(error));
+        this.streamingService.removeStreamerRole(this.guild).pipe(
+          toArray(),
+          tap((emitted) => expect(emitted).to.deep.eq([this.role])),
+        ).subscribe(() => done(), (error) => done(error));
       });
     });
 
@@ -792,13 +794,13 @@ describe('StreamingService', function () {
       });
 
       it('throws a RoleNotFoundError', function (done) {
-        this.streamingService.removeStreamerRole(this.guild)
-          .toArray()
-          .catch((error) => {
+        this.streamingService.removeStreamerRole(this.guild).pipe(
+          toArray(),
+          catchError((error) => {
             expect(error).to.be.an.instanceOf(RoleNotFoundError);
-            return Rx.Observable.empty();
-          })
-          .subscribe(() => done(new Error("Expected an error to be thrown")), (error) => done(error), () => done());
+            return EMPTY;
+          }),
+        ).subscribe(() => done(new Error("Expected an error to be thrown")), (error) => done(error), () => done());
       });
     });
 
@@ -809,13 +811,13 @@ describe('StreamingService', function () {
       });
 
       it('throws a RoleNotFoundError', function (done) {
-        this.streamingService.removeStreamerRole(this.guild)
-          .toArray()
-          .catch((error) => {
+        this.streamingService.removeStreamerRole(this.guild).pipe(
+          toArray(),
+          catchError((error) => {
             expect(error).to.be.an.instanceOf(RoleNotFoundError);
-            return Rx.Observable.empty();
-          })
-          .subscribe(() => done(new Error("Expected an error to be thrown")), (error) => done(error), () => done());
+            return EMPTY;
+          }),
+        ).subscribe(() => done(new Error("Expected an error to be thrown")), (error) => done(error), () => done());
       });
     });
   });

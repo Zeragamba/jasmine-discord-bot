@@ -1,4 +1,5 @@
-const Rx = require('rx');
+const {of, from} = require('rxjs');
+const {flatMap, tap, map, reduce, first, filter} = require('rxjs/operators');
 const Service = require('chaos-core').Service;
 
 const {
@@ -36,43 +37,39 @@ class AutoBanService extends Service {
   }
 
   onListen() {
-    this.chaos.streams.guildMemberAdd$
-      .flatMap((member) => this.handleGuildMemberAdd(member))
-      .subscribe();
-
-    this.chaos.streams.guildMemberUpdate$
-      .flatMap(([oldMember, newMember]) => this.handleGuildMemberUpdate(oldMember, newMember))
-      .subscribe();
-  }
-
-  handleGuildMemberAdd(member) {
-    return Rx.Observable
-      .of('')
-      .flatMap(() => this.doAutoBans(member))
-      .catch((error) => {
-        this.chaos.handleError(error, [
+    this.chaos.streams.guildMemberAdd$.pipe(
+      flatMap((member) => this.handleGuildMemberAdd(member).pipe(
+        this.chaos.catchError([
           {name: "Service", value: "AutoBanService"},
           {name: "Hook", value: "guildMemberAdd$"},
           {name: "Member", value: member.toString()},
           {name: "Guild", value: member.guild.toString()},
-        ]);
-        return Rx.Observable.empty();
-      });
+        ]),
+      )),
+    ).subscribe();
+
+    this.chaos.streams.guildMemberUpdate$.pipe(
+      flatMap(([oldMember, newMember]) => this.handleGuildMemberUpdate(oldMember, newMember).pipe(
+        this.chaos.catchError([
+          {name: "Service", value: "AutoBanService"},
+          {name: "Hook", value: "guildMemberUpdate$"},
+          {name: "Member", value: newMember.toString()},
+          {name: "Guild", value: newMember.guild.toString()},
+        ]),
+      )),
+    ).subscribe();
+  }
+
+  handleGuildMemberAdd(member) {
+    return of('').pipe(
+      flatMap(() => this.doAutoBans(member)),
+    );
   }
 
   handleGuildMemberUpdate(oldMember, newMember) {
-    return Rx.Observable
-      .of('')
-      .flatMap(() => this.doAutoBans(newMember))
-      .catch((error) => {
-        this.chaos.handleError(error, [
-          {name: "Service", value: "AutoBanService"},
-          {name: "Hook", value: "guildMemberUpdate$"},
-          {name: "Member", value: error.member.toString()},
-          {name: "Guild", value: error.member.guild.toString()},
-        ]);
-        return Rx.Observable.empty();
-      });
+    return of('').pipe(
+      flatMap(() => this.doAutoBans(newMember)),
+    );
   }
 
   getAutoBanRule(rule) {
@@ -91,36 +88,38 @@ class AutoBanService extends Service {
   setAutoBanRule(guild, rule, newValue) {
     rule = this.getAutoBanRule(rule);
 
-    return this.chaos
-      .setGuildData(guild.id, DATAKEYS.AUTO_BAN_RULE(rule), newValue)
-      .map((enabled) => ([rule, enabled]));
+    return this.chaos.setGuildData(guild.id, DATAKEYS.AUTO_BAN_RULE(rule), newValue).pipe(
+      map((enabled) => ([rule, enabled])),
+    );
   }
-  
+
   doAutoBans(member) {
-    return Rx.Observable
-      .of('')
-      .flatMap(() => this.isAutoBanEnabled(member.guild).filter(Boolean))
-      .do(() => this.chaos.logger.info(`Checking if ${member.user.tag} should be auto banned...`))
-      .flatMap(() => Rx.Observable.from(this.rules))
-      .flatMap((rule) => this.runRule(rule, member))
-      .filter((reason) => reason)
-      .take(1)
-      .do((reason) => this.chaos.logger.info(`Auto banning ${member.user.tag}; reason: ${reason}`))
-      .flatMap((reason) =>
+    return of('').pipe(
+      flatMap(() => this.isAutoBanEnabled(member.guild)),
+      filter(Boolean),
+      tap(() => this.chaos.logger.info(`Checking if ${member.user.tag} should be auto banned...`)),
+      flatMap(() => from(this.rules).pipe(
+        flatMap((rule) => this.runRule(rule, member)),
+        first((reason) => reason, ''),
+      )),
+      filter((reason) => reason !== ''),
+      tap((reason) => this.chaos.logger.info(`Auto banning ${member.user.tag}; reason: ${reason}`)),
+      flatMap((reason) =>
         member.guild.ban(member, {
           days: 1,
           reason: `[AutoBan] ${reason}`,
         }),
-      );
+      ),
+    );
   }
 
   runRule(rule, member) {
-    return Rx.Observable
-      .of('')
-      .flatMap(() => this.isAutoBanRuleEnabled(member.guild, rule.name))
-      .filter(Boolean)
-      .filter(() => rule.test(member))
-      .map(() => rule.reason);
+    return of('').pipe(
+      flatMap(() => this.isAutoBanRuleEnabled(member.guild, rule.name)),
+      filter(Boolean),
+      filter(() => rule.test(member)),
+      map(() => rule.reason),
+    );
   }
 
   isAutoBanEnabled(guild) {
@@ -136,13 +135,15 @@ class AutoBanService extends Service {
   }
 
   getRules(guild) {
-    return Rx.Observable
-      .from(Object.values(AUTO_BAN_RULES))
-      .flatMap((rule) => this.isAutoBanRuleEnabled(guild, rule).map((enabled) => [rule, enabled]))
-      .reduce((rules, [rule, enabled]) => {
+    return from(Object.values(AUTO_BAN_RULES)).pipe(
+      flatMap((rule) => this.isAutoBanRuleEnabled(guild, rule).pipe(
+        map((enabled) => [rule, enabled])),
+      ),
+      reduce((rules, [rule, enabled]) => {
         rules[rule] = enabled;
         return rules;
-      }, {});
+      }, {}),
+    );
   }
 
   memberNameMatches(member, regex) {

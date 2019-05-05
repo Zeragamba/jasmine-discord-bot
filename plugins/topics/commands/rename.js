@@ -1,4 +1,5 @@
-const Rx = require('rx');
+const {of} = require('rxjs');
+const {flatMap, catchError} = require('rxjs/operators');
 
 module.exports = {
   name: 'rename',
@@ -47,17 +48,16 @@ module.exports = {
       return response.send();
     }
 
-    return Rx.Observable
-      .fromPromise(topicChannel.setName(channelName))
-      .flatMap((topicChannel) => topicChannel.send('===== Renamed =====').then(() => topicChannel))
-      .catch((error) => {
+    return of('').pipe(
+      flatMap(() => topicChannel.setName(channelName)),
+      flatMap((topicChannel) => topicChannel.send('===== Renamed =====').then(() => topicChannel)),
+      catchError((error) => {
         response.type = 'message';
 
         if (error.name === 'DiscordAPIError') {
           if (error.message === "Missing Permissions") {
             response.content = `I'm sorry, but I do not have permission to rename channels. I need the "Manage Channels" permission.`;
-          }
-          else {
+          } else {
             response.content = `I'm sorry, Discord returned an unexpected error when I tried to rename the channel.`;
             context.chaos.handleError(error, [
               {name: "command", value: "rename"},
@@ -67,8 +67,7 @@ module.exports = {
               {name: "flags", value: JSON.stringify(context.flags)},
             ]);
           }
-        }
-        else {
+        } else {
           response.content = `I'm sorry, I ran into an unexpected problem.`;
           context.chaos.handleError(error, [
             {name: "command", value: "rename"},
@@ -80,6 +79,7 @@ module.exports = {
         }
 
         return response.send();
-      });
+      }),
+    );
   },
 };

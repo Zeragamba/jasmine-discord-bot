@@ -1,4 +1,5 @@
-const Rx = require('rx');
+const {throwError} = require('rxjs');
+const {flatMap, map, catchError} = require('rxjs/operators');
 
 const {ERRORS} = require('../utility');
 
@@ -21,15 +22,14 @@ module.exports = {
     let guild = context.guild;
     let userString = context.args.user;
 
-    return userService
-      .findUser(userString)
-      .map((member) => {
+    return userService.findUser(userString).pipe(
+      map((member) => {
         if (!member) { throw new Error(ERRORS.USER_NOT_FOUND); }
         return member;
-      })
-      .flatMap((user) => guild.unban(user, `Unbanned by ${context.author.tag}`))
-      .flatMap((user) => response.send({content: `${user.tag} has been unbanned`}))
-      .catch((error) => {
+      }),
+      flatMap((user) => guild.unban(user, `Unbanned by ${context.author.tag}`)),
+      flatMap((user) => response.send({content: `${user.tag} has been unbanned`})),
+      catchError((error) => {
         if (error.name === 'DiscordAPIError') {
           switch (error.message) {
             case "Unknown Ban":
@@ -72,8 +72,9 @@ module.exports = {
                 `another guild I'm on. If you know their User ID I can find them by that.`,
             });
           default:
-            return Rx.Observable.throw(error);
+            return throwError(error);
         }
-      });
+      }),
+    );
   },
 };

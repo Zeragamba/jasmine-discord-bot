@@ -1,4 +1,5 @@
-const Rx = require('rx');
+const {of, throwError} = require('rxjs');
+const {map, catchError} = require('rxjs/operators');
 
 const {
   AutoBanError,
@@ -29,29 +30,29 @@ module.exports = {
     let rule = context.inputs.rule;
     let enabled = context.inputs.enabled === "true";
 
-    return autoBanService
-      .setAutoBanRule(guild, rule, enabled)
-      .map(([rule, enabled]) => ({
+    return autoBanService.setAutoBanRule(guild, rule, enabled).pipe(
+      map(([rule, enabled]) => ({
         status: 200,
         content: `${rule} is now ${enabled ? "enabled" : "disabled"}`,
-      }))
-      .catch((error) => {
+      })),
+      catchError((error) => {
         if (error instanceof AutoBanError) {
           return handleAutoBanError(error, context);
         }
 
-        return Rx.Observable.throw(error);
-      });
+        return throwError(error);
+      }),
+    );
   },
 };
 
 function handleAutoBanError(error) {
   if (error instanceof RuleNotFoundError) {
-    return Rx.Observable.of(({
+    return of(({
       status: 404,
       content: error.message,
     }));
   }
 
-  return Rx.Observable.throw(error);
+  return throwError(error);
 }

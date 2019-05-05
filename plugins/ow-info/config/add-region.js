@@ -1,7 +1,8 @@
-const Rx = require('rx');
+const {of, throwError} = require('rxjs');
+const {map, catchError} = require('rxjs/operators');
 
-const { RegionNotFoundError } = require('../errors');
-const { findRole } = require("../../../lib/role-utilities");
+const {RegionNotFoundError} = require('../errors');
+const {findRole} = require("../../../lib/role-utilities");
 
 module.exports = {
   name: 'addRegion',
@@ -31,14 +32,14 @@ module.exports = {
     let roleString = context.inputs.role;
 
     if (!regionName) {
-      return Rx.Observable.of({
+      return of({
         status: 400,
         content: `a region name is required`,
       });
     }
 
     if (!roleString) {
-      return Rx.Observable.of({
+      return of({
         status: 400,
         content: `a role is to map the region to is required`,
       });
@@ -46,28 +47,28 @@ module.exports = {
 
     let role = findRole(guild, roleString);
     if (!role) {
-      return Rx.Observable.of({
+      return of({
         status: 400,
         content: `The role '${roleString}' could not be found.`,
       });
     }
 
-    return this.regionService
-      .mapRegion(guild, regionName, role)
-      .map((mappedAlias) => ({
+    return this.regionService.mapRegion(guild, regionName, role).pipe(
+      map((mappedAlias) => ({
         ...mappedAlias,
         role: guild.roles.get(mappedAlias.roleId),
-      }))
-      .map((mappedAlias) => ({
+      })),
+      map((mappedAlias) => ({
         status: 200,
         content: `Mapped the region ${mappedAlias.name} to ${mappedAlias.role.name}`,
-      }))
-      .catch((error) => {
+      })),
+      catchError((error) => {
         if (error instanceof RegionNotFoundError) {
-          return Rx.Observable.of({ status: 400, content: error.message });
+          return of({status: 400, content: error.message});
         } else {
-          return Rx.Observable.throw(error);
+          return throwError(error);
         }
-      });
+      }),
+    );
   },
 };

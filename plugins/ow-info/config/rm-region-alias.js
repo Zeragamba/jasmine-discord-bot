@@ -1,4 +1,5 @@
-const Rx = require('rx');
+const {of, throwError} = require('rxjs');
+const {map, catchError} = require('rxjs/operators');
 
 const {
   AliasNotFoundError,
@@ -26,25 +27,24 @@ module.exports = {
     let regionName = context.inputs.alias;
 
     if (!regionName) {
-      return Rx.Observable.of({
+      return of({
         status: 400,
         content: `the region to remove is required`,
       });
     }
 
-    return this.regionService
-      .removeAlias(guild, regionName)
-      .map((removedAlias) => ({
+    return this.regionService.removeAlias(guild, regionName).pipe(
+      map((removedAlias) => ({
         status: 200,
         content: `Removed region alias '${removedAlias}'`,
-      }))
-      .catch((error) => {
+      })),
+      catchError((error) => {
         if (error instanceof AliasNotFoundError) {
-          return Rx.Observable.of({status: 400, content: error.message});
+          return of({status: 400, content: error.message});
+        } else {
+          return throwError(error);
         }
-        else {
-          return Rx.Observable.throw(error);
-        }
-      });
+      }),
+    );
   },
 };

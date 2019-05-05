@@ -1,3 +1,4 @@
+const {tap} = require('rxjs/operators');
 const ChaosCore = require('chaos-core');
 const Path = require('path');
 const fs = require('fs');
@@ -49,12 +50,13 @@ class Jasmine extends ChaosCore {
   }
 
   listen() {
-    return super.listen()
-      .do(() => this.discord.user.setPresence({
+    return super.listen().pipe(
+      tap(() => this.discord.user.setPresence({
         game: {
           name: `v${packageJson.version}`,
         },
-      }));
+      })),
+    );
   }
 }
 

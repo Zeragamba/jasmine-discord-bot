@@ -1,4 +1,5 @@
-const Rx = require('rx');
+const {combineLatest} = require('rxjs');
+const {map} = require('rxjs/operators');
 
 module.exports = {
   name: 'listAutoBanRules',
@@ -9,12 +10,11 @@ module.exports = {
 
     let guild = context.guild;
 
-    return Rx.Observable
-      .combineLatest(
-        autoBanService.isAutoBanEnabled(guild),
-        autoBanService.getRules(guild),
-      )
-      .map(([autoBanEnabled, rules]) => {
+    return combineLatest(
+      autoBanService.isAutoBanEnabled(guild),
+      autoBanService.getRules(guild),
+    ).pipe(
+      map(([autoBanEnabled, rules]) => {
         let message = [
           `**Autoban Rules:**`,
           `(Autoban enabled: ${autoBanEnabled})`,
@@ -25,10 +25,11 @@ module.exports = {
         });
 
         return message.join('\n');
-      })
-      .map((content) => ({
-        status: 200, 
+      }),
+      map((content) => ({
+        status: 200,
         content,
-      }));
+      })),
+    );
   },
 };

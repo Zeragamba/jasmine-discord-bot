@@ -1,3 +1,5 @@
+const {map} = require('rxjs/operators');
+
 module.exports = {
   name: 'disableAutoBan',
   description: 'Disables autobanning of users',
@@ -7,11 +9,11 @@ module.exports = {
 
     let guild = context.guild;
 
-    return autoBanService
-      .setAutoBansEnabled(guild, false)
-      .map(() => ({
+    return autoBanService.setAutoBansEnabled(guild, false).pipe(
+      map(() => ({
         status: 200,
-        content: `*puts away ban hammer*\nAutobanning is now disabled.`,
-      }));
+        content: `Autobanning is now disabled.`,
+      })),
+    );
   },
 };

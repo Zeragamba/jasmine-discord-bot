@@ -1,4 +1,5 @@
-const Rx = require('rx');
+const {throwError, from} = require('rxjs');
+const {map, flatMap, mapTo, catchError} = require('rxjs/operators');
 
 const {ERRORS} = require('../utility');
 
@@ -39,32 +40,31 @@ module.exports = {
     let reason = context.args.reason;
     let days = context.flags.days;
 
-    return userService.findUser(userString)
-      .map((user) => {
+    return userService.findUser(userString).pipe(
+      map((user) => {
         if (!user) {
           throw new Error(ERRORS.USER_NOT_FOUND);
         }
         return user;
-      })
-      .flatMap((user) =>
-        Rx.Observable
-          .fromPromise(guild.fetchBans())
-          .map((bans) => {
-            if (bans.get(user.id)) {
-              throw new Error(ERRORS.USER_ALREADY_BANNED);
-            }
-            return user;
-          }),
-      )
-      .flatMap((user) =>
-        Rx.Observable
-          .fromPromise(
-            guild.ban(user, {reason: `${reason || '`none given`'} | Banned by ${context.author.tag}`, days}),
-          )
-          .map(user),
-      )
-      .flatMap((user) => response.send({content: `${user.tag} has been banned`}))
-      .catch((error) => {
+      }),
+      flatMap((user) => from(guild.fetchBans()).pipe(
+        map((bans) => {
+          if (bans.get(user.id)) {
+            throw new Error(ERRORS.USER_ALREADY_BANNED);
+          }
+          return user;
+        }),
+      )),
+      flatMap((user) => {
+        return from(guild.ban(user, {
+          reason: `${reason || '`none given`'} | Banned by ${context.author.tag}`,
+          days,
+        })).pipe(
+          mapTo(user),
+        );
+      }),
+      flatMap((user) => response.send({content: `${user.tag} has been banned`})),
+      catchError((error) => {
         if (error.name === 'DiscordAPIError') {
           switch (error.message) {
             case 'Missing Permissions':
@@ -99,8 +99,9 @@ module.exports = {
                 `another guild I'm on. If you know their User ID I can find them by that.`,
             });
           default:
-            return Rx.Observable.throw(error);
+            return throwError(error);
         }
-      });
+      }),
+    );
   },
 };

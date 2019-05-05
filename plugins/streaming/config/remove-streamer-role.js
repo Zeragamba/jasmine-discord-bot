@@ -1,6 +1,7 @@
-const Rx = require('rx');
+const {of} = require('rxjs');
+const {map, catchError} = require('rxjs/operators');
 
-const { RoleNotFoundError } = require('../lib/errors');
+const {RoleNotFoundError} = require('../lib/errors');
 
 module.exports = {
   name: 'removeStreamerRole',
@@ -13,19 +14,19 @@ module.exports = {
   run(context) {
     let guild = context.guild;
 
-    return this.streamingService
-      .removeStreamerRole(guild)
-      .map((prevStreamingRole) => ({
+    return this.streamingService.removeStreamerRole(guild).pipe(
+      map((prevStreamingRole) => ({
         status: 200,
         content: `I will no longer limit adding the live role to users with the role ${prevStreamingRole.name}`,
-      }))
-      .catch((error) => {
+      })),
+      catchError((error) => {
         if (error instanceof RoleNotFoundError) {
-          return Rx.Observable.of({
+          return of({
             status: 400,
             content: `No streamer role was set.`,
           });
         }
-      });
+      }),
+    );
   },
 };

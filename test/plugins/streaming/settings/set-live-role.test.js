@@ -1,4 +1,5 @@
-const Rx = require('rx');
+const {of} = require('rxjs');
+const {tap, toArray} = require('rxjs/operators');
 const Collection = require('discord.js').Collection;
 const ConfigAction = require('chaos-core').ConfigAction;
 
@@ -53,12 +54,12 @@ describe('!config streaming setLiveRole', function () {
       });
 
       it('returns a user readable error', function (done) {
-        this.setLiveRole.run(this.context)
-          .toArray()
-          .do((emitted) => expect(emitted).to.deep.eq([
+        this.setLiveRole.run(this.context).pipe(
+          toArray(),
+          tap((emitted) => expect(emitted).to.deep.eq([
             {status: 400, content: `A role is to assign users is required`},
-          ]))
-          .subscribe(() => done(), (error) => done(error));
+          ])),
+        ).subscribe(() => done(), (error) => done(error));
       });
     });
 
@@ -68,12 +69,12 @@ describe('!config streaming setLiveRole', function () {
       });
 
       it('returns a user readable error', function (done) {
-        this.setLiveRole.run(this.context)
-          .toArray()
-          .do((emitted) => expect(emitted).to.deep.eq([
+        this.setLiveRole.run(this.context).pipe(
+          toArray(),
+          tap((emitted) => expect(emitted).to.deep.eq([
             {status: 400, content: `The role 'role-not-found' could not be found.`},
-          ]))
-          .subscribe(() => done(), (error) => done(error));
+          ])),
+        ).subscribe(() => done(), (error) => done(error));
       });
     });
 
@@ -98,23 +99,23 @@ describe('!config streaming setLiveRole', function () {
         context(contextMsg, function () {
           beforeEach(function () {
             this.context.inputs.role = value;
-            this.streamingService.setLiveRole.returns(Rx.Observable.of(this.role));
+            this.streamingService.setLiveRole.returns(of(this.role));
           });
 
           it('sets the live role to the correct role', function (done) {
-            this.setLiveRole.run(this.context)
-              .toArray()
-              .do(() => expect(this.streamingService.setLiveRole).to.have.been.calledWith(this.guild, this.role))
-              .subscribe(() => done(), (error) => done(error));
+            this.setLiveRole.run(this.context).pipe(
+              toArray(),
+              tap(() => expect(this.streamingService.setLiveRole).to.have.been.calledWith(this.guild, this.role)),
+            ).subscribe(() => done(), (error) => done(error));
           });
 
           it('returns a success message', function (done) {
-            this.setLiveRole.run(this.context)
-              .toArray()
-              .do((emitted) => expect(emitted).to.deep.eq([
+            this.setLiveRole.run(this.context).pipe(
+              toArray(),
+              tap((emitted) => expect(emitted).to.deep.eq([
                 {status: 200, content: `Live streamers will now be given the ${this.role.name} role.`},
-              ]))
-              .subscribe(() => done(), (error) => done(error));
+              ])),
+            ).subscribe(() => done(), (error) => done(error));
           });
         });
       });

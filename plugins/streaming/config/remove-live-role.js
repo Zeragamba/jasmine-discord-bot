@@ -1,3 +1,5 @@
+const {map} = require('rxjs/operators');
+
 module.exports = {
   name: 'removeLiveRole',
   description: `Stop assigning a role when a user goes live`,
@@ -9,11 +11,11 @@ module.exports = {
   run(context) {
     let guild = context.guild;
 
-    return this.streamingService
-      .removeLiveRole(guild)
-      .map(() => ({
+    return this.streamingService.removeLiveRole(guild).pipe(
+      map(() => ({
         status: 200,
         content: `Live streamers will no longer receive a role`,
-      }));
+      })),
+    );
   },
 };

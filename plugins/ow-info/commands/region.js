@@ -1,4 +1,5 @@
-const Rx = require('rx');
+const {throwError, zip} = require('rxjs');
+const {flatMap, catchError} = require('rxjs/operators');
 const {DiscordAPIError} = require('discord.js');
 
 const {
@@ -30,15 +31,14 @@ module.exports = {
     let member = context.message.member;
     let regionName = context.args.region;
 
-    return this.regionService
-      .setUserRegion(member, regionName)
-      .flatMap((grantedRegion) =>
+    return this.regionService.setUserRegion(member, regionName).pipe(
+      flatMap((grantedRegion) =>
         response.send({
           type: 'reply',
           content: `I've updated your region to ${grantedRegion}`,
         }),
-      )
-      .catch((error) => {
+      ),
+      catchError((error) => {
         if (error instanceof RegionError) {
           return handleRegionError(error, context, response);
         }
@@ -47,8 +47,9 @@ module.exports = {
           return handleDiscordApiError(error, context, response);
         }
 
-        return Rx.Observable.throw(error);
-      });
+        return throwError(error);
+      }),
+    );
   },
 };
 
@@ -94,23 +95,21 @@ function handleDiscordApiError(error, context, response) {
     });
   }
 
-  return Rx.Observable
-    .merge(
-      response.send({
-        type: 'message',
-        content: `Err... Discord returned an unexpected error when I tried to update your roles.`,
-      }),
-      context.chaos.messageOwner(
-        `I got this error when I tried to update ${context.author.tag}'s platform:`,
-        {
-          embed: context.chaos.createEmbedForError(error, [
-            {name: "guild", value: context.guild.name},
-            {name: "channel", value: context.channel.name},
-            {name: "command", value: "region"},
-            {name: "user", value: context.author.tag},
-          ]),
-        },
-      ),
-    )
-    .last();
+  return zip(
+    response.send({
+      type: 'message',
+      content: `Err... Discord returned an unexpected error when I tried to update your roles.`,
+    }),
+    context.chaos.messageOwner(
+      `I got this error when I tried to update ${context.author.tag}'s platform:`,
+      {
+        embed: context.chaos.createEmbedForError(error, [
+          {name: "guild", value: context.guild.name},
+          {name: "channel", value: context.channel.name},
+          {name: "command", value: "region"},
+          {name: "user", value: context.author.tag},
+        ]),
+      },
+    ),
+  );
 }

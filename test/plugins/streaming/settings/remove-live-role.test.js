@@ -1,4 +1,5 @@
-const Rx = require('rx');
+const {of} = require('rxjs');
+const {tap, toArray} = require('rxjs/operators');
 const Collection = require('discord.js').Collection;
 const ConfigAction = require('chaos-core').ConfigAction;
 
@@ -47,23 +48,23 @@ describe('!config streaming removeLiveRole', function () {
         guild: this.guild,
       };
 
-      this.streamingService.removeLiveRole.returns(Rx.Observable.of(this.role));
+      this.streamingService.removeLiveRole.returns(of(this.role));
     });
 
     it('removes the live role from the guild', function (done) {
-      this.removeLiveRole.run(this.context)
-        .toArray()
-        .do(() => expect(this.streamingService.removeLiveRole).to.have.been.calledWith(this.guild))
-        .subscribe(() => done(), (error) => done(error));
+      this.removeLiveRole.run(this.context).pipe(
+        toArray(),
+        tap(() => expect(this.streamingService.removeLiveRole).to.have.been.calledWith(this.guild)),
+      ).subscribe(() => done(), (error) => done(error));
     });
 
     it('returns a success message', function (done) {
-      this.removeLiveRole.run(this.context)
-        .toArray()
-        .do((emitted) => expect(emitted).to.deep.eq([
+      this.removeLiveRole.run(this.context).pipe(
+        toArray(),
+        tap((emitted) => expect(emitted).to.deep.eq([
           {status: 200, content: `Live streamers will no longer receive a role`},
-        ]))
-        .subscribe(() => done(), (error) => done(error));
+        ])),
+      ).subscribe(() => done(), (error) => done(error));
     });
   });
 });
