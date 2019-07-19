@@ -1,6 +1,6 @@
 const {of, from, merge, zip, throwError} = require('rxjs');
 const {flatMap, map, last, toArray, filter, mapTo} = require('rxjs/operators');
-const Service = require('chaos-core').Service;
+const Service = require('../../chaos-core/chaos-core').Service;
 
 const DATAKEYS = require('../datakeys');
 const {

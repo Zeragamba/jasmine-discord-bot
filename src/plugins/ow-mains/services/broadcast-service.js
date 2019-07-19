@@ -1,7 +1,7 @@
 const {of, from, throwError} = require('rxjs');
 const {flatMap, last, map, filter} = require('rxjs/operators');
 const Discord = require('discord.js');
-const Service = require('chaos-core').Service;
+const Service = require('../../chaos-core/chaos-core').Service;
 
 const {InvalidBroadcastError} = require("../errors");
 const DataKeys = require('../datakeys');

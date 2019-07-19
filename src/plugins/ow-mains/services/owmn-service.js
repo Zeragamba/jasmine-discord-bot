@@ -1,4 +1,4 @@
-const Service = require('chaos-core').Service;
+const Service = require('../../chaos-core/chaos-core').Service;
 
 class OwmnService extends Service {
   get owmnServerId() {
