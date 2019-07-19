@@ -27,8 +27,6 @@ describe('!config streaming setStreamerRole', function () {
 
   describe('#run', function () {
     beforeEach(function () {
-      this.setStreamerRole.onListen();
-
       this.guild = {
         id: 'guild-00001',
         roles: new Collection(),

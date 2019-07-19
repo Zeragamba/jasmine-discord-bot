@@ -23,15 +23,12 @@ module.exports = {
     },
   ],
 
-  onListen() {
-    this.regionService = this.chaos.getService('ow-info', 'regionService');
-  },
-
   run(context, response) {
-    let member = context.message.member;
-    let regionName = context.args.region;
+    const regionService = this.chaos.getService('ow-info', 'regionService');
+    const member = context.message.member;
+    const regionName = context.args.region;
 
-    return this.regionService.setUserRegion(member, regionName).pipe(
+    return regionService.setUserRegion(member, regionName).pipe(
       flatMap((grantedRegion) =>
         response.send({
           type: 'reply',

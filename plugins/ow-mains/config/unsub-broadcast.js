@@ -13,17 +13,14 @@ module.exports = {
     },
   ],
 
-  onListen() {
-    this.broadcastService = this.chaos.getService('owMains', 'BroadcastService');
-  },
-
   run(context) {
-    let guild = context.guild;
-    let broadcastType = context.inputs.type;
+    const broadcastService = this.chaos.getService('owMains', 'BroadcastService');
+    const guild = context.guild;
+    const broadcastType = context.inputs.type;
 
-    if (!this.broadcastService.isValidType(broadcastType)) {
+    if (!broadcastService.isValidType(broadcastType)) {
       return of({
-        content: `${broadcastType} is not a valid broadcast type. Valid types: ${this.broadcastService.broadcastTypes.join(', ')}`,
+        content: `${broadcastType} is not a valid broadcast type. Valid types: ${broadcastService.broadcastTypes.join(', ')}`,
       });
     }
 

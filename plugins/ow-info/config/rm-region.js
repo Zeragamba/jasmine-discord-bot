@@ -15,14 +15,11 @@ module.exports = {
     },
   ],
 
-  onListen() {
-    this.regionService = this.chaos.getService('ow-info', 'regionService');
-  },
-
   run(context) {
-    let guild = context.guild;
+    const regionService = this.chaos.getService('ow-info', 'regionService');
+    const guild = context.guild;
 
-    let regionName = context.inputs.regionName;
+    const regionName = context.inputs.regionName;
 
     if (!regionName) {
       return of({
@@ -31,7 +28,7 @@ module.exports = {
       });
     }
 
-    return this.regionService.removeRegion(guild, regionName).pipe(
+    return regionService.removeRegion(guild, regionName).pipe(
       map((removedRegion) => ({
         status: 200,
         content: `Removed region '${removedRegion}'`,

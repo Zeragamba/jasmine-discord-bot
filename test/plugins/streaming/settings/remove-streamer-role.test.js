@@ -29,8 +29,6 @@ describe('!config streaming removeStreamerRole', function () {
 
   describe('#run', function () {
     beforeEach(function () {
-      this.removeStreamerRole.onListen();
-
       this.guild = {
         id: 'guild-00001',
         roles: new Collection(),

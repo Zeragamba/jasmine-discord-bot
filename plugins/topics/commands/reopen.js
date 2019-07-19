@@ -15,16 +15,12 @@ module.exports = {
     },
   ],
 
-  onListen() {
-    this.topicService = this.chaos.getService('topics', 'topicService');
-  },
-
   run(context, response) {
-    let topicChannel = null;
-    let guild = context.guild;
-    let channelName = context.args.channelName;
+    const topicService = this.chaos.getService('topics', 'topicService');
+    const guild = context.guild;
+    const channelName = context.args.channelName;
 
-    let openCategory = this.topicService.getOpenTopicsCategory(guild);
+    let openCategory = topicService.getOpenTopicsCategory(guild);
     if (!openCategory) {
       response.type = 'message';
       response.content =
@@ -32,7 +28,7 @@ module.exports = {
       return response.send();
     }
 
-    let closedCategory = this.topicService.getClosedTopicsCategory(guild);
+    let closedCategory = topicService.getClosedTopicsCategory(guild);
     if (!closedCategory) {
       response.type = 'message';
       response.content =
@@ -40,8 +36,9 @@ module.exports = {
       return response.send();
     }
 
+    let topicChannel = null;
     if (channelName) {
-      topicChannel = this.topicService.findChannel(guild, channelName);
+      topicChannel = topicService.findChannel(guild, channelName);
     } else {
       topicChannel = context.channel;
     }

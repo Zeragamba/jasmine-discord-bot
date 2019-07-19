@@ -7,21 +7,16 @@ const DataKeys = require('../datakeys');
 const AuditLogActions = Discord.GuildAuditLogs.Actions;
 
 class NetModLogService extends Service {
-  onListen() {
-    this.modLogService = this.chaos.getService('modTools', 'ModLogService');
-    this.owmnService = this.chaos.getService('owMains', 'owmnService');
+  constructor(chaos) {
+    super(chaos);
 
-    this.chaos.logger.debug('Adding listener for netModLog guildBanAdd$ events');
-    this.chaos.streams.guildBanAdd$.pipe(
-      flatMap(([guild, user]) => this.handleGuildBanAdd(guild, user)),
-    ).subscribe();
+    this.chaos.on("chaos.listen", () => {
+      this.modLogService = this.chaos.getService('modTools', 'ModLogService');
+      this.owmnService = this.chaos.getService('owMains', 'owmnService');
+    });
 
-    this.chaos.logger.debug('Adding listener for netModLog guildBanRemove$ events');
-    this.chaos.streams.guildBanRemove$.pipe(
-      flatMap(([guild, user]) => this.handleGuildBanRemove(guild, user)),
-    ).subscribe();
-
-    return of(true);
+    this.chaos.on("guildBanAdd", ([guild, user]) => this.handleGuildBanAdd(guild, user));
+    this.chaos.on("guildBanRemove", ([guild, user]) => this.handleGuildBanRemove(guild, user));
   }
 
   handleGuildBanAdd(guild, user) {

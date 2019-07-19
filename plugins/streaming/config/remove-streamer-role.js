@@ -7,14 +7,11 @@ module.exports = {
   name: 'removeStreamerRole',
   description: `Removes the limit on who can receive the live role`,
 
-  onListen() {
-    this.streamingService = this.chaos.getService('streaming', 'streamingService');
-  },
-
   run(context) {
+    const streamingService = this.chaos.getService('streaming', 'StreamingService');
     let guild = context.guild;
 
-    return this.streamingService.removeStreamerRole(guild).pipe(
+    return streamingService.removeStreamerRole(guild).pipe(
       map((prevStreamingRole) => ({
         status: 200,
         content: `I will no longer limit adding the live role to users with the role ${prevStreamingRole.name}`,

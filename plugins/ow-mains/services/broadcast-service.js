@@ -22,15 +22,12 @@ class BroadcastService extends Service {
     return this.chaos.config.broadcastTypes;
   }
 
-  onListen() {
-    this.owmnService = this.chaos.getService('owMains', 'OwmnService');
-  }
-
   isValidType(broadcastType) {
     return this.broadcastTypes.includes(broadcastType.toLowerCase());
   }
 
   checkBroadcastAllowed(fromGuild) {
+    this.owmnService = this.chaos.getService('owMains', 'OwmnService');
     if (!this.owmnService.isOwmnGuild(fromGuild)) {
       throw new BroadcastingNotAllowedError(
         `Broadcasting from this server is not allowed.`,

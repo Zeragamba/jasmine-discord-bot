@@ -14,14 +14,11 @@ module.exports = {
     },
   ],
 
-  onListen() {
-    this.streamingService = this.chaos.getService('streaming', 'streamingService');
-  },
-
   run(context) {
-    let guild = context.guild;
+    const streamingService = this.chaos.getService('streaming', 'streamingService');
+    const guild = context.guild;
 
-    let roleString = context.inputs.role;
+    const roleString = context.inputs.role;
     if (!roleString) {
       return of({
         status: 400,
@@ -29,7 +26,7 @@ module.exports = {
       });
     }
 
-    let role = findRole(guild, roleString);
+    const role = findRole(guild, roleString);
     if (!role) {
       return of({
         status: 400,
@@ -37,7 +34,7 @@ module.exports = {
       });
     }
 
-    return this.streamingService.setLiveRole(guild, role).pipe(
+    return streamingService.setLiveRole(guild, role).pipe(
       map((role) => ({
         status: 200,
         content: `Live streamers will now be given the ${role.name} role.`,

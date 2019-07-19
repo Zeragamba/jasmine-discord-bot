@@ -11,28 +11,13 @@ const {
 } = require('../utility');
 
 class ModLogService extends Service {
-  onListen() {
-    this.chaos.logger.debug('Adding listener for guildMemberAdd$ events');
-    this.chaos.streams.guildMemberAdd$.pipe(
-      flatMap((member) => this.handleGuildMemberAdd(member)),
-    ).subscribe();
+  constructor(chaos) {
+    super(chaos);
 
-    this.chaos.logger.debug('Adding listener for guildMemberRemove$ events');
-    this.chaos.streams.guildMemberRemove$.pipe(
-      flatMap((member) => this.handleGuildMemberRemove(member)),
-    ).subscribe();
-
-    this.chaos.logger.debug('Adding listener for guildBanAdd$ events');
-    this.chaos.streams.guildBanAdd$.pipe(
-      flatMap(([guild, user]) => this.handleGuildBanAdd(guild, user)),
-    ).subscribe();
-
-    this.chaos.logger.debug('Adding listener for guildBanRemove$ events');
-    this.chaos.streams.guildBanRemove$.pipe(
-      flatMap(([guild, user]) => this.handleGuildBanRemove(guild, user)),
-    ).subscribe();
-
-    return of(true);
+    this.chaos.on("guildMemberAdd", (member) => this.handleGuildMemberAdd(member));
+    this.chaos.on("guildMemberRemove", (member) => this.handleGuildMemberRemove(member));
+    this.chaos.on("guildBanAdd", ([guild, user]) => this.handleGuildBanAdd(guild, user));
+    this.chaos.on("guildBanRemove", ([guild, user]) => this.handleGuildBanRemove(guild, user));
   }
 
   handleGuildMemberAdd(member) {

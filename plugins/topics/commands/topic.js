@@ -15,17 +15,14 @@ module.exports = {
     },
   ],
 
-  onListen() {
-    this.topicService = this.chaos.getService('topics', 'topicService');
-  },
-
   run(context, response) {
-    let guild = context.guild;
-    let channelName = this.topicService.channelNameSafeString(context.args.channelName);
+    const topicService = this.chaos.getService('topics', 'topicService');
+    const guild = context.guild;
+    const channelName = topicService.channelNameSafeString(context.args.channelName);
 
     context.chaos.logger.debug(`attempting to open topic channel: ${channelName}`);
 
-    let openCategory = this.topicService.getOpenTopicsCategory(guild);
+    let openCategory = topicService.getOpenTopicsCategory(guild);
     if (!openCategory) {
       response.type = 'message';
       response.content =
@@ -36,7 +33,7 @@ module.exports = {
     return of('').pipe(
       flatMap(context.guild.createChannel(channelName)),
       flatMap((channel) => channel.setParent(openCategory).then(() => channel)),
-      tap((channel) => this.topicService.watchChannel(channel)),
+      tap((channel) => topicService.watchChannel(channel)),
       flatMap((channel) => {
         response.type = 'reply';
         response.content = 'I have opened the channel ' + channel.toString() + '.';

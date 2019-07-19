@@ -21,15 +21,12 @@ module.exports = {
     },
   ],
 
-  onListen() {
-    this.regionService = this.chaos.getService('ow-info', 'regionService');
-  },
-
   run(context) {
-    let guild = context.guild;
+    const regionService = this.chaos.getService('ow-info', 'regionService');
+    const guild = context.guild;
 
-    let regionName = context.inputs.regionName;
-    let roleString = context.inputs.role;
+    const regionName = context.inputs.regionName;
+    const roleString = context.inputs.role;
 
     if (!regionName) {
       return of({
@@ -53,7 +50,7 @@ module.exports = {
       });
     }
 
-    return this.regionService.mapRegion(guild, regionName, role).pipe(
+    return regionService.mapRegion(guild, regionName, role).pipe(
       map((mappedAlias) => ({
         ...mappedAlias,
         role: guild.roles.get(mappedAlias.roleId),

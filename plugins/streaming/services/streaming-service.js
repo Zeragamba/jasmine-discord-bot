@@ -11,12 +11,14 @@ function logPrefix(member) {
 }
 
 class StreamingService extends Service {
-  onListen() {
-    this.pluginService = this.chaos.getService('core', 'PluginService');
+  constructor(chaos) {
+    super(chaos);
 
-    this.chaos.streams.presenceUpdate$.pipe(
-      flatMap(([oldMember, newMember]) => this.handlePresenceUpdate(oldMember, newMember)),
-    ).subscribe();
+    this.chaos.on('chaos.listen', () => {
+      this.pluginService = this.chaos.getService('core', 'PluginService');
+    });
+
+    this.chaos.on("presenceUpdate", ([oldMember, newMember]) => this.handlePresenceUpdate(oldMember, newMember));
   }
 
   handlePresenceUpdate(oldMember, newMember) {

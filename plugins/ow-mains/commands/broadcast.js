@@ -26,22 +26,19 @@ module.exports = {
     },
   ],
 
-  onListen() {
-    this.broadcastService = this.chaos.getService('owMains', 'broadcastService');
-  },
-
   run(context, response) {
-    let guild = context.guild;
-    let broadcastType = context.args.type.toLowerCase();
-    let broadcastBody = context.args.message + `\n*- ${context.member.displayName}*`;
+    const broadcastService = this.chaos.getService('owMains', 'broadcastService');
+    const guild = context.guild;
+    const broadcastType = context.args.type.toLowerCase();
+    const broadcastBody = context.args.message + `\n*- ${context.member.displayName}*`;
 
     return of('').pipe(
-      tap(() => this.broadcastService.checkBroadcastAllowed(guild)),
-      tap(() => this.broadcastService.checkValidBroadcast(broadcastType, broadcastBody)),
-      flatMap(() => this.broadcastService.confirmBroadcast(context, broadcastType, broadcastBody)),
+      tap(() => broadcastService.checkBroadcastAllowed(guild)),
+      tap(() => broadcastService.checkValidBroadcast(broadcastType, broadcastBody)),
+      flatMap(() => broadcastService.confirmBroadcast(context, broadcastType, broadcastBody)),
       filter(Boolean),
       flatMap(() => response.send({content: `Ok, let me broadcast that then.`})),
-      flatMap(() => this.broadcastService.broadcastMessage(broadcastType, broadcastBody)),
+      flatMap(() => broadcastService.broadcastMessage(broadcastType, broadcastBody)),
       count(() => true),
       flatMap((sentMessages) => response.send({content: `Done. Broadcasted to ${sentMessages} servers`})),
       catchError((error) => {

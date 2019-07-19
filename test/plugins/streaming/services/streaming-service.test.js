@@ -1,16 +1,16 @@
 const {of, from, throwError, Subject, EMPTY} = require('rxjs');
 const {tap, toArray, catchError} = require('rxjs/operators');
-
 const ChaosDataMemory = require('chaos-data-memory');
 const Collection = require('discord.js').Collection;
 const DiscordAPIError = require('discord.js').DiscordAPIError;
+const {MockGuild, MockUser, MockGuildMember} = require("chaos-core").test.discordMocks;
 
 const StreamingService = require('../../../../plugins/streaming/services/streaming-service');
 const DATAKEYS = require('../../../../plugins/streaming/lib/datakeys');
 const {RoleNotFoundError} = require('../../../../plugins/streaming/lib/errors');
 
 describe('StreamingService', function () {
-  beforeEach(function () {
+  beforeEach(function (done) {
     this.dataSource = new ChaosDataMemory();
     this.presenceUpdate$ = new Subject();
 
@@ -20,62 +20,35 @@ describe('StreamingService', function () {
     };
 
     this.streamingService = new StreamingService(this.jasmine);
+    this.jasmine.emit('chaos.listen')
+      .subscribe(() => done(), (error) => done(error));
   });
 
   afterEach(function () {
     this.presenceUpdate$.complete();
   });
 
-  describe('#onListen', function () {
-    beforeEach(function () {
-      this.pluginService = {};
-      this.jasmine.stubService('core', 'PluginService', this.pluginService);
-    });
-
-    it('gets PluginService from Nix', function () {
-      this.streamingService.onListen();
-      expect(this.streamingService.pluginService).to.eq(this.pluginService);
-    });
-  });
-
-  describe('#onListen', function () {
-    it('subscribes to the presence update event stream', function () {
-      this.streamingService.onListen();
-      expect(this.presenceUpdate$.observers.length).to.eq(1);
-    });
-  });
-
   describe('on presence update', function () {
     beforeEach(function () {
-      this.streamingService.onListen();
-
-      this.oldMember = {name: 'oldMember'};
-      this.newMember = {name: 'newMember'};
+      this.guild = new MockGuild({client: this.jasmine.discord});
+      this.user = new MockUser({client: this.jasmine.discord});
+      this.oldMember = new MockGuildMember({guild: this.guild, user: this.user});
+      this.newMember = new MockGuildMember({guild: this.guild, user: this.user});
       this.eventPayload = [this.oldMember, this.newMember];
 
       sinon.stub(this.streamingService, 'handlePresenceUpdate').returns(of(''));
-
-      this.triggerEvent = (done, callback) => {
-        this.presenceUpdate$.subscribe(() => {}, (error) => done(error), () => {
-          callback();
-          done();
-        });
-
-        this.presenceUpdate$.next(this.eventPayload);
-        this.presenceUpdate$.complete();
-      };
     });
 
     it('calls #handlePresenceUpdate', function (done) {
-      this.triggerEvent(done, () => {
-        expect(this.streamingService.handlePresenceUpdate).to.have.been.called;
-      });
+      this.jasmine.emit('presenceUpdate', this.eventPayload).pipe(
+        tap(() => expect(this.streamingService.handlePresenceUpdate).to.have.been.called),
+      ).subscribe(() => done(), (error) => done(error));
     });
 
     it('passes #handlePresenceUpdate oldMember and newMember', function (done) {
-      this.triggerEvent(done, () => {
-        expect(this.streamingService.handlePresenceUpdate).to.have.been.calledWith(this.oldMember, this.newMember);
-      });
+      this.jasmine.emit('presenceUpdate', this.eventPayload).pipe(
+        tap(() => expect(this.streamingService.handlePresenceUpdate).to.have.been.calledWith(this.oldMember, this.newMember)),
+      ).subscribe(() => done(), (error) => done(error));
     });
   });
 

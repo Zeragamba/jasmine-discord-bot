@@ -13,15 +13,12 @@ module.exports = {
     },
   ],
 
-  onListen() {
-    this.owmnService = this.chaos.getService('owMains', 'OwmnService');
-  },
-
   run(context) {
-    let guild = context.guild;
-    let channelString = context.inputs.channel;
+    const owmnService = this.chaos.getService('owMains', 'OwmnService');
+    const guild = context.guild;
+    const channelString = context.inputs.channel;
 
-    if (!this.owmnService.isOwmnGuild(guild)) {
+    if (!owmnService.isOwmnGuild(guild)) {
       return {content: "NetModLog can only be enabled on the OWMN server."};
     }
 

@@ -5,16 +5,13 @@ module.exports = {
   name: 'viewRegions',
   description: 'Displays a list of all configured regions, and their aliases',
 
-  onListen() {
-    this.regionService = this.chaos.getService('ow-info', 'regionService');
-  },
-
   run(context) {
+    const regionService = this.chaos.getService('ow-info', 'regionService');
     let guild = context.guild;
 
     return zip(
-      this.regionService.getRegions(guild),
-      this.regionService.getAliases(guild),
+      regionService.getRegions(guild),
+      regionService.getAliases(guild),
     ).pipe(
       map(([regions, aliases]) => {
         let data = {

@@ -6,18 +6,13 @@ module.exports = {
   name: 'broadcastSettings',
   description: `Views current broadcast settings`,
 
-  inputs: [],
-
-  onListen() {
-    this.broadcastService = this.chaos.getService('owMains', 'BroadcastService');
-  },
-
   run(context) {
+    const broadcastService = this.chaos.getService('owMains', 'BroadcastService');
     let guild = context.guild;
 
-    return from(this.broadcastService.broadcastTypes).pipe(
+    return from(broadcastService.broadcastTypes).pipe(
       flatMap((type) => {
-        return this.broadcastService.getBroadcastChannel(type, guild).pipe(
+        return broadcastService.getBroadcastChannel(type, guild).pipe(
           map((channel) => channel.toString()),
           map((channel) => [type, channel]),
           defaultIfEmpty([type, "*none*"]),

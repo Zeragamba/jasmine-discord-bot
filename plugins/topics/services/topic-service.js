@@ -7,10 +7,8 @@ class TopicService extends Service {
     super(chaos);
 
     this.watchedChannels = {};
-  }
 
-  onListen() {
-    this.chaos.streams.message$.pipe(
+    this.chaos.on("message", (message) => of(message).pipe(
       filter((message) => !message.system),
       filter((message) => this.watchedChannels[message.channel.id]),
       tap((message) => delete this.watchedChannels[message.channel.id]),
@@ -20,9 +18,7 @@ class TopicService extends Service {
         this.chaos.logger.error(error);
         return of('');
       }),
-    ).subscribe();
-
-    return of(true);
+    ));
   }
 
   watchChannel(channel) {

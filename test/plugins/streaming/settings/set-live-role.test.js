@@ -27,8 +27,6 @@ describe('!config streaming setLiveRole', function () {
 
   describe('#run', function () {
     beforeEach(function () {
-      this.setLiveRole.onListen();
-
       this.guild = {
         id: 'guild-00001',
         roles: new Collection(),

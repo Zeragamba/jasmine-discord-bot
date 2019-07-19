@@ -20,15 +20,12 @@ module.exports = {
     },
   ],
 
-  onListen() {
-    this.regionService = this.chaos.getService('ow-info', 'regionService');
-  },
-
   run(context) {
-    let guild = context.guild;
+    const regionService = this.chaos.getService('ow-info', 'regionService');
+    const guild = context.guild;
 
-    let aliasName = context.inputs.aliasName;
-    let regionName = context.inputs.regionName;
+    const aliasName = context.inputs.aliasName;
+    const regionName = context.inputs.regionName;
 
     if (!aliasName) {
       return of({
@@ -44,7 +41,7 @@ module.exports = {
       });
     }
 
-    return this.regionService.mapAlias(guild, aliasName, regionName).pipe(
+    return regionService.mapAlias(guild, aliasName, regionName).pipe(
       map((mappedAlias) => ({
         status: 200,
         content: `Added alias ${mappedAlias.name} for ${mappedAlias.region}`,

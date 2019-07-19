@@ -6,16 +6,13 @@ module.exports = {
   name: 'viewSettings',
   description: `View the current settings for the streaming module`,
 
-  onListen() {
-    this.streamingService = this.chaos.getService('streaming', 'streamingService');
-  },
-
   run(context) {
-    let guild = context.guild;
+    const streamingService = this.chaos.getService('streaming', 'streamingService');
+    const guild = context.guild;
 
     return zip(
-      this.streamingService.getLiveRole(guild),
-      this.streamingService.getStreamerRole(guild),
+      streamingService.getLiveRole(guild),
+      streamingService.getStreamerRole(guild),
     ).pipe(
       map(([liveRole, streamerRole]) => {
         let embed = new Discord.RichEmbed();
