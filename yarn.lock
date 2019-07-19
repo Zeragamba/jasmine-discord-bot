@@ -383,9 +383,10 @@ chaos-data-disk@^4.0.0-dev:
   version "1.0.1-rx6"
   resolved "https://codeload.github.com/chaos-core/chaos-data-memory/tar.gz/50b82b8fdbc81933c15c63aa296b34e88d998f85"
 
-"chaos-plugin-auto-role@github:chaos-core/chaos-plugin-auto-role#RxJs-6":
-  version "2.0.0-Rx6"
-  resolved "https://codeload.github.com/chaos-core/chaos-plugin-auto-role/tar.gz/ce2f47b3f9ebdd04751cd1d6ccd0c1533d26de08"
+chaos-plugin-auto-role@^4.0.2-dev:
+  version "4.0.2-dev"
+  resolved "https://registry.yarnpkg.com/chaos-plugin-auto-role/-/chaos-plugin-auto-role-4.0.2-dev.tgz#9a3b384ef4103036ac1048d677b1cb83122db2c8"
+  integrity sha512-tblpMVAlDTloOdSbuquztTRhPrPbF61K8CG/ZlapHLZb0sfwSnZXlwTfWIxgI57wWA764dt+9/0aQf4bszDK2w==
 
 chardet@^0.4.0:
   version "0.4.2"

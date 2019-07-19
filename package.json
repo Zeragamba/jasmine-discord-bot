@@ -41,7 +41,7 @@
   "dependencies": {
     "chaos-core": "^4.0.0-dev",
     "chaos-data-disk": "^4.0.0-dev",
-    "chaos-plugin-auto-role": "github:chaos-core/chaos-plugin-auto-role#RxJs-6",
+    "chaos-plugin-auto-role": "^4.0.2-dev",
     "discord.js": "11.4.2",
     "git-rev": "^0.2.1",
     "glob": "^7.1.3",
