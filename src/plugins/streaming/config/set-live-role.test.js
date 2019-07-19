@@ -3,7 +3,7 @@ const {tap, toArray} = require('rxjs/operators');
 const Collection = require('discord.js').Collection;
 const ConfigAction = require('chaos-core').ConfigAction;
 
-const StreamingService = require('../../../../plugins/streaming/services/streaming-service');
+const StreamingService = require('../services/streaming-service');
 
 describe('!config streaming setLiveRole', function () {
   beforeEach(function () {
@@ -12,7 +12,7 @@ describe('!config streaming setLiveRole', function () {
     this.streamingService = sinon.createStubInstance(StreamingService);
     this.jasmine.stubService('streaming', 'StreamingService', this.streamingService);
 
-    this.setLiveRole = new ConfigAction(this.jasmine, require('../../../../plugins/streaming/config/set-live-role'));
+    this.setLiveRole = new ConfigAction(this.jasmine, require('./set-live-role'));
   });
 
   describe('properties', function () {

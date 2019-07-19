@@ -9,9 +9,9 @@
     "url": ""
   },
   "files": [
-    "lib"
+    "src/lib"
   ],
-  "main": "lib/index.js",
+  "main": "src/lib/index.js",
   "keywords": [
     ""
   ],

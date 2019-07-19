@@ -3,7 +3,7 @@ const {tap} = require('rxjs/operators');
 const Collection = require('discord.js').Collection;
 const ConfigAction = require('chaos-core').ConfigAction;
 
-const StreamingService = require('../../../../plugins/streaming/services/streaming-service');
+const StreamingService = require('../services/streaming-service');
 
 describe('!config streaming viewSettings', function () {
   beforeEach(function () {
@@ -12,7 +12,7 @@ describe('!config streaming viewSettings', function () {
     this.streamingService = new StreamingService(this.jasmine);
     this.jasmine.stubService('streaming', 'StreamingService', this.streamingService);
 
-    this.viewSettings = new ConfigAction(this.jasmine, require('../../../../plugins/streaming/config/view-settings'));
+    this.viewSettings = new ConfigAction(this.jasmine, require('./view-settings'));
   });
 
   describe('properties', function () {

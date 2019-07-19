@@ -1,6 +1,6 @@
 const {of, from} = require('rxjs');
 const {flatMap, tap, map, reduce, first, filter} = require('rxjs/operators');
-const Service = require('../../chaos-core/chaos-core').Service;
+const Service = require('chaos-core').Service;
 
 const {
   RuleNotFoundError,

@@ -19,11 +19,11 @@ const defaultConfig = {
 
   plugins: [
     "auto-role",
-    require('./plugins/mod-tools'),
-    require('./plugins/ow-info'),
-    require('./plugins/ow-mains'),
-    require('./plugins/streaming'),
-    require('./plugins/topics'),
+    require('./src/plugins/mod-tools'),
+    require('./src/plugins/ow-info'),
+    require('./src/plugins/ow-mains'),
+    require('./src/plugins/streaming'),
+    require('./src/plugins/topics'),
   ],
 
   broadcastTokens: {},

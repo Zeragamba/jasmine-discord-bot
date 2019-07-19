@@ -1,6 +1,6 @@
 const {of} = require('rxjs');
 const {flatMap, tap, catchError, filter} = require('rxjs/operators');
-const Service = require("../../chaos-core/chaos-core").Service;
+const Service = require("chaos-core").Service;
 
 class TopicService extends Service {
   constructor(chaos) {

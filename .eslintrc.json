@@ -11,7 +11,8 @@
   ],
   "globals": {
     "expect": "readonly",
-    "sinon": "readonly"
+    "sinon": "readonly",
+    "stubJasmine": "readonly"
   },
   "env": {
     "node": true,

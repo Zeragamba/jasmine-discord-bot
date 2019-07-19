@@ -1,7 +1,7 @@
 const {of, from, throwError, EMPTY, retryWhen, range, zip, timer} = require('rxjs');
 const {flatMap, tap, map, defaultIfEmpty, catchError, filter, mapTo} = require('rxjs/operators');
 const Discord = require('discord.js');
-const Service = require('../../chaos-core/chaos-core').Service;
+const Service = require('chaos-core').Service;
 
 const AuditLogActions = Discord.GuildAuditLogs.Actions;
 

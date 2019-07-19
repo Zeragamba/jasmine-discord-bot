@@ -1,6 +1,6 @@
 const {of, iif, throwError, merge, EMPTY} = require('rxjs');
 const {flatMap, tap, map, defaultIfEmpty, catchError, filter, every} = require('rxjs/operators');
-const Service = require('../../chaos-core/chaos-core').Service;
+const Service = require('chaos-core').Service;
 const DiscordAPIError = require('discord.js').DiscordAPIError;
 
 const DATAKEYS = require('../lib/datakeys');

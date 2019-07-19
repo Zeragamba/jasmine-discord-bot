@@ -1,10 +1,8 @@
 const {of, throwError} = require('rxjs');
 const {flatMap, tap, map} = require('rxjs/operators');
+const {MockMessage} = require("chaos-core").test.discordMocks;
 
-const {MockMessage} = require('../mocks/discord-mocks');
-const flatAwait = require('../support/operators.js');
-
-const platforms = require('./../../plugins/ow-info/data/platforms');
+const platforms = require('../data/platforms');
 
 describe('Feature: !platform', function () {
   beforeEach(function () {
@@ -157,26 +155,16 @@ describe('Feature: !platform', function () {
     });
 
     it('fetches the member and works normally', function (done) {
-      this.listen().pipe(
-        flatAwait((resolve) => {
-          const original = this.message.reply;
-          this.message.reply = sinon.fake(() => {
-            resolve('');
-            return original(arguments);
-          });
-          this.jasmine.discord.emit('message', this.message);
-        }),
-        tap(() => {
-          expect(this.message.guild.fetchMember).to.have.been.calledWith(
-            this.message.author,
-          );
-          expect(this.message.reply).to.have.been.calledWith(
-            `I've updated your platform to PC`,
-          );
-          expect(this.member.setNickname).to.have.been.calledWith(
-            `TestUser [PC]`,
-          );
-        }),
+      this.jasmine.testCmdMessage(this.message).pipe(
+        tap(() => expect(this.message.guild.fetchMember).to.have.been.calledWith(
+          this.message.author,
+        )),
+        tap(() => expect(this.message.reply).to.have.been.calledWith(
+          `I've updated your platform to PC`,
+        )),
+        tap(() => expect(this.member.setNickname).to.have.been.calledWith(
+          `TestUser [PC]`,
+        )),
       ).subscribe(() => done(), (error) => done(error));
     });
   });
