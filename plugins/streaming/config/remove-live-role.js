@@ -4,14 +4,11 @@ module.exports = {
   name: 'removeLiveRole',
   description: `Stop assigning a role when a user goes live`,
 
-  onListen() {
-    this.streamingService = this.chaos.getService('streaming', 'StreamingService');
-  },
-
   run(context) {
-    let guild = context.guild;
+    const streamingService = this.chaos.getService('streaming', 'StreamingService');
+    const guild = context.guild;
 
-    return this.streamingService.removeLiveRole(guild).pipe(
+    return streamingService.removeLiveRole(guild).pipe(
       map(() => ({
         status: 200,
         content: `Live streamers will no longer receive a role`,

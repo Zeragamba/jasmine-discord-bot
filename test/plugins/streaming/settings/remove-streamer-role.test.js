@@ -14,8 +14,7 @@ describe('!config streaming removeStreamerRole', function () {
     this.streamingService = sinon.createStubInstance(StreamingService);
     this.jasmine.stubService('streaming', 'StreamingService', this.streamingService);
 
-    this.removeStreamerRole = new ConfigAction(require('../../../../plugins/streaming/config/remove-streamer-role'));
-    this.removeStreamerRole.chaos = this.jasmine;
+    this.removeStreamerRole = new ConfigAction(this.jasmine, require('../../../../plugins/streaming/config/remove-streamer-role'));
   });
 
   describe('properties', function () {
@@ -25,13 +24,6 @@ describe('!config streaming removeStreamerRole', function () {
 
     it('has no inputs', function () {
       expect(this.removeStreamerRole.inputs).to.be.empty;
-    });
-  });
-
-  describe('#onListen', function () {
-    it('gets PluginService from Nix', function () {
-      this.removeStreamerRole.onListen();
-      expect(this.removeStreamerRole.streamingService).to.eq(this.streamingService);
     });
   });
 

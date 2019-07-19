@@ -11,8 +11,8 @@ const {
 } = require('../utility');
 
 class AutoBanService extends Service {
-  constructor(props) {
-    super(props);
+  constructor(chaos) {
+    super(chaos);
 
     this.rules = [
       {
@@ -34,30 +34,28 @@ class AutoBanService extends Service {
         reason: "Username contains or was changed to a Twitch link",
       },
     ];
-  }
 
-  onListen() {
-    this.chaos.streams.guildMemberAdd$.pipe(
-      flatMap((member) => this.handleGuildMemberAdd(member).pipe(
+    this.chaos.on('guildMemberAdd', (member) => {
+      return this.handleGuildMemberAdd(member).pipe(
         this.chaos.catchError([
           {name: "Service", value: "AutoBanService"},
           {name: "Hook", value: "guildMemberAdd$"},
           {name: "Member", value: member.toString()},
           {name: "Guild", value: member.guild.toString()},
         ]),
-      )),
-    ).subscribe();
+      );
+    });
 
-    this.chaos.streams.guildMemberUpdate$.pipe(
-      flatMap(([oldMember, newMember]) => this.handleGuildMemberUpdate(oldMember, newMember).pipe(
+    this.chaos.on('guildMemberUpdate', ([oldMember, newMember]) => {
+      return this.handleGuildMemberUpdate(oldMember, newMember).pipe(
         this.chaos.catchError([
           {name: "Service", value: "AutoBanService"},
           {name: "Hook", value: "guildMemberUpdate$"},
           {name: "Member", value: newMember.toString()},
           {name: "Guild", value: newMember.guild.toString()},
         ]),
-      )),
-    ).subscribe();
+      );
+    });
   }
 
   handleGuildMemberAdd(member) {

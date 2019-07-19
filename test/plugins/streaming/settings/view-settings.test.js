@@ -12,8 +12,7 @@ describe('!config streaming viewSettings', function () {
     this.streamingService = new StreamingService(this.jasmine);
     this.jasmine.stubService('streaming', 'StreamingService', this.streamingService);
 
-    this.viewSettings = new ConfigAction(require('../../../../plugins/streaming/config/view-settings'));
-    this.viewSettings.chaos = this.jasmine;
+    this.viewSettings = new ConfigAction(this.jasmine, require('../../../../plugins/streaming/config/view-settings'));
   });
 
   describe('properties', function () {
@@ -23,13 +22,6 @@ describe('!config streaming viewSettings', function () {
 
     it('has no inputs', function () {
       expect(this.viewSettings.inputs).to.be.empty;
-    });
-  });
-
-  describe('#onListen', function () {
-    it('gets PluginService from Nix', function () {
-      this.viewSettings.onListen();
-      expect(this.viewSettings.streamingService).to.eq(this.streamingService);
     });
   });
 

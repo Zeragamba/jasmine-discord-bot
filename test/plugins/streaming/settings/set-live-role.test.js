@@ -12,8 +12,7 @@ describe('!config streaming setLiveRole', function () {
     this.streamingService = sinon.createStubInstance(StreamingService);
     this.jasmine.stubService('streaming', 'StreamingService', this.streamingService);
 
-    this.setLiveRole = new ConfigAction(require('../../../../plugins/streaming/config/set-live-role'));
-    this.setLiveRole.chaos = this.jasmine;
+    this.setLiveRole = new ConfigAction(this.jasmine, require('../../../../plugins/streaming/config/set-live-role'));
   });
 
   describe('properties', function () {
@@ -23,13 +22,6 @@ describe('!config streaming setLiveRole', function () {
 
     it('has a required rule input', function () {
       expect(this.setLiveRole.inputs).to.containSubset([{name: 'role', required: true}]);
-    });
-  });
-
-  describe('#onListen', function () {
-    it('gets PluginService from Nix', function () {
-      this.setLiveRole.onListen();
-      expect(this.setLiveRole.streamingService).to.eq(this.streamingService);
     });
   });
 

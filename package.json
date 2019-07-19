@@ -39,8 +39,8 @@
   "repository": "https://github.com/SpyMaster356/jasmine-discord-bot",
   "license": "MIT",
   "dependencies": {
-    "chaos-core": "github:chaos-core/chaos-core#RxJs-6",
-    "chaos-data-disk": "github:chaos-core/chaos-data-disk#RxJs-6",
+    "chaos-core": "^4.0.0-dev",
+    "chaos-data-disk": "^4.0.0-dev",
     "chaos-plugin-auto-role": "github:chaos-core/chaos-plugin-auto-role#RxJs-6",
     "discord.js": "11.4.2",
     "git-rev": "^0.2.1",

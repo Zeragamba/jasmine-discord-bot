@@ -21,7 +21,7 @@ describe('Feature: !region', function () {
       commandService.handleCmdError = (error) => throwError(error);
 
       return of('').pipe(
-        flatMap(() => this.jasmine.onJoinGuild(this.message.guild)),
+        flatMap(() => this.jasmine.emit("guildCreate", this.message.guild)),
         flatMap(() => pluginService.enablePlugin(this.message.guild.id, 'ow-info')),
       );
     };

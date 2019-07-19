@@ -13,8 +13,7 @@ describe('!config streaming removeLiveRole', function () {
     this.streamingService = sinon.createStubInstance(StreamingService);
     this.jasmine.stubService('streaming', 'StreamingService', this.streamingService);
 
-    this.removeLiveRole = new ConfigAction(require('../../../../plugins/streaming/config/remove-live-role'));
-    this.removeLiveRole.chaos = this.jasmine;
+    this.removeLiveRole = new ConfigAction(this.jasmine, require('../../../../plugins/streaming/config/remove-live-role'));
   });
 
   describe('properties', function () {
@@ -27,17 +26,8 @@ describe('!config streaming removeLiveRole', function () {
     });
   });
 
-  describe('#onListen', function () {
-    it('gets PluginService from Nix', function () {
-      this.removeLiveRole.onListen();
-      expect(this.removeLiveRole.streamingService).to.eq(this.streamingService);
-    });
-  });
-
   describe('#run', function () {
     beforeEach(function () {
-      this.removeLiveRole.onListen();
-
       this.guild = {
         id: 'guild-00001',
         roles: new Collection(),

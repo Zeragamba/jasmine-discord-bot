@@ -14,7 +14,13 @@ const {
 const defaultRegions = require('../data/regions');
 
 class RegionService extends Service {
-  onJoinGuild(guild) {
+  constructor(chaos) {
+    super(chaos);
+
+    this.chaos.on('guildCreate', (guild) => this.onGuildCreate(guild));
+  }
+
+  onGuildCreate(guild) {
     let mapRoles$ = this.getRegions(guild).pipe(
       filter((roles) => roles === null),
       flatMap(() => this.setRegions(guild, this.mapDefaultRoles(guild))),
@@ -57,7 +63,9 @@ class RegionService extends Service {
   }
 
   getRegions(guild) {
-    return this.chaos.getGuildData(guild.id, DATAKEYS.REGION_REGIONS);
+    return this.chaos.getGuildData(guild.id, DATAKEYS.REGION_REGIONS).pipe(
+      map((regions) => regions || {}),
+    );
   }
 
   setRegions(guild, roles) {
@@ -65,7 +73,9 @@ class RegionService extends Service {
   }
 
   getAliases(guild) {
-    return this.chaos.getGuildData(guild.id, DATAKEYS.REGION_ALIASES);
+    return this.chaos.getGuildData(guild.id, DATAKEYS.REGION_ALIASES).pipe(
+      map((aliases) => aliases || {}),
+    );
   }
 
   setAliases(guild, aliases) {

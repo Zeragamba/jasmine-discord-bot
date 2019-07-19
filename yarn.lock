@@ -367,15 +367,17 @@ chalk@^2.0.0, chalk@^2.1.0, chalk@^2.4.1:
     escape-string-regexp "^1.0.5"
     supports-color "^5.3.0"
 
-"chaos-core@github:chaos-core/chaos-core#RxJs-6":
-  version "3.0.6-rx6"
-  resolved "https://codeload.github.com/chaos-core/chaos-core/tar.gz/d01d8ad4049a248522efc84425ddf488ee5935ab"
+chaos-core@^4.0.0-dev:
+  version "4.0.0-dev"
+  resolved "https://registry.yarnpkg.com/chaos-core/-/chaos-core-4.0.0-dev.tgz#04d90dad13b6fcba398cbe413967666712ab0686"
+  integrity sha512-GpHL7ToPLX5bYD/zhnpsjhCd4sGmg1swiTAhbfqArNMD1O5hqyk/FETpnW8CUB6HEya2381aeQ3OwOVhShzYEg==
   dependencies:
     winston "^3.0.0"
 
-"chaos-data-disk@github:chaos-core/chaos-data-disk#RxJs-6":
-  version "1.0.0-Rx6"
-  resolved "https://codeload.github.com/chaos-core/chaos-data-disk/tar.gz/f9f89b4b845f356c6682eb16a0540471496be008"
+chaos-data-disk@^4.0.0-dev:
+  version "4.0.0-dev"
+  resolved "https://registry.yarnpkg.com/chaos-data-disk/-/chaos-data-disk-4.0.0-dev.tgz#0566444cc2feb2a68ec9e431d677a8ab999ef6d9"
+  integrity sha512-ZkB7jsMYseEPT8FqgamE7/MZl7jBHvF4lhAKgbUsUKbKd7nCdDVshjkkWkjw/zhLTJiAx+yWmz6HoKsbrsRuZQ==
 
 "chaos-data-memory@github:chaos-core/chaos-data-memory#RxJs-6":
   version "1.0.1-rx6"
