@@ -1,6 +1,6 @@
 const {of, throwError} = require('rxjs');
-const {flatMap, tap, map} = require('rxjs/operators');
-const {MockMessage} = require('../../chaos-core/chaos-core').test.discordMocks;
+const {flatMap, tap} = require('rxjs/operators');
+const {MockMessage} = require('chaos-core').test.discordMocks;
 
 describe('Feature: !region', function () {
   beforeEach(function (done) {

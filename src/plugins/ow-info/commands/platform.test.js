@@ -1,32 +1,34 @@
 const {of, throwError} = require('rxjs');
-const {flatMap, tap, map} = require('rxjs/operators');
+const {flatMap, tap} = require('rxjs/operators');
 const {MockMessage} = require("chaos-core").test.discordMocks;
 
 const platforms = require('../data/platforms');
 
 describe('Feature: !platform', function () {
-  beforeEach(function () {
+  beforeEach(function (done) {
     this.jasmine = stubJasmine();
 
-    this.message = new MockMessage({
-      content: '!platform',
-    });
+    this.message = new MockMessage({client: this.jasmine.discord});
+    this.message.author.username = "TestUser";
 
-    this.listen = () => {
-      return this.jasmine.listen().pipe(
-        flatMap(() => {
-          let pluginService = this.jasmine.getService('core', 'PluginService');
-          let commandService = this.jasmine.getService('core', 'CommandService');
+    sinon.stub(this.message, "reply")
+      .callsFake((message) => Promise.resolve(message));
+    sinon.stub(this.message.member, "setNickname")
+      .callsFake((nickname) => Promise.resolve(nickname));
 
-          commandService.handleCmdError = (error) => throwError(error);
+    this.jasmine.listen().pipe(
+      flatMap(() => {
+        let pluginService = this.jasmine.getService('core', 'PluginService');
+        let commandService = this.jasmine.getService('core', 'CommandService');
 
-          return of('').pipe(
-            flatMap(() => this.jasmine.emit("guildCreate", this.message.guild)),
-            flatMap(() => pluginService.enablePlugin(this.message.guild.id, 'ow-info')),
-          );
-        }),
-      );
-    };
+        commandService.handleCmdError = (error) => throwError(error);
+
+        return of('').pipe(
+          flatMap(() => this.jasmine.emit("guildCreate", this.message.guild)),
+          flatMap(() => pluginService.enablePlugin(this.message.guild.id, 'ow-info')),
+        );
+      }),
+    ).subscribe(() => done(), (error) => done(error));
   });
 
   afterEach(function (done) {
@@ -44,9 +46,9 @@ describe('Feature: !platform', function () {
     });
 
     it('responds with an error message', function (done) {
-      this.listen().pipe(
-        map(() => this.jasmine.discord.emit('message', this.message)),
-        flatMap(() => this.jasmine.shutdown()),
+      sinon.spy(this.message.channel, "send");
+
+      this.jasmine.testCmdMessage(this.message).pipe(
         tap(() => expect(this.message.channel.send).to.have.been.calledWith(
           `I'm sorry, but I'm missing some information for that command:`,
         )),
@@ -61,26 +63,18 @@ describe('Feature: !platform', function () {
       });
 
       it(`responds with a success message`, function (done) {
-        this.listen().pipe(
-          map(() => this.jasmine.discord.emit('message', this.message)),
-          flatMap(() => this.jasmine.shutdown()),
-          tap(() => {
-            expect(this.message.reply).to.have.been.calledWith(
-              `I've updated your platform to ${name}`,
-            );
-          }),
+        this.jasmine.testCmdMessage(this.message).pipe(
+          tap(() => expect(this.message.reply).to.have.been.calledWith(
+            `I've updated your platform to ${name}`,
+          )),
         ).subscribe(() => done(), (error) => done(error));
       });
 
       it(`adds the tag [${tag}] to the username`, function (done) {
-        this.listen().pipe(
-          map(() => this.jasmine.discord.emit('message', this.message)),
-          flatMap(() => this.jasmine.shutdown()),
-          tap(() => {
-            expect(this.message.member.setNickname).to.have.been.calledWith(
-              `TestUser [${tag}]`,
-            );
-          }),
+        this.jasmine.testCmdMessage(this.message).pipe(
+          tap(() => expect(this.message.member.setNickname).to.have.been.calledWith(
+            `TestUser [${tag}]`,
+          )),
         ).subscribe(() => done(), (error) => done(error));
       });
 
@@ -91,14 +85,10 @@ describe('Feature: !platform', function () {
           });
 
           it(`sets the platform tag to [${tag}]`, function (done) {
-            this.listen().pipe(
-              map(() => this.jasmine.discord.emit('message', this.message)),
-              flatMap(() => this.jasmine.shutdown()),
-              tap(() => {
-                expect(this.message.member.setNickname).to.have.been.calledWith(
-                  `TestUser [${tag}]`,
-                );
-              }),
+            this.jasmine.testCmdMessage(this.message).pipe(
+              tap(() => expect(this.message.member.setNickname).to.have.been.calledWith(
+                `TestUser [${tag}]`,
+              )),
             ).subscribe(() => done(), (error) => done(error));
           });
         });
@@ -110,14 +100,10 @@ describe('Feature: !platform', function () {
         });
 
         it(`adds the tag [${tag}] to the nickname`, function (done) {
-          this.listen().pipe(
-            map(() => this.jasmine.discord.emit('message', this.message)),
-            flatMap(() => this.jasmine.shutdown()),
-            tap(() => {
-              expect(this.message.member.setNickname).to.have.been.calledWith(
-                `UserNickname [${tag}]`,
-              );
-            }),
+          this.jasmine.testCmdMessage(this.message).pipe(
+            tap(() => expect(this.message.member.setNickname).to.have.been.calledWith(
+              `UserNickname [${tag}]`,
+            )),
           ).subscribe(() => done(), (error) => done(error));
         });
       });
@@ -131,14 +117,10 @@ describe('Feature: !platform', function () {
     });
 
     it(`replaces the tag`, function (done) {
-      this.listen().pipe(
-        map(() => this.jasmine.discord.emit('message', this.message)),
-        flatMap(() => this.jasmine.shutdown()),
-        tap(() => {
-          expect(this.message.member.setNickname).to.have.been.calledWith(
-            `UserNickname [PC]`,
-          );
-        }),
+      this.jasmine.testCmdMessage(this.message).pipe(
+        tap(() => expect(this.message.member.setNickname).to.have.been.calledWith(
+          `UserNickname [PC]`,
+        )),
       ).subscribe(() => done(), (error) => done(error));
     });
   });
