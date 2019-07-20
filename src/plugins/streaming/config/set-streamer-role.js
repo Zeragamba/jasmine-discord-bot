@@ -1,7 +1,6 @@
+const {RoleNotFoundError} = require("chaos-core").errors;
 const {of} = require('rxjs');
-const {map} = require('rxjs/operators');
-
-const {findRole} = require("../../../lib/role-utilities");
+const {map, flatMap, catchError} = require('rxjs/operators');
 
 module.exports = {
   name: 'setStreamerRole',
@@ -15,6 +14,7 @@ module.exports = {
   ],
 
   run(context) {
+    const roleService = this.chaos.getService('core', 'RoleService');
     const streamingService = this.chaos.getService('streaming', 'StreamingService');
     let guild = context.guild;
 
@@ -26,19 +26,21 @@ module.exports = {
       });
     }
 
-    const role = findRole(guild, roleString);
-    if (!role) {
-      return of({
-        status: 400,
-        content: `The role '${roleString}' could not be found.`,
-      });
-    }
-
-    return streamingService.setStreamerRole(guild, role).pipe(
+    return of('').pipe(
+      flatMap(() => roleService.findRole(guild, roleString)),
+      flatMap((role) => streamingService.setStreamerRole(guild, role)),
       map((streamerRole) => ({
         status: 200,
         content: `I will now only give the live role to users with the ${streamerRole.name} role`,
       })),
+      catchError((error) => {
+        if (error instanceof RoleNotFoundError) {
+          return of({
+            status: 400,
+            content: `The role '${roleString}' could not be found.`,
+          });
+        }
+      }),
     );
   },
 };

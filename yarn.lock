@@ -367,10 +367,10 @@ chalk@^2.0.0, chalk@^2.1.0, chalk@^2.4.1:
     escape-string-regexp "^1.0.5"
     supports-color "^5.3.0"
 
-chaos-core@^4.0.0-dev:
-  version "4.0.0-dev"
-  resolved "https://registry.yarnpkg.com/chaos-core/-/chaos-core-4.0.0-dev.tgz#04d90dad13b6fcba398cbe413967666712ab0686"
-  integrity sha512-GpHL7ToPLX5bYD/zhnpsjhCd4sGmg1swiTAhbfqArNMD1O5hqyk/FETpnW8CUB6HEya2381aeQ3OwOVhShzYEg==
+chaos-core@^4.0.1-dev:
+  version "4.0.1-dev"
+  resolved "https://registry.yarnpkg.com/chaos-core/-/chaos-core-4.0.1-dev.tgz#12edceef75c07ff82c1ec680bce6205cf6d47dd7"
+  integrity sha512-kMHWL+KX9EFXlnooKPaCS+UegJGeghOro8oQSWbT91QruO8DVNdFYnox5uHaKz1eRf3wudjC0FlWE1Obcla24g==
   dependencies:
     winston "^3.0.0"
 

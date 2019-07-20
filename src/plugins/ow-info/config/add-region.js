@@ -2,7 +2,6 @@ const {of, throwError} = require('rxjs');
 const {map, catchError} = require('rxjs/operators');
 
 const {RegionNotFoundError} = require('../errors');
-const {findRole} = require("../../../lib/role-utilities");
 
 module.exports = {
   name: 'addRegion',
@@ -22,6 +21,7 @@ module.exports = {
   ],
 
   run(context) {
+    const roleService = this.chaos.getService('core', 'RoleService');
     const regionService = this.chaos.getService('ow-info', 'regionService');
     const guild = context.guild;
 
@@ -42,7 +42,7 @@ module.exports = {
       });
     }
 
-    let role = findRole(guild, roleString);
+    let role = roleService.findRole(guild, roleString);
     if (!role) {
       return of({
         status: 400,
