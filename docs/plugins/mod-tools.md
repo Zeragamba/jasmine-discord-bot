@@ -1,13 +1,21 @@
 # Mod Tools
 Provides commands to assist with server moderation.
 
+*Note: This module is disabled by default. Use `!config module enable modtools` to enable this module*
+
+- Permission Levels:
+    - Mod
+        - Grants access to `!ban`, `!unban`, `!warn`
+
 - [AutoBan](#autoban):
     - [Rules](#rules)
-- [Commands](#commands):
+    
+- Commands:
     - [!ban](#ban)
     - [!unban](#unban)
     - [!warn](#warn)
-- [Config Actions](#config-actions):
+    
+- Config Actions:
     - [disableAutoBan](#disableautoban)
     - [disableLog](#disablelog)
     - [enableAutoBan](#enableautoban)
@@ -17,16 +25,22 @@ Provides commands to assist with server moderation.
 
 ## Autoban
 
-This module also provides auto banning of undesirable users, such as users with discord invite as their name.
-
-By default, autobanning is enabled. To disable autobanning users:
-```text
-!config modtools disableAutoBan
-```
+This module provides support for auto banning of undesirable users, such as users with a discord invite as their name.
+By default, autobanning is enabled, but **no rules are enabled**. 
 
 To configure the rules around which users are autobanned:
 ```text
 !config modTools setAutoBanRule {rule} {enabled}
+```
+
+To view which rules are enabled, use:
+```text
+!config modTools listAutoBanRules
+```
+
+To disable autobanning users all together:
+```text
+!config modtools disableAutoBan
 ```
 
 ### Rules
@@ -41,8 +55,6 @@ The following rules are available:
     * enabled by default
 
 ## Commands
-
-This module has no commands
 
 ### ban
 ```text

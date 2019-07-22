@@ -25,9 +25,9 @@ The core plugin contains core Jasmine commands.
             - Lists all commands
     - **Permissions**
         - [grantRole](#grantrole)
-            - Grants a permission to a role
+            - Grants a Jasmine permission to a role
         - [grantUser](#grantuser)
-            - Grants a permission to an user
+            - Grants a Jasmine permission to an user
         - [listPerms](#listperms)
             - Lists all configured permissions
         - [revokeRole](#revokerole)
