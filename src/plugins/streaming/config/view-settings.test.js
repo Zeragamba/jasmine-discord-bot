@@ -1,52 +1,30 @@
 const {from} = require('rxjs');
 const {tap} = require('rxjs/operators');
-const Collection = require('discord.js').Collection;
-const ConfigAction = require('chaos-core').ConfigAction;
-
-const StreamingService = require('../services/streaming-service');
 
 describe('streaming: !config streaming viewSettings', function () {
   beforeEach(function () {
     this.jasmine = stubJasmine();
-
-    this.streamingService = new StreamingService(this.jasmine);
-    this.jasmine.stubService('streaming', 'StreamingService', this.streamingService);
-
-    this.viewSettings = new ConfigAction(this.jasmine, require('./view-settings'));
-  });
-
-  describe('properties', function () {
-    it('has the correct name', function () {
-      expect(this.viewSettings.name).to.eq('viewSettings');
+    this.test$ = this.jasmine.testConfigAction({
+      pluginName: 'streaming',
+      actionName: 'viewSettings',
     });
 
-    it('has no inputs', function () {
-      expect(this.viewSettings.inputs).to.be.empty;
-    });
+    this.streamingService = this.jasmine.getService('streaming', 'StreamingService');
   });
 
   describe('#run', function () {
-    beforeEach(function () {
-      this.guild = {
-        id: 'guild-00001',
-        roles: new Collection(),
-      };
-
-      this.context = {
-        inputs: {},
-        guild: this.guild,
-      };
-    });
-
     context('when no live role is set', function () {
       beforeEach(function () {
         sinon.stub(this.streamingService, 'getLiveRole').returns(from([undefined]));
       });
 
       it('Says the live role is not set', function (done) {
-        this.viewSettings.run(this.context).pipe(
+        this.test$.pipe(
           tap(({embed}) => expect(embed.fields).to.containSubset([
-            {name: 'Live Role:', value: '[Not set]'},
+            {
+              name: 'Live Role:',
+              value: '[Not set]',
+            },
           ])),
         ).subscribe(() => done(), (error) => done(error));
       });
@@ -59,7 +37,7 @@ describe('streaming: !config streaming viewSettings', function () {
       });
 
       it('Says the live role is not set', function (done) {
-        this.viewSettings.run(this.context).pipe(
+        this.test$.pipe(
           tap(({embed}) => expect(embed.fields).to.containSubset([
             {name: 'Live Role:', value: 'liveRole'},
           ])),
@@ -73,7 +51,7 @@ describe('streaming: !config streaming viewSettings', function () {
       });
 
       it('Says the live role is not set', function (done) {
-        this.viewSettings.run(this.context).pipe(
+        this.test$.pipe(
           tap(({embed}) => expect(embed.fields).to.containSubset([
             {name: 'Streamer Role:', value: '[Not set]'},
           ])),
@@ -88,7 +66,7 @@ describe('streaming: !config streaming viewSettings', function () {
       });
 
       it('Says the live role is not set', function (done) {
-        this.viewSettings.run(this.context).pipe(
+        this.test$.pipe(
           tap(({embed}) => expect(embed.fields).to.containSubset([
             {name: 'Streamer Role:', value: 'streamerRole'},
           ])),

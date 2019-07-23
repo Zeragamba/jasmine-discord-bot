@@ -16,11 +16,17 @@ function stubJasmine(config = {}) {
     dataSource: {type: 'memory'},
   };
 
-  return ChaosCore.test.stubChaosBot(new Jasmine({
+  const jasmine = ChaosCore.test.stubChaosBot(new Jasmine({
     ...localConfig,
     ...stubConfig,
     ...config,
   }));
+
+  jasmine.discord.user = {
+    setPresence: () => Promise.resolve(true),
+  };
+
+  return jasmine;
 }
 
 chai.use(sinonChai);
