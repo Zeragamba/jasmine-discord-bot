@@ -5,7 +5,7 @@ const ConfigAction = require('chaos-core').ConfigAction;
 
 const StreamingService = require('../services/streaming-service');
 
-describe('!config streaming viewSettings', function () {
+describe('streaming: !config streaming viewSettings', function () {
   beforeEach(function () {
     this.jasmine = stubJasmine();
 

@@ -4,7 +4,7 @@ const {MockMessage} = require("chaos-core").test.discordMocks;
 
 const platforms = require('../data/platforms');
 
-describe('Feature: !platform', function () {
+describe('ow-info: !platform', function () {
   beforeEach(function (done) {
     this.jasmine = stubJasmine();
 
@@ -40,7 +40,7 @@ describe('Feature: !platform', function () {
     }
   });
 
-  context('when the platform arg is missing', function () {
+  describe('!platform', function () {
     beforeEach(function () {
       this.message.content = `!platform`;
     });
@@ -56,98 +56,115 @@ describe('Feature: !platform', function () {
     });
   });
 
-  platforms.forEach(({name, tag, alias}) => {
-    context(`when the platform is ${name}`, function () {
+  describe('!platform {platform}', function () {
+    context(`when the platform is not valid`, function () {
       beforeEach(function () {
-        this.message.content = `!platform ${name}`;
+        this.message.content = `!platform null`;
       });
 
-      it(`responds with a success message`, function (done) {
+      it(`responds with an error message`, function (done) {
         this.jasmine.testCmdMessage(this.message).pipe(
           tap(() => expect(this.message.reply).to.have.been.calledWith(
-            `I've updated your platform to ${name}`,
+            `I'm sorry, but 'null' is not an available platform.`,
           )),
         ).subscribe(() => done(), (error) => done(error));
       });
+    });
 
-      it(`adds the tag [${tag}] to the username`, function (done) {
-        this.jasmine.testCmdMessage(this.message).pipe(
-          tap(() => expect(this.message.member.setNickname).to.have.been.calledWith(
-            `TestUser [${tag}]`,
-          )),
-        ).subscribe(() => done(), (error) => done(error));
-      });
-
-      alias.forEach((alias) => {
-        context(`when the platform is given as ${alias}`, function () {
-          beforeEach(function () {
-            this.message.content = `!platform ${alias}`;
-          });
-
-          it(`sets the platform tag to [${tag}]`, function (done) {
-            this.jasmine.testCmdMessage(this.message).pipe(
-              tap(() => expect(this.message.member.setNickname).to.have.been.calledWith(
-                `TestUser [${tag}]`,
-              )),
-            ).subscribe(() => done(), (error) => done(error));
-          });
-        });
-      });
-
-      context('when the user has a nickname', function () {
+    platforms.forEach(({name, tag, alias}) => {
+      context(`when the platform is "${name}"`, function () {
         beforeEach(function () {
-          this.message.member.nickname = 'UserNickname';
+          this.message.content = `!platform ${name}`;
         });
 
-        it(`adds the tag [${tag}] to the nickname`, function (done) {
+        it(`responds with a success message`, function (done) {
           this.jasmine.testCmdMessage(this.message).pipe(
-            tap(() => expect(this.message.member.setNickname).to.have.been.calledWith(
-              `UserNickname [${tag}]`,
+            tap(() => expect(this.message.reply).to.have.been.calledWith(
+              `I've updated your platform to ${name}`,
             )),
           ).subscribe(() => done(), (error) => done(error));
         });
+
+        it(`adds the tag [${tag}] to the user's nickname`, function (done) {
+          this.jasmine.testCmdMessage(this.message).pipe(
+            tap(() => expect(this.message.member.setNickname).to.have.been.calledWith(
+              `TestUser [${tag}]`,
+            )),
+          ).subscribe(() => done(), (error) => done(error));
+        });
+
+        alias.forEach((alias) => {
+          context(`when the platform is given as ${alias}`, function () {
+            beforeEach(function () {
+              this.message.content = `!platform ${alias}`;
+            });
+
+            it(`sets the platform tag to [${tag}]`, function (done) {
+              this.jasmine.testCmdMessage(this.message).pipe(
+                tap(() => expect(this.message.member.setNickname).to.have.been.calledWith(
+                  `TestUser [${tag}]`,
+                )),
+              ).subscribe(() => done(), (error) => done(error));
+            });
+          });
+        });
       });
     });
-  });
 
-  context('when the user has a tag', function () {
-    beforeEach(function () {
-      this.message.content = `!platform PC`;
-      this.message.member.nickname = 'UserNickname [NULL]';
-    });
-
-    it(`replaces the tag`, function (done) {
-      this.jasmine.testCmdMessage(this.message).pipe(
-        tap(() => expect(this.message.member.setNickname).to.have.been.calledWith(
-          `UserNickname [PC]`,
-        )),
-      ).subscribe(() => done(), (error) => done(error));
-    });
-  });
-
-  context('when the user was not cached by Discord.js', function () {
-    beforeEach(function () {
-      this.message.content = '!platform PC';
-
-      this.member = this.message.member;
-      this.message.guild.fetchMember = sinon.fake(() => {
-        return new Promise((resolve) => resolve(this.member));
+    context('when the user already has a tag', function () {
+      beforeEach(function () {
+        this.message.content = `!platform PC`;
+        this.message.member.nickname = 'UserNickname [NULL]';
       });
-      delete this.message.member;
+
+      it(`replaces the tag`, function (done) {
+        this.jasmine.testCmdMessage(this.message).pipe(
+          tap(() => expect(this.message.member.setNickname).to.have.been.calledWith(
+            `UserNickname [PC]`,
+          )),
+        ).subscribe(() => done(), (error) => done(error));
+      });
     });
 
-    it('fetches the member and works normally', function (done) {
-      this.jasmine.testCmdMessage(this.message).pipe(
-        tap(() => expect(this.message.guild.fetchMember).to.have.been.calledWith(
-          this.message.author,
-        )),
-        tap(() => expect(this.message.reply).to.have.been.calledWith(
-          `I've updated your platform to PC`,
-        )),
-        tap(() => expect(this.member.setNickname).to.have.been.calledWith(
-          `TestUser [PC]`,
-        )),
-      ).subscribe(() => done(), (error) => done(error));
+    context('when the user has a nickname', function () {
+      beforeEach(function () {
+        this.message.content = `!platform PC`;
+        this.message.member.nickname = 'UserNickname';
+      });
+
+      it(`updates the user's nickname`, function (done) {
+        this.jasmine.testCmdMessage(this.message).pipe(
+          tap(() => expect(this.message.member.setNickname).to.have.been.calledWith(
+            `UserNickname [PC]`,
+          )),
+        ).subscribe(() => done(), (error) => done(error));
+      });
+    });
+
+    context('when the user was not cached by Discord.js', function () {
+      beforeEach(function () {
+        this.message.content = '!platform PC';
+
+        this.member = this.message.member;
+        this.message.guild.fetchMember = sinon.fake(() => {
+          return new Promise((resolve) => resolve(this.member));
+        });
+        delete this.message.member;
+      });
+
+      it('fetches the member and works normally', function (done) {
+        this.jasmine.testCmdMessage(this.message).pipe(
+          tap(() => expect(this.message.guild.fetchMember).to.have.been.calledWith(
+            this.message.author,
+          )),
+          tap(() => expect(this.message.reply).to.have.been.calledWith(
+            `I've updated your platform to PC`,
+          )),
+          tap(() => expect(this.member.setNickname).to.have.been.calledWith(
+            `TestUser [PC]`,
+          )),
+        ).subscribe(() => done(), (error) => done(error));
+      });
     });
   });
 });

@@ -5,7 +5,7 @@ const ConfigAction = require('chaos-core').ConfigAction;
 
 const StreamingService = require('../services/streaming-service');
 
-describe('!config streaming setLiveRole', function () {
+describe('streaming: !config streaming setLiveRole', function () {
   beforeEach(function () {
     this.jasmine = stubJasmine();
 

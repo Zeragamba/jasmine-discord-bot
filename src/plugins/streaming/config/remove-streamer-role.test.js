@@ -6,7 +6,7 @@ const ConfigAction = require('chaos-core').ConfigAction;
 const StreamingService = require('../services/streaming-service');
 const {RoleNotFoundError} = require('../lib/errors');
 
-describe('!config streaming removeStreamerRole', function () {
+describe('streaming: !config streaming removeStreamerRole', function () {
   beforeEach(function () {
     this.role = {id: 'role-00001', name: 'testRole'};
     this.jasmine = stubJasmine();

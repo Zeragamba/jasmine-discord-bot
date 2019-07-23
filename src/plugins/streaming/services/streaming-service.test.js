@@ -9,7 +9,7 @@ const StreamingService = require('./streaming-service');
 const DATAKEYS = require('../lib/datakeys');
 const {RoleNotFoundError} = require('../lib/errors');
 
-describe('StreamingService', function () {
+describe('streaming: StreamingService', function () {
   beforeEach(function (done) {
     this.dataSource = new ChaosDataMemory();
     this.presenceUpdate$ = new Subject();
