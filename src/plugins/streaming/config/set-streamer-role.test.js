@@ -18,7 +18,7 @@ describe('streaming: !config streaming setStreamerRole', function () {
         this.test$.pipe(
           tap((response) => expect(response).to.containSubset({
             status: 400,
-            content: `A role to watch is required`,
+            content: `I'm sorry, but I'm missing some information for that command:`,
           })),
         ).subscribe(() => done(), (error) => done(error));
       });

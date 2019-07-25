@@ -16,15 +16,9 @@ module.exports = {
   run(context) {
     const roleService = this.chaos.getService('core', 'RoleService');
     const streamingService = this.chaos.getService('streaming', 'StreamingService');
-    let guild = context.guild;
 
+    const guild = context.guild;
     const roleString = context.args.role;
-    if (!roleString) {
-      return of({
-        status: 400,
-        content: `A role to watch is required`,
-      });
-    }
 
     return of('').pipe(
       flatMap(() => roleService.findRole(guild, roleString)),
