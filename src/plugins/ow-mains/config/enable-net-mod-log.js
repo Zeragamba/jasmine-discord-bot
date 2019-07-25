@@ -6,7 +6,7 @@ module.exports = {
   name: 'enableNetModLog',
   description: `Enable network mod log reporting to this server.`,
 
-  inputs: [
+  args: [
     {
       name: 'channel',
       required: true,
@@ -16,7 +16,7 @@ module.exports = {
   run(context) {
     const owmnService = this.chaos.getService('owMains', 'OwmnService');
     const guild = context.guild;
-    const channelString = context.inputs.channel;
+    const channelString = context.args.channel;
 
     if (!owmnService.isOwmnGuild(guild)) {
       return {content: "NetModLog can only be enabled on the OWMN server."};

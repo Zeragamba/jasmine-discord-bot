@@ -9,7 +9,7 @@ module.exports = {
   name: 'enableLog',
   description: 'Enable a log in a channel, such as the ModLog or the JoinLog',
 
-  inputs: [
+  args: [
     {
       name: 'type',
       description: `the log type to add. Valid types: ${VALID_LOG_TYPES_NAMES.join(',')}`,
@@ -26,8 +26,8 @@ module.exports = {
     let modLogService = context.chaos.getService('modTools', 'ModLogService');
 
     let guild = context.guild;
-    let logTypeName = context.inputs.type;
-    let channelString = context.inputs.channel;
+    let logTypeName = context.args.type;
+    let channelString = context.args.channel;
 
     let channel = guild.channels.find((c) => c.toString() === channelString || c.id.toString() === channelString);
     if (!channel) {

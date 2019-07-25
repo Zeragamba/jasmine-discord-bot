@@ -7,7 +7,7 @@ module.exports = {
   name: 'rmRegion',
   description: 'Removes an Overwatch region',
 
-  inputs: [
+  args: [
     {
       name: 'regionName',
       description: 'The name of the region to remove',
@@ -19,7 +19,7 @@ module.exports = {
     const regionService = this.chaos.getService('ow-info', 'regionService');
     const guild = context.guild;
 
-    const regionName = context.inputs.regionName;
+    const regionName = context.args.regionName;
 
     if (!regionName) {
       return of({

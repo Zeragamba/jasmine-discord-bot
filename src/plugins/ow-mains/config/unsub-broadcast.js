@@ -6,7 +6,7 @@ module.exports = {
   name: 'unsubBroadcast',
   description: `Unsubscribe from a type of broadcast.`,
 
-  inputs: [
+  args: [
     {
       name: 'type',
       required: true,
@@ -16,7 +16,7 @@ module.exports = {
   run(context) {
     const broadcastService = this.chaos.getService('owMains', 'BroadcastService');
     const guild = context.guild;
-    const broadcastType = context.inputs.type;
+    const broadcastType = context.args.type;
 
     if (!broadcastService.isValidType(broadcastType)) {
       return of({

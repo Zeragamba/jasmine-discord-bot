@@ -9,7 +9,7 @@ module.exports = {
   name: 'rmRegionAlias',
   description: 'removes an Overwatch region alias',
 
-  inputs: [
+  args: [
     {
       name: 'alias',
       description: 'The name of the alias to remove',
@@ -21,7 +21,7 @@ module.exports = {
     const regionService = this.chaos.getService('ow-info', 'regionService');
     const guild = context.guild;
 
-    const regionName = context.inputs.alias;
+    const regionName = context.args.alias;
 
     if (!regionName) {
       return of({

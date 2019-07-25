@@ -6,7 +6,7 @@ module.exports = {
   name: 'setLiveRole',
   description: `Set role to assign when a user goes live`,
 
-  inputs: [
+  args: [
     {
       name: 'role',
       required: true,
@@ -18,7 +18,7 @@ module.exports = {
     const streamingService = this.chaos.getService('streaming', 'streamingService');
     const guild = context.guild;
 
-    const roleString = context.inputs.role;
+    const roleString = context.args.role;
     if (!roleString) {
       return of({
         status: 400,

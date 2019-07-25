@@ -7,7 +7,7 @@ module.exports = {
   name: 'subBroadcast',
   description: `Subscribe to a type of broadcast in a channel.`,
 
-  inputs: [
+  args: [
     {
       name: 'type',
       required: true,
@@ -21,8 +21,8 @@ module.exports = {
   run(context) {
     const broadcastService = this.chaos.getService('owMains', 'BroadcastService');
     const guild = context.guild;
-    const broadcastType = context.inputs.type;
-    const channelString = context.inputs.channel;
+    const broadcastType = context.args.type;
+    const channelString = context.args.channel;
 
     if (!broadcastService.isValidType(broadcastType)) {
       return of({

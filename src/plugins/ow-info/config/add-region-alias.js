@@ -7,7 +7,7 @@ module.exports = {
   name: 'addRegionAlias',
   description: 'Adds an alias for a region',
 
-  inputs: [
+  args: [
     {
       name: 'aliasName',
       description: 'The name of alias',
@@ -24,8 +24,8 @@ module.exports = {
     const regionService = this.chaos.getService('ow-info', 'regionService');
     const guild = context.guild;
 
-    const aliasName = context.inputs.aliasName;
-    const regionName = context.inputs.regionName;
+    const aliasName = context.args.aliasName;
+    const regionName = context.args.regionName;
 
     if (!aliasName) {
       return of({

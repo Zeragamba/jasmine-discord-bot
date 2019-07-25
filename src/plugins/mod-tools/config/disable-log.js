@@ -8,7 +8,7 @@ module.exports = {
   name: 'disableLog',
   description: 'disable a log, such as the ModLog or the JoinLog',
 
-  inputs: [
+  args: [
     {
       name: 'type',
       description: `the log type to remove. Valid types: ${VALID_LOG_TYPES_NAMES.join(',')}`,
@@ -20,7 +20,7 @@ module.exports = {
     let modLogService = context.chaos.getService('modTools', 'ModLogService');
 
     let guild = context.guild;
-    let logTypeName = context.inputs.type;
+    let logTypeName = context.args.type;
 
     let logType = modLogService.getLogType(logTypeName);
     if (!logType) {

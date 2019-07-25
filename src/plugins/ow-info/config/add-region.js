@@ -7,7 +7,7 @@ module.exports = {
   name: 'addRegion',
   description: 'Adds an Overwatch region, and map it to a role',
 
-  inputs: [
+  args: [
     {
       name: 'regionName',
       description: 'The name of region to add',
@@ -25,8 +25,8 @@ module.exports = {
     const regionService = this.chaos.getService('ow-info', 'regionService');
     const guild = context.guild;
 
-    const regionName = context.inputs.regionName;
-    const roleString = context.inputs.role;
+    const regionName = context.args.regionName;
+    const roleString = context.args.role;
 
     if (!regionName) {
       return of({

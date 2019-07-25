@@ -10,7 +10,7 @@ module.exports = {
   name: 'setAutoBanRule',
   description: 'Enables or disables auto ban rules',
 
-  inputs: [
+  args: [
     {
       name: 'rule',
       description: `the rule to enable or disable`,
@@ -27,8 +27,8 @@ module.exports = {
     let autoBanService = context.chaos.getService('modTools', 'autoBanService');
     let guild = context.guild;
 
-    let rule = context.inputs.rule;
-    let enabled = context.inputs.enabled === "true";
+    let rule = context.args.rule;
+    let enabled = context.args.enabled === "true";
 
     return autoBanService.setAutoBanRule(guild, rule, enabled).pipe(
       map(([rule, enabled]) => ({

@@ -6,7 +6,7 @@ module.exports = {
   name: 'setStreamerRole',
   description: `Set a role to limit who can receive the live role`,
 
-  inputs: [
+  args: [
     {
       name: 'role',
       required: true,
@@ -18,7 +18,7 @@ module.exports = {
     const streamingService = this.chaos.getService('streaming', 'StreamingService');
     let guild = context.guild;
 
-    const roleString = context.inputs.role;
+    const roleString = context.args.role;
     if (!roleString) {
       return of({
         status: 400,
