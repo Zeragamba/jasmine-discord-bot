@@ -2,7 +2,17 @@ const {tap} = require('rxjs/operators');
 const ChaosCore = require('chaos-core');
 const Path = require('path');
 
-const packageJson = require('./package');
+const packageJson = require('../package');
+
+const plugins = [
+  "auto-role",
+  "user-roles",
+  require('./plugins/mod-tools'),
+  require('./plugins/ow-info'),
+  require('./plugins/ow-mains'),
+  require('./plugins/streaming'),
+  require('./plugins/topics'),
+];
 
 const defaultConfig = {
   ownerUserId: null,
@@ -17,15 +27,6 @@ const defaultConfig = {
     dataDir: Path.join(__dirname, 'data'),
   },
 
-  plugins: [
-    "auto-role",
-    require('./src/plugins/mod-tools'),
-    require('./src/plugins/ow-info'),
-    require('./src/plugins/ow-mains'),
-    require('./src/plugins/streaming'),
-    require('./src/plugins/topics'),
-  ],
-
   broadcastTokens: {},
   networkModLogToken: null,
 };
@@ -35,6 +36,7 @@ class Jasmine extends ChaosCore {
     super({
       ...defaultConfig,
       ...config,
+      plugins,
     });
 
     if (!this.config.owmnServerId) {

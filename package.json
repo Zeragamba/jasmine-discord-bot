@@ -42,6 +42,7 @@
     "chaos-core": "^4.0.3-dev",
     "chaos-data-disk": "^4.0.0-dev",
     "chaos-plugin-auto-role": "^4.0.2-dev",
+    "chaos-plugin-user-roles": "^1.0.0-dev",
     "discord.js": "^11.5.1",
     "git-rev": "^0.2.1",
     "glob": "^7.1.3",

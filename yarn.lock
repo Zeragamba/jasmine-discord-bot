@@ -388,6 +388,11 @@ chaos-plugin-auto-role@^4.0.2-dev:
   resolved "https://registry.yarnpkg.com/chaos-plugin-auto-role/-/chaos-plugin-auto-role-4.0.2-dev.tgz#9a3b384ef4103036ac1048d677b1cb83122db2c8"
   integrity sha512-tblpMVAlDTloOdSbuquztTRhPrPbF61K8CG/ZlapHLZb0sfwSnZXlwTfWIxgI57wWA764dt+9/0aQf4bszDK2w==
 
+chaos-plugin-user-roles@^1.0.0-dev:
+  version "1.0.0-dev"
+  resolved "https://registry.yarnpkg.com/chaos-plugin-user-roles/-/chaos-plugin-user-roles-1.0.0-dev.tgz#909605a877444966bdbb3b0120695569b9ab2b0d"
+  integrity sha512-1oStUL1ONuqpHMtcCjeiVygEUZYShyhf/5vch3/JT4+zlmM+u+3zNAZS5IbZELZUd0tpjN/TfbSuN/b38fAi0Q==
+
 chardet@^0.4.0:
   version "0.4.2"
   resolved "https://registry.yarnpkg.com/chardet/-/chardet-0.4.2.tgz#b5473b33dc97c424e5d98dc87d55d4d8a29c8bf2"

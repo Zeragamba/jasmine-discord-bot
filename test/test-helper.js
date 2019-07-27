@@ -4,7 +4,7 @@ const chaiSubset = require('chai-subset');
 const sinon = require('sinon');
 const sinonChai = require('sinon-chai');
 
-const Jasmine = require('../jasmine');
+const Jasmine = require('../src/jasmine');
 const localConfig = require('../config');
 
 function stubJasmine(config = {}) {
