@@ -1,8 +1,11 @@
-# 6.0.2
+# Next
 
+**Major Features:**
+- Update to ChaosCore 4
 - add `!config owMains broadcastSettings`
 
 # 6.0.0
+
 **Major Features:**
 - Update Chaos-Core to v3.0.0
   - renames modules to plugins
@@ -12,8 +15,6 @@
   - added `!config core listPlugins` to view all available plugins
 - Added the AutoRoles plugin
   - allows for setting a role that Jasmine should automatically grant to users when they join.
-  
-**Minor changes:**
 
 **Updated config commands**
 
