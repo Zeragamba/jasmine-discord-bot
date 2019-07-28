@@ -211,7 +211,7 @@ class ModLogService extends Service {
         // Error was not handled, rethrow it
         return throwError(error);
       }),
-      map(true),
+      mapTo(true),
       defaultIfEmpty(true),
     );
   }
