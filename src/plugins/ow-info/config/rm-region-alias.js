@@ -19,18 +19,7 @@ module.exports = {
 
   run(context) {
     const regionService = this.chaos.getService('ow-info', 'regionService');
-    const guild = context.guild;
-
-    const regionName = context.args.alias;
-
-    if (!regionName) {
-      return of({
-        status: 400,
-        content: `the region to remove is required`,
-      });
-    }
-
-    return regionService.removeAlias(guild, regionName).pipe(
+    return regionService.removeAlias(context.guild, context.args.alias).pipe(
       map((removedAlias) => ({
         status: 200,
         content: `Removed region alias '${removedAlias}'`,

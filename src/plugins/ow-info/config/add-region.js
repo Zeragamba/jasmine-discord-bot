@@ -1,5 +1,6 @@
 const {of, throwError} = require('rxjs');
-const {map, catchError} = require('rxjs/operators');
+const {map, flatMap, catchError} = require('rxjs/operators');
+const {RoleNotFoundError} = require('chaos-core').errors;
 
 const {RegionNotFoundError} = require('../errors');
 
@@ -9,7 +10,7 @@ module.exports = {
 
   args: [
     {
-      name: 'regionName',
+      name: 'region',
       description: 'The name of region to add',
       required: true,
     },
@@ -22,48 +23,26 @@ module.exports = {
 
   run(context) {
     const roleService = this.chaos.getService('core', 'RoleService');
-    const regionService = this.chaos.getService('ow-info', 'regionService');
-    const guild = context.guild;
+    const regionService = this.chaos.getService('ow-info', 'RegionService');
 
-    const regionName = context.args.regionName;
-    const roleString = context.args.role;
-
-    if (!regionName) {
-      return of({
-        status: 400,
-        content: `a region name is required`,
-      });
-    }
-
-    if (!roleString) {
-      return of({
-        status: 400,
-        content: `a role is to map the region to is required`,
-      });
-    }
-
-    let role = roleService.findRole(guild, roleString);
-    if (!role) {
-      return of({
-        status: 400,
-        content: `The role '${roleString}' could not be found.`,
-      });
-    }
-
-    return regionService.mapRegion(guild, regionName, role).pipe(
-      map((mappedAlias) => ({
-        ...mappedAlias,
-        role: guild.roles.get(mappedAlias.roleId),
+    return of('').pipe(
+      flatMap(() => roleService.findRole(context.guild, context.args.role)),
+      flatMap((role) => regionService.mapRegion(context.guild, context.args.region, role)),
+      map((region) => ({
+        region,
+        role: context.guild.roles.get(region.roleId),
       })),
-      map((mappedAlias) => ({
+      map(({region, role}) => ({
         status: 200,
-        content: `Mapped the region ${mappedAlias.name} to ${mappedAlias.role.name}`,
+        content: `Mapped the region ${region.name} to ${role.name}`,
       })),
       catchError((error) => {
-        if (error instanceof RegionNotFoundError) {
-          return of({status: 400, content: error.message});
-        } else {
-          return throwError(error);
+        switch (true) {
+          case error instanceof RoleNotFoundError:
+          case error instanceof RegionNotFoundError:
+            return of({status: 400, content: error.message});
+          default:
+            return throwError(error);
         }
       }),
     );

@@ -1,20 +1,16 @@
+const Discord = require('discord.js');
 const {of} = require('rxjs');
 const {flatMap, tap} = require('rxjs/operators');
-const {MockMessage} = require('chaos-core').test.discordMocks;
 
 describe('ow-info: !region', function () {
   beforeEach(function (done) {
     this.jasmine = stubJasmine();
-    this.message = new MockMessage();
-    this.args = {};
     this.test$ = this.jasmine.testCommand({
       pluginName: 'ow-info',
       commandName: 'region',
-      message: this.message,
-      args: this.args,
     });
 
-    this.message.reply = (message) => Promise.resolve(message);
+    this.message = this.test$.message;
 
     const pluginService = this.jasmine.getService('core', 'PluginService');
 
@@ -38,13 +34,14 @@ describe('ow-info: !region', function () {
 
   describe("!region {region}", function () {
     beforeEach(function () {
-      this.args.region = `test`;
+      this.test$.args.region = `test`;
     });
 
     context('when the region is mapped to a role', function () {
       beforeEach(function (done) {
         this.role = {
-          id: 'role-0001',
+          id: Discord.SnowflakeUtil.generate(),
+          name: 'testRole',
         };
         this.message.guild.roles.set(this.role.id, this.role);
 
@@ -53,16 +50,24 @@ describe('ow-info: !region', function () {
           .subscribe(() => done(), (error) => done(error));
       });
 
+      it('gives a success message', function (done) {
+        this.test$.pipe(
+          tap((response) => expect(response.replies).to.have.length(1)),
+          tap((response) => expect(response.replies).to.containSubset([
+            {
+              type: 'reply',
+              content: 'I\'ve updated your region to test',
+            },
+          ])),
+        ).subscribe(() => done(), (error) => done(error));
+      });
+
       it('adds the role to the user', function (done) {
-        sinon.spy(this.message, "reply");
         sinon.spy(this.message.member, "addRole");
 
         this.test$.pipe(
-          tap(() => expect(this.message.reply).to.have.been.calledWith(
-            'I\'ve updated your region to test',
-          )),
           tap(() => expect(this.message.member.addRole).to.have.been.calledWith(
-            this.role,
+            this.role.id,
           )),
         ).subscribe(() => done(), (error) => done(error));
       });
@@ -85,13 +90,14 @@ describe('ow-info: !region', function () {
 
   describe("!region {regionAlias}", function () {
     beforeEach(function () {
-      this.args.region = `testAlias`;
+      this.test$.args.region = `testAlias`;
     });
 
     context('when the alias is mapped to a region', function () {
       beforeEach(function (done) {
         this.role = {
-          id: 'role-0001',
+          id: Discord.SnowflakeUtil.generate(),
+          name: 'testRole',
         };
         this.message.guild.roles.set(this.role.id, this.role);
 
@@ -102,16 +108,24 @@ describe('ow-info: !region', function () {
         ).subscribe(() => done(), (error) => done(error));
       });
 
+      it('gives a success message', function (done) {
+        this.test$.pipe(
+          tap((response) => expect(response.replies).to.have.length(1)),
+          tap((response) => expect(response.replies).to.containSubset([
+            {
+              type: 'reply',
+              content: 'I\'ve updated your region to test',
+            },
+          ])),
+        ).subscribe(() => done(), (error) => done(error));
+      });
+
       it('adds the role to the user', function (done) {
-        sinon.spy(this.message, "reply");
         sinon.spy(this.message.member, "addRole");
 
         this.test$.pipe(
-          tap(() => expect(this.message.reply).to.have.been.calledWith(
-            'I\'ve updated your region to test',
-          )),
           tap(() => expect(this.message.member.addRole).to.have.been.calledWith(
-            this.role,
+            this.role.id,
           )),
         ).subscribe(() => done(), (error) => done(error));
       });

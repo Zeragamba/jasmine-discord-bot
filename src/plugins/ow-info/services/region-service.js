@@ -1,5 +1,5 @@
-const {of, from, merge, zip, throwError} = require('rxjs');
-const {flatMap, map, last, toArray, filter, mapTo} = require('rxjs/operators');
+const {of, zip, throwError} = require('rxjs');
+const {flatMap, map, mapTo} = require('rxjs/operators');
 const Service = require('chaos-core').Service;
 
 const DATAKEYS = require('../datakeys');
@@ -14,29 +14,6 @@ const {
 const defaultRegions = require('../data/regions');
 
 class RegionService extends Service {
-  constructor(chaos) {
-    super(chaos);
-
-    this.chaos.on('guildCreate', (guild) => this.onGuildCreate(guild));
-  }
-
-  onGuildCreate(guild) {
-    let mapRoles$ = this.getRegions(guild).pipe(
-      filter((roles) => roles === null),
-      flatMap(() => this.setRegions(guild, this.mapDefaultRoles(guild))),
-    );
-
-    let mapAliases$ = this.getAliases(guild).pipe(
-      filter((aliases) => aliases === null),
-      flatMap(() => this.setAliases(guild, this.mapDefaultAliases())),
-    );
-
-    return merge(mapRoles$, mapAliases$).pipe(
-      last(null, ''),
-      map(() => true),
-    );
-  }
-
   mapDefaultRoles(guild) {
     let roleMap = {};
     defaultRegions.forEach((region) => {
@@ -64,7 +41,11 @@ class RegionService extends Service {
 
   getRegions(guild) {
     return this.chaos.getGuildData(guild.id, DATAKEYS.REGION_REGIONS).pipe(
-      map((regions) => regions || {}),
+      flatMap((regions) => (
+        regions
+          ? of(regions)
+          : this.setRegions(guild, this.mapDefaultRoles(guild))
+      )),
     );
   }
 
@@ -74,7 +55,11 @@ class RegionService extends Service {
 
   getAliases(guild) {
     return this.chaos.getGuildData(guild.id, DATAKEYS.REGION_ALIASES).pipe(
-      map((aliases) => aliases || {}),
+      flatMap((aliases) => (
+        aliases
+          ? of(aliases)
+          : this.setAliases(guild, this.mapDefaultAliases())
+      )),
     );
   }
 
@@ -217,33 +202,20 @@ class RegionService extends Service {
   setUserRegion(member, regionOrAlias) {
     let guild = member.guild;
 
-    let rolesToRemove$ = this.getRegions(guild).pipe(
-      flatMap((regions) => from(Object.values(regions))),
-      map((region) => region.roleId),
-      map((roleId) => guild.roles.get(roleId)),
-      filter((role) => role),
-      toArray(),
-    );
-
     return this.getRegion(guild, regionOrAlias).pipe(
-      flatMap((region) => {
-        if (member.roles.get(region.roleId)) {
-          return throwError(new RegionAlreadyAssigned(member, region.name));
-        }
-
-        let regionRole = guild.roles.get(region.roleId);
-        if (!regionRole) {
-          return throwError(new UnmappedRegionError(region.name));
-        }
-
-        return rolesToRemove$.pipe(
-          map((rolesToRemove) => [region, rolesToRemove, regionRole]),
-        );
-      }),
-      flatMap(([region, rolesToRemove, regionRole]) => of('').pipe(
-        flatMap(() => member.removeRoles(rolesToRemove)),
-        flatMap(() => member.addRole(regionRole)),
-        map(() => region.name),
+      flatMap((region) => (
+        member.roles.get(region.roleId)
+          ? throwError(new RegionAlreadyAssigned(member, region.name))
+          : of(region)
+      )),
+      flatMap((region) => (
+        guild.roles.get(region.roleId)
+          ? of(region)
+          : throwError(new UnmappedRegionError(region.name))
+      )),
+      flatMap((region) => of('').pipe(
+        flatMap(() => member.addRole(region.roleId)),
+        mapTo(region),
       )),
     );
   }

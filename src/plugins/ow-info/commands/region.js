@@ -29,22 +29,21 @@ module.exports = {
     const regionName = context.args.region;
 
     return regionService.setUserRegion(member, regionName).pipe(
-      flatMap((grantedRegion) =>
+      flatMap((region) =>
         response.send({
           type: 'reply',
-          content: `I've updated your region to ${grantedRegion}`,
+          content: `I've updated your region to ${region.name}`,
         }),
       ),
       catchError((error) => {
-        if (error instanceof RegionError) {
-          return handleRegionError(error, context, response);
+        switch (true) {
+          case error instanceof RegionError:
+            return handleRegionError(error, context, response);
+          case error instanceof DiscordAPIError:
+            return handleDiscordApiError(error, context, response);
+          default:
+            return throwError(error);
         }
-
-        if (error instanceof DiscordAPIError) {
-          return handleDiscordApiError(error, context, response);
-        }
-
-        return throwError(error);
       }),
     );
   },

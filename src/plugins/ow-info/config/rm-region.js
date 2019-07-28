@@ -9,7 +9,7 @@ module.exports = {
 
   args: [
     {
-      name: 'regionName',
+      name: 'region',
       description: 'The name of the region to remove',
       required: true,
     },
@@ -17,18 +17,8 @@ module.exports = {
 
   run(context) {
     const regionService = this.chaos.getService('ow-info', 'regionService');
-    const guild = context.guild;
 
-    const regionName = context.args.regionName;
-
-    if (!regionName) {
-      return of({
-        status: 400,
-        content: `the region to remove is required`,
-      });
-    }
-
-    return regionService.removeRegion(guild, regionName).pipe(
+    return regionService.removeRegion(context.guild, context.args.region).pipe(
       map((removedRegion) => ({
         status: 200,
         content: `Removed region '${removedRegion}'`,
