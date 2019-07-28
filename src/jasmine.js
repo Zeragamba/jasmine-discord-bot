@@ -24,7 +24,7 @@ const defaultConfig = {
 
   dataSource: {
     type: 'disk',
-    dataDir: Path.join(__dirname, 'data'),
+    dataDir: Path.join(__dirname, '../data'),
   },
 
   broadcastTokens: {},
