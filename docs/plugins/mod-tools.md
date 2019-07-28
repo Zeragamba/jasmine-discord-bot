@@ -1,7 +1,7 @@
 # Mod Tools
 Provides commands to assist with server moderation.
 
-*Note: This module is disabled by default. Use `!config module enable modtools` to enable this module*
+*Note: This module is disabled by default. Use `!config core enablePlugin modtools` to enable this module*
 
 - Permission Levels:
     - Mod

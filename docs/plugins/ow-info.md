@@ -1,9 +1,9 @@
 # Overwatch Info (ow-info)
 
-The Overwatch Info module provides commands to allow users to specify what Region and Platform 
+The Overwatch Info plugin provides commands to allow users to specify what Region and Platform 
 they play on to help users find others to play with.
 
-*Note: This module is disabled by default. Use `!config module enable ow-info` to enable this module*
+*Note: This module is disabled by default. Use `!config core enablePlugin ow-info` to enable this module*
 
 - Commands
     - [platform](#platform)

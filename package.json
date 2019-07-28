@@ -8,13 +8,7 @@
     "email": "Stephen-356@hotmail.com",
     "url": ""
   },
-  "files": [
-    "src/lib"
-  ],
   "main": "src/lib/index.js",
-  "keywords": [
-    ""
-  ],
   "scripts": {
     "start": "npm run bot",
     "bot": "node --preserve-symlinks ./index.js",
@@ -24,30 +18,30 @@
     "validate": "npm-run-all --parallel test lint"
   },
   "devDependencies": {
-    "chai": "^4.1.2",
+    "chai": "^4.2.0",
     "chai-subset": "^1.6.0",
-    "chaos-data-memory": "github:chaos-core/chaos-data-memory#RxJs-6",
-    "eslint": "^4.14.0",
+    "chaos-data-memory": "^4.0.1",
+    "eslint": "^6.1.0",
     "eslint-plugin-chai-expect": "^2.0.1",
-    "eslint-watch": "^4.0.2",
-    "husky": "^1.3.1",
-    "mocha": "^5.2.0",
+    "eslint-watch": "^6.0.0",
+    "husky": "^3.0.1",
+    "mocha": "^6.2.0",
     "npm-run-all": "^4.1.5",
-    "sinon": "^6.1.4",
-    "sinon-chai": "^3.2.0"
+    "sinon": "^7.3.2",
+    "sinon-chai": "^3.3.0"
   },
   "repository": "https://github.com/SpyMaster356/jasmine-discord-bot",
   "license": "MIT",
   "dependencies": {
-    "chaos-core": "^4.0.3-dev",
-    "chaos-data-disk": "^4.0.0-dev",
-    "chaos-plugin-auto-role": "^4.0.2-dev",
-    "chaos-plugin-user-roles": "^1.0.0-dev",
+    "chaos-core": "^4.0.6",
+    "chaos-data-disk": "^4.0.1",
+    "chaos-plugin-auto-role": "^4.0.2",
+    "chaos-plugin-user-roles": "^1.0.2",
     "discord.js": "^11.5.1",
     "git-rev": "^0.2.1",
-    "glob": "^7.1.3",
+    "glob": "^7.1.4",
     "node-glob": "^1.2.0",
-    "rxjs": "^6.5.1",
-    "yarn": "^1.13.0"
+    "rxjs": "^6.5.2",
+    "yarn": "^1.17.3"
   }
 }

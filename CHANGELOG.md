@@ -3,6 +3,8 @@
 **Major Features:**
 - Update to ChaosCore 4
 - add `!config owMains broadcastSettings`
+- add 'UserRoles' plugin
+  - Allows users to `!join` roles
 
 # 6.0.0
 
@@ -32,7 +34,7 @@
 | `!config permissions rmRole <role> <permission>` | `!config core revokeRole <role> <permission>` |
 | `!config permissions rmUser <user> <permission>` | `!config core revokeUser <user> <permission>` |
 | | |
-| `!config module enable <module>` | `!config core enablePlugin <plugin>` |
+| `!config core enablePlugin <module>` | `!config core enablePlugin <plugin>` |
 | `!config module disable <module>` | `!config core disablePlugin <plugin>` |
 
 
@@ -56,7 +58,7 @@
 # v4.0.0
 **Major Features:**
 - Add Streaming module
-    - use `!config module enable streaming` to enable
+    - use `!config core enablePlugin streaming` to enable
     - `!config streaming setLiveRole {role}` to set a role to assign to users that go live
     - `!config streaming setStreamerRole {role}` to restrict the live role to approved users
 

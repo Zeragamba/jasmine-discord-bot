@@ -1,7 +1,7 @@
 # Streaming
 Allows for adding a role to a user when they go live on twitch.
 
-**Note: This module is disabled by default. Use `!config module enable streaming` to enable it.**
+**Note: This module is disabled by default. Use `!config core enablePlugin streaming` to enable it.**
  
 - [Usage](#usage)
 - [Config Actions](#config-actions):
