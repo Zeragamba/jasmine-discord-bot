@@ -14,9 +14,7 @@ class StreamingService extends Service {
   constructor(chaos) {
     super(chaos);
 
-    this.chaos.on('chaos.listen', () => {
-      this.pluginService = this.chaos.getService('core', 'PluginService');
-    });
+    this.pluginService = this.chaos.getService('core', 'PluginService');
 
     this.chaos.on("presenceUpdate", ([oldMember, newMember]) => this.handlePresenceUpdate(oldMember, newMember));
   }
