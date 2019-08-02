@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="All Tests (watch)" type="CompoundRunConfigurationType">
+    <toRun name="lint (watch)" type="js.build_tools.npm" />
+    <toRun name="test (watch)" type="mocha-javascript-test-runner" />
+    <method v="2" />
+  </configuration>
+</component>
