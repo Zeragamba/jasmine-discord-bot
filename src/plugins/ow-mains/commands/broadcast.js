@@ -32,8 +32,8 @@ class BroadcastCommand extends Command {
   }
 
   execCommand(context, response) {
-    const broadcastService = this.chaos.getService('owMains', 'broadcastService');
-    if (context.guild.id === broadcastService.owmnServerId) {
+    const OwmnService = this.chaos.getService('owMains', 'OwmnService');
+    if (context.guild.id === OwmnService.owmnServerId) {
       return super.execCommand(context, response);
     } else {
       return EMPTY; // Treat it as a disabled command
