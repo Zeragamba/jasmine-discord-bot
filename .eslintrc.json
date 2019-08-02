@@ -37,6 +37,7 @@
     "no-confusing-arrow": "error",
     "chai-expect/missing-assertion": "error",
     "chai-expect/terminating-properties": "error",
-    "chai-expect/no-inner-compare": "error"
+    "chai-expect/no-inner-compare": "error",
+    "eol-last": "error"
   }
 }
