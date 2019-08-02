@@ -3,6 +3,7 @@ const chai = require('chai');
 const chaiSubset = require('chai-subset');
 const sinon = require('sinon');
 const sinonChai = require('sinon-chai');
+const Discord = require('discord.js');
 
 const Jasmine = require('../src/jasmine');
 const localConfig = require('../config');
@@ -14,6 +15,8 @@ function stubJasmine(config = {}) {
     ownerUserId: ownerUserId,
     logger: {level: 'warn'},
     dataSource: {type: 'memory'},
+
+    owmnServerId: Discord.SnowflakeUtil.generate(),
   };
 
   const jasmine = ChaosCore.test.stubChaosBot(new Jasmine({

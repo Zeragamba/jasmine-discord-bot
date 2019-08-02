@@ -1,5 +1,5 @@
-const {of, from, throwError} = require('rxjs');
-const {flatMap, last, map, filter} = require('rxjs/operators');
+const {of, from} = require('rxjs');
+const {flatMap, tap, map, filter, delayWhen} = require('rxjs/operators');
 const Discord = require('discord.js');
 const Service = require('chaos-core').Service;
 
@@ -92,9 +92,7 @@ class BroadcastService extends Service {
         `Broadcast this to "${broadcastType}"?`,
         {embed: broadcastEmbed},
       )),
-      flatMap((confirmMessage) => this.addConfirmReactions(confirmMessage).pipe(
-        map(() => confirmMessage),
-      )),
+      delayWhen((confirmMessage) => this.addConfirmReactions(confirmMessage)),
       flatMap((confirmMessage) => {
         let allowedEmojiNames = [
           CONFIRM_YES_EMOJI_NAME,
@@ -103,35 +101,29 @@ class BroadcastService extends Service {
           FALLBACK_NO,
         ];
 
-        return of().pipe(
-          flatMap(() => confirmMessage.awaitReactions(
-            (reaction, user) =>
-              allowedEmojiNames.includes(reaction.emoji.name.toLowerCase()) &&
-              user.id === context.message.author.id,
-            {max: 1},
-          )),
-          map((reactions) => ({confirmMessage, reactions})),
+        let yesEmojiNames = [
+          CONFIRM_YES_EMOJI_NAME,
+          FALLBACK_YES,
+        ];
+
+        const reactionFilter = (reaction, user) => (
+          user.id === context.message.author.id
+          && allowedEmojiNames.includes(reaction.emoji.name.toLowerCase())
+        );
+
+        return of('').pipe(
+          flatMap(() => confirmMessage.awaitReactions(reactionFilter, {max: 1})),
+          flatMap((reactions) => {
+            if (reactions.find((r) => yesEmojiNames.includes(r.emoji.name.toLowerCase()))) {
+              return of({confirmMessage, result: true});
+            } else {
+              return of({confirmMessage, result: false});
+            }
+          }),
         );
       }),
-      flatMap(({confirmMessage, reactions}) => {
-        let yesEmojiNames = [CONFIRM_YES_EMOJI_NAME, FALLBACK_YES];
-
-        if (reactions.find((r) => yesEmojiNames.includes(r.emoji.name.toLowerCase()))) {
-          return of({confirmMessage, result: true});
-        } else {
-          return of({confirmMessage, result: false});
-        }
-      }),
-      flatMap(({confirmMessage, result}) => this.removeOwnReactions(confirmMessage).pipe(
-        last(null, ''),
-        map(() => result),
-      )),
-      flatMap((result) => {
-        if (!result) {
-          return throwError(new BroadcastCanceledError());
-        }
-        return of(result);
-      }),
+      delayWhen(({confirmMessage}) => this.removeOwnReactions(confirmMessage)),
+      tap(({result}) => { if (!result) throw new BroadcastCanceledError(); }),
     );
   }
 
@@ -140,6 +132,10 @@ class BroadcastService extends Service {
       flatMap((guild) => this.getBroadcastChannel(broadcastType, guild)),
       flatMap((channel) => channel.send(broadcastBody)),
     );
+  }
+
+  setBroadcastChannel(guild, broadcastType, channel) {
+    return this.chaos.setGuildData(guild.id, DataKeys.broadcastChannelId(broadcastType), channel.id);
   }
 
   getBroadcastChannel(broadcastType, guild) {

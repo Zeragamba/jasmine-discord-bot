@@ -1,5 +1,6 @@
-const {of, throwError} = require('rxjs');
+const {of, throwError, EMPTY} = require('rxjs');
 const {flatMap, tap, catchError, count, filter} = require('rxjs/operators');
+const { Command } = require('chaos-core');
 
 const {
   BroadcastingNotAllowedError,
@@ -7,24 +8,37 @@ const {
   InvalidBroadcastError,
 } = require('../errors');
 
-module.exports = {
-  name: 'broadcast',
-  description: 'broadcast a message to all connected servers',
-  permissions: ['broadcaster'],
+class BroadcastCommand extends Command {
+  constructor(chaos) {
+    super(chaos, {
+      name: 'broadcast',
+      description: 'broadcast a message to all connected servers',
+      permissions: ['broadcaster'],
 
-  args: [
-    {
-      name: 'type',
-      description: `the type of broadcast message.`,
-      required: true,
-    },
-    {
-      name: 'message',
-      description: 'the message to broadcast.',
-      required: true,
-      greedy: true,
-    },
-  ],
+      args: [
+        {
+          name: 'type',
+          description: `the type of broadcast message.`,
+          required: true,
+        },
+        {
+          name: 'message',
+          description: 'the message to broadcast.',
+          required: true,
+          greedy: true,
+        },
+      ],
+    });
+  }
+
+  execCommand(context, response) {
+    const broadcastService = this.chaos.getService('owMains', 'broadcastService');
+    if (context.guild.id === broadcastService.owmnServerId) {
+      return super.execCommand(context, response);
+    } else {
+      return EMPTY; // Treat it as a disabled command
+    }
+  }
 
   run(context, response) {
     const broadcastService = this.chaos.getService('owMains', 'broadcastService');
@@ -47,9 +61,7 @@ module.exports = {
             content: error.message,
           });
         } else if (error instanceof BroadcastingNotAllowedError) {
-          return response.send({
-            content: error.message,
-          });
+          return EMPTY;
         } else if (error instanceof BroadcastCanceledError) {
           return response.send({
             content: `Ok. Broadcast canceled`,
@@ -59,5 +71,7 @@ module.exports = {
         }
       }),
     );
-  },
-};
+  }
+}
+
+module.exports = BroadcastCommand;
