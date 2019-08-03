@@ -1,5 +1,5 @@
 const {of, throwError, EMPTY} = require('rxjs');
-const {flatMap, tap, catchError, count, filter} = require('rxjs/operators');
+const {flatMap, tap, catchError, filter} = require('rxjs/operators');
 const { Command } = require('chaos-core');
 
 const {
@@ -53,8 +53,7 @@ class BroadcastCommand extends Command {
       filter(Boolean),
       flatMap(() => response.send({content: `Ok, let me broadcast that then.`})),
       flatMap(() => broadcastService.broadcastMessage(broadcastType, broadcastBody)),
-      count(() => true),
-      flatMap((sentMessages) => response.send({content: `Done. Broadcasted to ${sentMessages} servers`})),
+      flatMap((sentMessages) => response.send({content: `Done. Broadcasted to ${sentMessages.length} servers`})),
       catchError((error) => {
         if (error instanceof InvalidBroadcastError) {
           return response.send({

@@ -1,5 +1,5 @@
 const {of, from} = require('rxjs');
-const {flatMap, tap, map, filter, delayWhen} = require('rxjs/operators');
+const {flatMap, tap, map, filter, delayWhen, toArray} = require('rxjs/operators');
 const Discord = require('discord.js');
 const Service = require('chaos-core').Service;
 
@@ -131,6 +131,7 @@ class BroadcastService extends Service {
     return from(this.chaos.discord.guilds.values()).pipe(
       flatMap((guild) => this.getBroadcastChannel(broadcastType, guild)),
       flatMap((channel) => channel.send(broadcastBody)),
+      toArray(),
     );
   }
 
