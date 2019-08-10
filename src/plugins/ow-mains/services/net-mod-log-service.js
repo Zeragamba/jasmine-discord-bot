@@ -1,5 +1,5 @@
 const {of, throwError, EMPTY} = require('rxjs');
-const {flatMap, tap, map, defaultIfEmpty, catchError, filter} = require('rxjs/operators');
+const {flatMap, tap, map, mapTo, defaultIfEmpty, catchError, filter} = require('rxjs/operators');
 const Discord = require('discord.js');
 const Service = require('chaos-core').Service;
 
@@ -10,10 +10,8 @@ class NetModLogService extends Service {
   constructor(chaos) {
     super(chaos);
 
-    this.chaos.on("chaos.listen", () => {
-      this.modLogService = this.chaos.getService('modTools', 'ModLogService');
-      this.owmnService = this.chaos.getService('owMains', 'owmnService');
-    });
+    this.modLogService = this.chaos.getService('modTools', 'ModLogService');
+    this.owmnService = this.chaos.getService('owMains', 'owmnService');
 
     this.chaos.on("guildBanAdd", ([guild, user]) => this.handleGuildBanAdd(guild, user));
     this.chaos.on("guildBanRemove", ([guild, user]) => this.handleGuildBanRemove(guild, user));
@@ -21,25 +19,24 @@ class NetModLogService extends Service {
 
   handleGuildBanAdd(guild, user) {
     return of('').pipe(
-      flatMap(() => {
-        return this.modLogService
-          .findReasonAuditLog(guild, user, {type: AuditLogActions.MEMBER_BAN_ADD})
-          .catchError((error) => {
-            switch (error.name) {
-              case "TargetMatchError":
-                return of({
-                  executor: {id: null},
-                  reason: `ERROR: Unable to find matching log entry`,
-                });
-              case "AuditLogReadError":
-                return of({
-                  executor: {id: null},
-                  reason: `ERROR: ${error.message}`,
-                });
-              default:
-                return throwError(error);
-            }
-          });
+      flatMap(() => this.modLogService.findReasonAuditLog(
+        guild, user, {type: AuditLogActions.MEMBER_BAN_ADD},
+      )),
+      catchError((error) => {
+        switch (error.name) {
+          case "TargetMatchError":
+            return of({
+              executor: {id: null},
+              reason: `ERROR: Unable to find matching log entry`,
+            });
+          case "AuditLogReadError":
+            return of({
+              executor: {id: null},
+              reason: `ERROR: ${error.message}`,
+            });
+          default:
+            return throwError(error);
+        }
       }),
       filter((log) => !log.reason || !log.reason.match(/\[AutoBan]/i)),
       map((log) => {
@@ -125,7 +122,7 @@ class NetModLogService extends Service {
         // Error was not handled, rethrow it
         return throwError(error);
       }),
-      map(true),
+      mapTo(true),
       defaultIfEmpty(true),
     );
   }

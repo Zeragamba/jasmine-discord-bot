@@ -1,5 +1,9 @@
-const {of, from, throwError, EMPTY, retryWhen, range, zip, timer} = require('rxjs');
-const {flatMap, tap, map, defaultIfEmpty, catchError, filter, mapTo} = require('rxjs/operators');
+const {
+  of, from, throwError, EMPTY, range, zip, timer
+} = require('rxjs');
+const {
+  flatMap, tap, map, defaultIfEmpty, catchError, filter, mapTo, retryWhen,
+} = require('rxjs/operators');
 const Discord = require('discord.js');
 const Service = require('chaos-core').Service;
 
@@ -231,9 +235,11 @@ class ModLogService extends Service {
         }
         return auditEntry;
       }),
-      retryWhen((error$) => {
-        return range(1, 3).pipe(
-          zip(error$),
+      retryWhen((errors$) => {
+        return zip(
+          range(1, 3),
+          errors$,
+        ).pipe(
           flatMap(([attempt, error]) => {
             if (attempt === 3) {
               return throwError(error);
