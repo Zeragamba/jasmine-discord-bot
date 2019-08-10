@@ -29,6 +29,7 @@ class NetModLogService extends Service {
               executor: {id: null},
               reason: `ERROR: Unable to find matching log entry`,
             });
+          case "NoAuditRecords":
           case "AuditLogReadError":
             return of({
               executor: {id: null},

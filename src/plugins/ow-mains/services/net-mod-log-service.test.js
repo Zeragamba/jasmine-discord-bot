@@ -36,24 +36,15 @@ describe('NetModLogService', function () {
         }),
 
         fetchAuditLogs: () => {
-          const logs = {
-            entries: new Discord.Collection(),
-          };
-
-          const entry = {
-            id: Discord.SnowflakeUtil.generate(),
-            reason: "A Reason",
-            target: this.bannedMember,
-            executor: {
-              id: Discord.SnowflakeUtil.generate(),
-              tag: "modUser#0001",
-              guild: this.guild,
-            },
-          };
-          logs.entries.set(entry.id, entry);
-
+          const logs = {entries: new Discord.Collection()};
           return Promise.resolve(logs);
         },
+      };
+
+      this.modMember = {
+        id: Discord.SnowflakeUtil.generate(),
+        tag: "modUser#0001",
+        guild: this.guild,
       };
 
       this.bannedMember = {
@@ -74,25 +65,6 @@ describe('NetModLogService', function () {
 
         this.jasmine.setGuildData(this.owmnGuild.id, DataKeys.netModLogChannelId, this.modLogChannel.id)
           .subscribe(() => done(), (error) => done(error));
-      });
-
-      it('Adds a log entry', function (done) {
-        sinon.spy(this.modLogChannel, 'send');
-
-        this.netModLogService.handleGuildBanAdd(this.guild, this.bannedMember).pipe(
-          toArray(),
-          tap(() => expect(this.modLogChannel.send).to.have.been.calledOnce),
-          tap(() => expect(this.modLogChannel.send.firstCall.args).to.containSubset([
-            {
-              embed: {
-                author: {
-                  name: "banned#0001 banned from Other guild",
-                },
-                description: `User ID: ${this.bannedMember.id}\nReason: A Reason`,
-              },
-            },
-          ])),
-        ).subscribe(() => done(), (error) => done(error));
       });
 
       context('when the audit logs can not be read', function () {
@@ -123,6 +95,73 @@ describe('NetModLogService', function () {
                   description:
                     `User ID: ${this.bannedMember.id}\n` +
                     `Reason: ERROR: Unable to view audit log. I need the 'View Audit Log' permission in 'Other guild'`,
+                },
+              },
+            ])),
+          ).subscribe(() => done(), (error) => done(error));
+        });
+      });
+
+      context('when no audit log entry was found', function () {
+        it('Adds a notice to the log entry', function (done) {
+          sinon.spy(this.modLogChannel, 'send');
+
+          this.netModLogService.handleGuildBanAdd(this.guild, this.bannedMember).pipe(
+            toArray(),
+            tap(() => expect(this.modLogChannel.send).to.have.been.calledOnce),
+            tap(() => expect(this.modLogChannel.send.firstCall.args).to.containSubset([
+              {
+                embed: {
+                  author: {
+                    name: "banned#0001 banned from Other guild",
+                  },
+                  description:
+                    `User ID: ${this.bannedMember.id}\n` +
+                    `Reason: ERROR: No audit records were found`,
+                },
+              },
+            ])),
+          ).subscribe(() => done(), (error) => done(error));
+        });
+
+        it('retries fetching the logs three times', function (done) {
+          sinon.spy(this.guild, 'fetchAuditLogs');
+
+          this.netModLogService.handleGuildBanAdd(this.guild, this.bannedMember).pipe(
+            tap(() => expect(this.guild.fetchAuditLogs).to.have.callCount(3)),
+          ).subscribe(() => done(), (error) => done(error));
+        });
+      });
+
+      context('when a matching audit log entry was found', function () {
+        beforeEach(function () {
+          this.logEntries = new Discord.Collection();
+          const entry = {
+            id: Discord.SnowflakeUtil.generate(),
+            reason: "A Reason",
+            target: this.bannedMember,
+            executor: this.modMember,
+          };
+          this.logEntries.set(entry.id, entry);
+
+          this.guild.fetchAuditLogs = () => Promise.resolve({
+            entries: this.logEntries,
+          });
+        });
+
+        it('Adds the reason to the log entry', function (done) {
+          sinon.spy(this.modLogChannel, 'send');
+
+          this.netModLogService.handleGuildBanAdd(this.guild, this.bannedMember).pipe(
+            toArray(),
+            tap(() => expect(this.modLogChannel.send).to.have.been.calledOnce),
+            tap(() => expect(this.modLogChannel.send.firstCall.args).to.containSubset([
+              {
+                embed: {
+                  author: {
+                    name: "banned#0001 banned from Other guild",
+                  },
+                  description: `User ID: ${this.bannedMember.id}\nReason: A Reason`,
                 },
               },
             ])),

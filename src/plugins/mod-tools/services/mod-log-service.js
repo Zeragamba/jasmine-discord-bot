@@ -227,13 +227,19 @@ class ModLogService extends Service {
   findReasonAuditLog(guild, target, options) {
     return of('').pipe(
       flatMap(() => this.getLatestAuditLogs(guild, {...options, limit: 1})),
+      defaultIfEmpty(null),
       map((auditEntry) => {
-        if (auditEntry.target.id !== target.id) {
+        if (auditEntry === null) {
+          let error = new Error("No audit records were found");
+          error.name = "NoAuditRecords";
+          throw error;
+        } else if (auditEntry.target.id !== target.id) {
           let error = new Error("Audit log entry does not match the target");
           error.name = "TargetMatchError";
           throw error;
+        } else {
+          return auditEntry;
         }
-        return auditEntry;
       }),
       retryWhen((errors$) => {
         return zip(
@@ -241,12 +247,13 @@ class ModLogService extends Service {
           errors$,
         ).pipe(
           flatMap(([attempt, error]) => {
-            if (attempt === 3) {
-              return throwError(error);
-            } else if (error.name === "TargetMatchError") {
-              return timer(500);
-            } else {
-              return throwError(error);
+            if (attempt === 3) { return throwError(error); }
+            switch (error.name) {
+              case "TargetMatchError":
+              case "NoAuditRecords":
+                return timer(500);
+              default:
+                return throwError(error);
             }
           }),
         );
