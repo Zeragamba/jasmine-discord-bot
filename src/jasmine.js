@@ -1,4 +1,3 @@
-const {tap} = require('rxjs/operators');
 const ChaosCore = require('chaos-core');
 const Path = require('path');
 
@@ -42,16 +41,12 @@ class Jasmine extends ChaosCore {
     if (!this.config.owmnServerId) {
       throw new Error("owmnServerId is required");
     }
-  }
 
-  listen() {
-    return super.listen().pipe(
-      tap(() => this.discord.user.setPresence({
-        game: {
-          name: `v${packageJson.version}`,
-        },
-      })),
-    );
+    this.on('chaos.listen', () => this.discord.user.setPresence({
+      game: {
+        name: `v${packageJson.version}`,
+      },
+    }));
   }
 }
 

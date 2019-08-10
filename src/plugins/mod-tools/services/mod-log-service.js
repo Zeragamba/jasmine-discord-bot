@@ -1,5 +1,5 @@
 const {
-  of, from, throwError, EMPTY, range, zip, timer
+  of, from, throwError, EMPTY, range, zip, timer,
 } = require('rxjs');
 const {
   flatMap, tap, map, defaultIfEmpty, catchError, filter, mapTo, retryWhen,
