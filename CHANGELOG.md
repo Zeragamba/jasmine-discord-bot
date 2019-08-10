@@ -1,10 +1,36 @@
-# Next
+# 7.0.3
+
+**Bug fixes**
+- Fix the network mod log
+    - bans and unbans should now get reported
+- Fix Jasmine's version presence text
+
+
+
+# 7.0.2
+
+**Bug fixes**
+- Fix the `!broadcast` command
+- Fix code that checks if a guild is the OWMN guild
+
+
+
+# 7.0.1
+
+**Bug fixes**
+- Fix on listen crash with Streaming Service
+
+
+
+# 7.0.0
 
 **Major Features:**
 - Update to ChaosCore 4
 - add `!config owMains broadcastSettings`
 - add 'UserRoles' plugin
   - Allows users to `!join` roles
+
+
 
 # 6.0.0
 
