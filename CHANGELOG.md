@@ -1,3 +1,10 @@
+# 7.0.4
+
+**Bug fixes**
+- Fix `!region` when the user was not cached by discord.js
+
+
+
 # 7.0.3
 
 **Bug fixes**

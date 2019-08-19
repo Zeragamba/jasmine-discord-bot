@@ -129,6 +129,34 @@ describe('ow-info: !region', function () {
           )),
         ).subscribe(() => done(), (error) => done(error));
       });
+
+      context('when the user was not cached by Discord.js', function () {
+        beforeEach(function () {
+          this.test$.args.region = `test`;
+
+          this.member = this.message.member;
+          this.message.guild.fetchMember = () => Promise.resolve(this.member);
+          delete this.message.member;
+        });
+
+        it('fetches the member and works normally', function (done) {
+          sinon.spy(this.member.guild, 'fetchMember');
+          sinon.spy(this.message, 'reply');
+
+          this.test$.pipe(
+            tap(() => expect(this.message.guild.fetchMember).to.have.been.calledWith(
+              this.message.author,
+            )),
+            tap((response) => expect(response.replies).to.have.length(1)),
+            tap((response) => expect(response.replies).to.containSubset([
+              {
+                type: 'reply',
+                content: 'I\'ve updated your region to test',
+              },
+            ])),
+          ).subscribe(() => done(), (error) => done(error));
+        });
+      });
     });
   });
 });

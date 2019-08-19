@@ -1,4 +1,4 @@
-const {throwError, zip} = require('rxjs');
+const {throwError, zip, iif, of} = require('rxjs');
 const {flatMap, catchError} = require('rxjs/operators');
 const {DiscordAPIError} = require('discord.js');
 
@@ -25,10 +25,15 @@ module.exports = {
 
   run(context, response) {
     const regionService = this.chaos.getService('ow-info', 'regionService');
-    const member = context.message.member;
-    const regionName = context.args.region;
 
-    return regionService.setUserRegion(member, regionName).pipe(
+    return iif(
+      () => context.member,
+      of(context.member),
+      of('').pipe(
+        flatMap(() => context.guild.fetchMember(context.author)),
+      ),
+    ).pipe(
+      flatMap((member) => regionService.setUserRegion(member, context.args.region)),
       flatMap((region) =>
         response.send({
           type: 'reply',
