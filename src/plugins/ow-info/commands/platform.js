@@ -59,10 +59,10 @@ module.exports = {
           }
 
           response.content = `Err... Discord returned an unexpected error when I tried to update your nickname.`;
-          context.chaos.messageOwner(
+          this.chaos.messageOwner(
             `I got this error when I tried to update ${context.author.tag}'s platform:`,
             {
-              embed: context.chaos.createEmbedForError(error, [
+              embed: this.chaos.createEmbedForError(error, [
                 {name: 'guild', inline: true, value: context.guild.name},
                 {name: 'channel', inline: true, value: context.channel.name},
                 {name: 'command', inline: true, value: 'platform'},

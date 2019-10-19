@@ -101,10 +101,10 @@ function handleDiscordApiError(error, context, response) {
       type: 'message',
       content: `Err... Discord returned an unexpected error when I tried to update your roles.`,
     }),
-    context.chaos.messageOwner(
+    this.chaos.messageOwner(
       `I got this error when I tried to update ${context.author.tag}'s platform:`,
       {
-        embed: context.chaos.createEmbedForError(error, [
+        embed: this.chaos.createEmbedForError(error, [
           {name: "guild", value: context.guild.name},
           {name: "channel", value: context.channel.name},
           {name: "command", value: "region"},

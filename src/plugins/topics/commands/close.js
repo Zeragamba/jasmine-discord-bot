@@ -75,7 +75,7 @@ module.exports = {
             response.content = `I'm sorry, but I do not have permission to move channels. I need the "Manage Channels" permission.`;
           } else {
             response.content = `I'm sorry, Discord returned an unexpected error when I tried to move the channel.`;
-            context.chaos.handleError(error, [
+            this.chaos.handleError(error, [
               {name: "command", value: "close"},
               {name: "guild", value: context.guild.name},
               {name: "channel", value: context.channel.name},
@@ -85,7 +85,7 @@ module.exports = {
           }
         } else {
           response.content = `I'm sorry, I ran into an unexpected problem.`;
-          context.chaos.handleError(error, [
+          this.chaos.handleError(error, [
             {name: "command", value: "close"},
             {name: "guild", value: context.guild.name},
             {name: "channel", value: context.channel.name},

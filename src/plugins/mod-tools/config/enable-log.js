@@ -23,7 +23,7 @@ module.exports = {
   ],
 
   run(context) {
-    let modLogService = context.chaos.getService('modTools', 'ModLogService');
+    let modLogService = this.chaos.getService('modTools', 'ModLogService');
 
     let guild = context.guild;
     let logTypeName = context.args.type;

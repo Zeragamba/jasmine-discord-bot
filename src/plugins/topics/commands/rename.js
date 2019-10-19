@@ -20,7 +20,7 @@ module.exports = {
     const guild = context.guild;
     const channelName = topicService.channelNameSafeString(context.args.channelName);
 
-    context.chaos.logger.debug(`renaming channel: ${topicChannel.name} => ${channelName}`);
+    this.chaos.logger.debug(`renaming channel: ${topicChannel.name} => ${channelName}`);
 
     let openCategory = topicService.getOpenTopicsCategory(guild);
     if (!openCategory) {
@@ -56,7 +56,7 @@ module.exports = {
             response.content = `I'm sorry, but I do not have permission to rename channels. I need the "Manage Channels" permission.`;
           } else {
             response.content = `I'm sorry, Discord returned an unexpected error when I tried to rename the channel.`;
-            context.chaos.handleError(error, [
+            this.chaos.handleError(error, [
               {name: "command", value: "rename"},
               {name: "guild", value: context.guild.name},
               {name: "channel", value: context.channel.name},
@@ -66,7 +66,7 @@ module.exports = {
           }
         } else {
           response.content = `I'm sorry, I ran into an unexpected problem.`;
-          context.chaos.handleError(error, [
+          this.chaos.handleError(error, [
             {name: "command", value: "rename"},
             {name: "guild", value: context.guild.name},
             {name: "channel", value: context.channel.name},

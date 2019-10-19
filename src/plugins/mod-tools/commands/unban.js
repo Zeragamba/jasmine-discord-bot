@@ -17,7 +17,7 @@ module.exports = {
   ],
 
   run(context, response) {
-    let userService = context.chaos.getService('core', 'UserService');
+    let userService = this.chaos.getService('core', 'UserService');
 
     let guild = context.guild;
     let userString = context.args.user;
@@ -47,10 +47,10 @@ module.exports = {
               break;
             default:
               response.content = `Err... Discord returned an unexpected error when I tried to unban that user.`;
-              context.chaos.messageOwner(
+              this.chaos.messageOwner(
                 "I got this error when I tried to unban a user:",
                 {
-                  embed: context.chaos.createEmbedForError(error, [
+                  embed: this.chaos.createEmbedForError(error, [
                     {name: "guild", inline: true, value: context.guild.name},
                     {name: "channel", inline: true, value: context.channel.name},
                     {name: "command", inline: true, value: "unban"},
