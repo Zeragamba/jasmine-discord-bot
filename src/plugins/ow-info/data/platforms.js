@@ -28,4 +28,11 @@ module.exports = [
       'xbo',
     ],
   },
+  {
+    name: 'Switch',
+    tag: 'SW',
+    alias: [
+      'nintendo',
+    ],
+  },
 ];
