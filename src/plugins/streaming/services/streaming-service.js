@@ -36,19 +36,21 @@ class StreamingService extends Service {
       filter(Boolean),
       flatMap(() => this.updateMemberRoles(newMember)),
       catchError((error) => {
-        if (error instanceof DiscordAPIError) {
-          this.chaos.logger.debug(`${logPrefix(newMember)} Ignored discord error: ${error.toString()}`);
-          return EMPTY;
+        switch (error.message) {
+          case "Adding the role timed out.":
+          case "Removing the role timed out.":
+            this.chaos.logger.debug(`${logPrefix(newMember)} Ignored timeout error: ${error.toString()}`);
+            return EMPTY;
+          default:
+            return this.chaos.handleError(error, [
+              {name: "Service", value: "StreamingService"},
+              {name: "Hook", value: "presenceUpdate$"},
+              {name: "Guild", value: newMember.guild.toString()},
+              {name: "Member", value: newMember.toString()},
+            ]).pipe(
+              flatMap(() => EMPTY),
+            );
         }
-
-        return this.chaos.handleError(error, [
-          {name: "Service", value: "StreamingService"},
-          {name: "Hook", value: "presenceUpdate$"},
-          {name: "Guild", value: newMember.guild.toString()},
-          {name: "Member", value: newMember.toString()},
-        ]).pipe(
-          flatMap(() => EMPTY),
-        );
       }),
     );
   }
