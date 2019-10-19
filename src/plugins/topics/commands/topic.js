@@ -1,26 +1,31 @@
+const {Command} = require('chaos-core');
 const {of} = require('rxjs');
 const {flatMap, tap, catchError} = require('rxjs/operators');
 
-module.exports = {
-  name: 'topic',
-  description: 'Open a new discussion channel',
-  scope: 'text',
+class TopicCommand extends Command {
+  constructor(chaos) {
+    super(chaos, {
+      name: 'topic',
+      description: 'Open a new discussion channel',
+      scope: 'text',
 
-  args: [
-    {
-      name: 'channelName',
-      description: 'The name of the channel to open',
-      required: true,
-      greedy: true,
-    },
-  ],
+      args: [
+        {
+          name: 'channelName',
+          description: 'The name of the channel to open',
+          required: true,
+          greedy: true,
+        },
+      ],
+    });
+  }
 
   run(context, response) {
     const topicService = this.chaos.getService('topics', 'topicService');
     const guild = context.guild;
     const channelName = topicService.channelNameSafeString(context.args.channelName);
 
-    context.chaos.logger.debug(`attempting to open topic channel: ${channelName}`);
+    this.logger.debug(`attempting to open topic channel: ${channelName}`);
 
     let openCategory = topicService.getOpenTopicsCategory(guild);
     if (!openCategory) {
@@ -49,7 +54,7 @@ module.exports = {
             response.content = `I'm sorry, Discord does not allow that channel name.`;
           } else {
             response.content = `I'm sorry, Discord returned an unexpected error when I tried to create the channel.`;
-            context.chaos.handleError(error, [
+            this.chaos.handleError(error, [
               {name: "command", value: "topic"},
               {name: "guild", value: context.guild.name},
               {name: "channel", value: context.channel.name},
@@ -59,7 +64,7 @@ module.exports = {
           }
         } else {
           response.content = `I'm sorry, I ran into an unexpected problem.`;
-          context.chaos.handleError(error, [
+          this.chaos.handleError(error, [
             {name: "command", value: "topic"},
             {name: "guild", value: context.guild.name},
             {name: "channel", value: context.channel.name},
@@ -71,5 +76,7 @@ module.exports = {
         return response.send();
       }),
     );
-  },
-};
+  }
+}
+
+module.exports = TopicCommand;
