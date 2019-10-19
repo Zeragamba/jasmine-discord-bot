@@ -1,5 +1,3 @@
-const glob = require('glob');
-
 const {
   DATAKEYS,
   AUTO_BAN_RULES,
@@ -32,13 +30,21 @@ module.exports = {
       data: true,
     },
   ],
-  services: glob
-    .sync(`${__dirname}/services/**/*.js`)
-    .map((filename) => require(filename)),
-  configActions: glob
-    .sync(`${__dirname}/config/**/*.js`)
-    .map((filename) => require(filename)),
-  commands: glob
-    .sync(`${__dirname}/commands/**/*.js`)
-    .map((filename) => require(filename)),
+  services: [
+    require('./services/auto-ban-service'),
+    require('./services/mod-log-service'),
+  ],
+  configActions: [
+    require('./config/disable-auto-ban'),
+    require('./config/disable-log'),
+    require('./config/enable-auto-ban'),
+    require('./config/enable-log'),
+    require('./config/list-auto-ban-rules'),
+    require('./config/set-auto-ban-rule'),
+  ],
+  commands: [
+    require('./commands/ban'),
+    require('./commands/unban'),
+    require('./commands/warn'),
+  ],
 };
