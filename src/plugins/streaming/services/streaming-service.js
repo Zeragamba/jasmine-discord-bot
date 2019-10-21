@@ -41,6 +41,9 @@ class StreamingService extends Service {
           case "Removing the role timed out.":
             this.chaos.logger.debug(`${logPrefix(newMember)} Ignored timeout error: ${error.toString()}`);
             return EMPTY;
+          case "Missing Permissions":
+            this.chaos.logger.debug(`${logPrefix(newMember)} Missing permissions to add/remove roles`);
+            return EMPTY;
           default:
             return this.chaos.handleError(error, [
               {name: "Service", value: "StreamingService"},
