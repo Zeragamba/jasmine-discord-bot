@@ -35,9 +35,19 @@ class TopicCommand extends Command {
       return response.send();
     }
 
+    if (guild.channels.some((c) => c.name === channelName)) {
+      response.type = 'message';
+      response.content = "A channel with that name already exists.";
+      return response.send();
+    }
+
+    this.logger.debug(`Open Category found: ${openCategory}`);
+
     return of('').pipe(
-      flatMap(context.guild.createChannel(channelName)),
+      flatMap(() => context.guild.createChannel(channelName, {type: 'text'})),
+      tap((channel) => this.logger.debug(`Channel created: ${channel}`)),
       flatMap((channel) => channel.setParent(openCategory).then(() => channel)),
+      tap(() => this.logger.debug(`Channel parent set`)),
       tap((channel) => topicService.watchChannel(channel)),
       flatMap((channel) => {
         response.type = 'reply';
@@ -45,6 +55,7 @@ class TopicCommand extends Command {
         return response.send();
       }),
       catchError((error) => {
+        this.logger.debug(`Error caught: ${error}`);
         response.type = 'message';
 
         if (error.name === 'DiscordAPIError') {
