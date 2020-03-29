@@ -4,8 +4,8 @@ const Path = require('path');
 const packageJson = require('../package');
 
 const plugins = [
-  "auto-role",
-  "user-roles",
+  require("chaos-plugin-auto-role"),
+  require("chaos-plugin-user-roles"),
   require('./plugins/mod-tools'),
   require('./plugins/ow-info'),
   require('./plugins/ow-mains'),
