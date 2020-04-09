@@ -245,18 +245,18 @@ chalk@^3.0.0:
     ansi-styles "^4.1.0"
     supports-color "^7.1.0"
 
-chaos-core@^4.2.0:
-  version "4.2.1"
-  resolved "https://registry.yarnpkg.com/chaos-core/-/chaos-core-4.2.1.tgz#47828accb03ee4e2efa6a07fd0d7f0785d954a77"
-  integrity sha512-BVue9Kc2naDJjYNPGks1UqU+BxCemkHC7ZAyzIdWqbQdb5KX2j3mq+EQNAHzDYLK1v511KrDjc9ybPn++jAcaA==
+chaos-core@^4.3.1:
+  version "4.3.1"
+  resolved "https://registry.yarnpkg.com/chaos-core/-/chaos-core-4.3.1.tgz#7afb5f15d97d275a4bc1f66dc5f2ca8306c8a070"
+  integrity sha512-wQKTqrTQXG0HCZIRXRq7pZUB0Vlb10g6pEIlG0ICDGRS30lRz+s/AcpYLCPICfi8mEhrlIKNIjYIOuIgBK5vNA==
   dependencies:
     deepmerge "^4.2.2"
     winston "^3.2.1"
 
-chaos-data-disk@^4.2.0:
-  version "4.2.0"
-  resolved "https://registry.yarnpkg.com/chaos-data-disk/-/chaos-data-disk-4.2.0.tgz#3e8e608cff2c9cdb25d62f90fffd69a071fdefc0"
-  integrity sha512-o6O3BDtKKe68z/gC47yQltNYfvzG1w7zTTK4mOPmrxvUykk7zI5yOMvHrUvYkaG6FRX+XDF+2yOR/PZ+2nGbGA==
+chaos-data-disk@^4.3.0:
+  version "4.3.0"
+  resolved "https://registry.yarnpkg.com/chaos-data-disk/-/chaos-data-disk-4.3.0.tgz#284ba617a2075bf98e3a7e8c3bcf36a4512a026c"
+  integrity sha512-NF8u9631+pafxkXOAKbr6aFrc9T5beamVJ6SBEc3GIAWKzuUO2SCEam5jyMnzKPx1BwMKOFGqZBzM20yMf6Zjw==
 
 chaos-data-memory@^4.0.1:
   version "4.2.0"
