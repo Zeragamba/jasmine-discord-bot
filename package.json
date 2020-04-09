@@ -23,7 +23,7 @@
   "devDependencies": {
     "chai": "^4.2.0",
     "chai-subset": "^1.6.0",
-    "chaos-data-memory": "^4.0.1",
+    "chaos-data-memory": "^4.3.0",
     "eslint": "^6.1.0",
     "eslint-plugin-chai-expect": "^2.0.1",
     "eslint-watch": "^6.0.0",
