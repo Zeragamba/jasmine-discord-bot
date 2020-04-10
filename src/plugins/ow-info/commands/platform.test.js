@@ -6,15 +6,7 @@ describe('ow-info: !platform', function () {
   beforeEach(async function () {
     this.jasmine = stubJasmine();
     this.message = new MockMessage();
-    this.args = {};
-    this.test$ = this.jasmine.testCommand({
-      pluginName: 'ow-info',
-      commandName: 'platform',
-      message: this.message,
-      args: this.args,
-    });
 
-    this.message.reply = (message) => Promise.resolve(message);
     this.author = this.message.author;
     this.author.username = "TestUser";
 
@@ -25,54 +17,56 @@ describe('ow-info: !platform', function () {
       return Promise.resolve(this.member);
     };
 
-    let pluginService = this.jasmine.getService('core', 'PluginService');
-
+    await this.jasmine.listen().toPromise();
     await this.jasmine.emit("guildCreate", this.message.guild).toPromise();
-    await pluginService.enablePlugin(this.message.guild.id, 'ow-info').toPromise();
+    await this.jasmine.getService('core', 'PluginService')
+      .enablePlugin(this.message.guild.id, 'ow-info').toPromise();
   });
 
   describe('!platform', function () {
+    beforeEach(function () {
+      this.message.content = '!platform';
+    });
+
     it('responds with an error message', async function () {
       sinon.spy(this.message.channel, "send");
-      await this.test$.toPromise();
-      expect(this.message.channel.send).to.have.been.calledWith(
-        `I'm sorry, but I'm missing some information for that command:`,
-      );
+      const responses = await this.jasmine.testMessage(this.message);
+      expect(responses[0]).to.containSubset({
+        content: `I'm sorry, but I'm missing some information for that command:`,
+      });
     });
   });
 
   describe('!platform {platform}', function () {
     context(`when the platform is not valid`, function () {
       beforeEach(function () {
-        this.args.platform = `null`;
+        this.message.content = '!platform null';
       });
 
       it(`responds with an error message`, async function () {
-        sinon.spy(this.message, 'reply');
-        await this.test$.toPromise();
-        expect(this.message.reply).to.have.been.calledWith(
-          `I'm sorry, but 'null' is not an available platform.`,
-        );
+        const responses = await this.jasmine.testMessage(this.message);
+        expect(responses[0]).to.containSubset({
+          content: `I'm sorry, but 'null' is not an available platform.`,
+        });
       });
     });
 
     platforms.forEach(({name, tag, alias}) => {
       context(`when the platform is "${name}"`, function () {
         beforeEach(function () {
-          this.args.platform = name;
+          this.message.content = `!platform ${name}`;
         });
 
         it(`responds with a success message`, async function () {
-          sinon.spy(this.message, 'reply');
-          await this.test$.toPromise();
-          expect(this.message.reply).to.have.been.calledWith(
-            `I've updated your platform to ${name}`,
-          );
+          const responses = await this.jasmine.testMessage(this.message);
+          expect(responses[0]).to.containSubset({
+            content: `I've updated your platform to ${name}`,
+          });
         });
 
         it(`adds the tag [${tag}] to the user's nickname`, async function () {
           sinon.spy(this.message.member, 'setNickname');
-          await this.test$.toPromise();
+          await this.jasmine.testMessage(this.message);
           expect(this.message.member.setNickname).to.have.been.calledWith(
             `TestUser [${tag}]`,
           );
@@ -81,12 +75,12 @@ describe('ow-info: !platform', function () {
         alias.forEach((alias) => {
           context(`when the platform is given as ${alias}`, function () {
             beforeEach(function () {
-              this.args.platform = alias;
+              this.message.content = `!platform ${alias}`;
             });
 
             it(`sets the platform tag to [${tag}]`, async function () {
               sinon.spy(this.message.member, 'setNickname');
-              await this.test$.toPromise();
+              await this.jasmine.testMessage(this.message);
               expect(this.message.member.setNickname).to.have.been.calledWith(
                 `TestUser [${tag}]`,
               );
@@ -98,13 +92,13 @@ describe('ow-info: !platform', function () {
 
     context('when the user already has a tag', function () {
       beforeEach(function () {
-        this.args.platform = `PC`;
+        this.message.content = '!platform PC';
         this.message.member.nickname = 'UserNickname [NULL]';
       });
 
       it(`replaces the tag`, async function () {
         sinon.spy(this.message.member, 'setNickname');
-        await this.test$.toPromise();
+        await this.jasmine.testMessage(this.message);
         expect(this.message.member.setNickname).to.have.been.calledWith(
           `UserNickname [PC]`,
         );
@@ -113,13 +107,13 @@ describe('ow-info: !platform', function () {
 
     context('when the user has a nickname', function () {
       beforeEach(function () {
-        this.args.platform = `PC`;
+        this.message.content = '!platform PC';
         this.message.member.nickname = 'UserNickname';
       });
 
       it(`updates the user's nickname`, async function () {
         sinon.spy(this.message.member, 'setNickname');
-        await this.test$.toPromise();
+        await this.jasmine.testMessage(this.message);
         expect(this.message.member.setNickname).to.have.been.calledWith(
           `UserNickname [PC]`,
         );
@@ -128,7 +122,7 @@ describe('ow-info: !platform', function () {
 
     context('when the user was not cached by Discord.js', function () {
       beforeEach(function () {
-        this.args.platform = `PC`;
+        this.message.content = '!platform PC';
 
         this.member = this.message.member;
         this.message.guild.fetchMember = () => Promise.resolve(this.member);
@@ -140,7 +134,7 @@ describe('ow-info: !platform', function () {
         sinon.spy(this.message, 'reply');
         sinon.spy(this.member, 'setNickname');
 
-        await this.test$.toPromise();
+        await this.jasmine.testMessage(this.message);
         expect(this.message.guild.fetchMember)
           .to.have.been.calledWith(this.message.author);
         expect(this.message.reply)
