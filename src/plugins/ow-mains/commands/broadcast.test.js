@@ -1,6 +1,6 @@
 const Discord = require('discord.js');
-const {range, EMPTY} = require('rxjs');
-const {tap, map, last, delayWhen} = require('rxjs/operators');
+const {EMPTY} = require('rxjs');
+const {range} = require('range');
 
 describe('owmains: !broadcast', function () {
   beforeEach(async function () {
@@ -215,35 +215,36 @@ describe('owmains: !broadcast', function () {
       });
 
       context('when servers have subscribed channels', function () {
-        beforeEach(function (done) {
+        beforeEach(async function () {
           const BroadcastService = this.jasmine.getService('owmains', 'BroadcastService');
           this.subbedChannels = [];
+          this.guilds = range(0, 3).map((index) => ({
+            id: Discord.SnowflakeUtil.generate(),
+            name: `Guild ${index}`,
+            channels: new Discord.Collection(),
+          }));
 
-          range(0, 3).pipe(
-            map((index) => ({
-              id: Discord.SnowflakeUtil.generate(),
-              name: `Guild ${index}`,
-              channels: new Discord.Collection(),
-            })),
-            map((guild) => ({
-              id: Discord.SnowflakeUtil.generate(),
-              name: "broadcasts",
-              send: () => Promise.resolve(),
-              guild,
-              permissionsFor: () => ({
-                has: () => true,
-              }),
-            })),
-            tap((channel) => channel.guild.channels.set(channel.id, channel)),
-            tap((channel) => this.jasmine.discord.guilds.set(channel.guild.id, channel.guild)),
-            delayWhen((channel) => BroadcastService.setBroadcastChannel(
+          this.channels = this.guilds.map((guild) => ({
+            id: Discord.SnowflakeUtil.generate(),
+            name: "broadcasts",
+            send: () => Promise.resolve(),
+            guild,
+            permissionsFor: () => ({
+              has: () => true,
+            }),
+          }));
+
+          for (const channel of this.channels) {
+            channel.guild.channels.set(channel.id, channel);
+            this.jasmine.discord.guilds.set(channel.guild.id, channel.guild);
+            this.subbedChannels.push(channel);
+
+            await BroadcastService.setBroadcastChannel(
               channel.guild,
               "network",
               channel,
-            )),
-            tap((channel) => this.subbedChannels.push(channel)),
-            last(),
-          ).subscribe(() => done(), (error) => done(error));
+            ).toPromise();
+          }
         });
 
         it('replies that there were broadcasts', async function () {
