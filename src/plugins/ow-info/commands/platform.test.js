@@ -1,11 +1,9 @@
-const {of} = require('rxjs');
-const {flatMap, tap} = require('rxjs/operators');
 const {MockMessage} = require("chaos-core").test.discordMocks;
 
 const platforms = require('../data/platforms');
 
 describe('ow-info: !platform', function () {
-  beforeEach(function (done) {
+  beforeEach(async function () {
     this.jasmine = stubJasmine();
     this.message = new MockMessage();
     this.args = {};
@@ -29,21 +27,17 @@ describe('ow-info: !platform', function () {
 
     let pluginService = this.jasmine.getService('core', 'PluginService');
 
-    of('').pipe(
-      flatMap(() => this.jasmine.emit("guildCreate", this.message.guild)),
-      flatMap(() => pluginService.enablePlugin(this.message.guild.id, 'ow-info')),
-    ).subscribe(() => done(), (error) => done(error));
+    await this.jasmine.emit("guildCreate", this.message.guild).toPromise();
+    await pluginService.enablePlugin(this.message.guild.id, 'ow-info').toPromise();
   });
 
   describe('!platform', function () {
-    it('responds with an error message', function (done) {
+    it('responds with an error message', async function () {
       sinon.spy(this.message.channel, "send");
-
-      this.test$.pipe(
-        tap(() => expect(this.message.channel.send).to.have.been.calledWith(
-          `I'm sorry, but I'm missing some information for that command:`,
-        )),
-      ).subscribe(() => done(), (error) => done(error));
+      await this.test$.toPromise();
+      expect(this.message.channel.send).to.have.been.calledWith(
+        `I'm sorry, but I'm missing some information for that command:`,
+      );
     });
   });
 
@@ -53,14 +47,12 @@ describe('ow-info: !platform', function () {
         this.args.platform = `null`;
       });
 
-      it(`responds with an error message`, function (done) {
+      it(`responds with an error message`, async function () {
         sinon.spy(this.message, 'reply');
-
-        this.test$.pipe(
-          tap(() => expect(this.message.reply).to.have.been.calledWith(
-            `I'm sorry, but 'null' is not an available platform.`,
-          )),
-        ).subscribe(() => done(), (error) => done(error));
+        await this.test$.toPromise();
+        expect(this.message.reply).to.have.been.calledWith(
+          `I'm sorry, but 'null' is not an available platform.`,
+        );
       });
     });
 
@@ -70,24 +62,20 @@ describe('ow-info: !platform', function () {
           this.args.platform = name;
         });
 
-        it(`responds with a success message`, function (done) {
+        it(`responds with a success message`, async function () {
           sinon.spy(this.message, 'reply');
-
-          this.test$.pipe(
-            tap(() => expect(this.message.reply).to.have.been.calledWith(
-              `I've updated your platform to ${name}`,
-            )),
-          ).subscribe(() => done(), (error) => done(error));
+          await this.test$.toPromise();
+          expect(this.message.reply).to.have.been.calledWith(
+            `I've updated your platform to ${name}`,
+          );
         });
 
-        it(`adds the tag [${tag}] to the user's nickname`, function (done) {
+        it(`adds the tag [${tag}] to the user's nickname`, async function () {
           sinon.spy(this.message.member, 'setNickname');
-
-          this.test$.pipe(
-            tap(() => expect(this.message.member.setNickname).to.have.been.calledWith(
-              `TestUser [${tag}]`,
-            )),
-          ).subscribe(() => done(), (error) => done(error));
+          await this.test$.toPromise();
+          expect(this.message.member.setNickname).to.have.been.calledWith(
+            `TestUser [${tag}]`,
+          );
         });
 
         alias.forEach((alias) => {
@@ -96,14 +84,12 @@ describe('ow-info: !platform', function () {
               this.args.platform = alias;
             });
 
-            it(`sets the platform tag to [${tag}]`, function (done) {
+            it(`sets the platform tag to [${tag}]`, async function () {
               sinon.spy(this.message.member, 'setNickname');
-
-              this.test$.pipe(
-                tap(() => expect(this.message.member.setNickname).to.have.been.calledWith(
-                  `TestUser [${tag}]`,
-                )),
-              ).subscribe(() => done(), (error) => done(error));
+              await this.test$.toPromise();
+              expect(this.message.member.setNickname).to.have.been.calledWith(
+                `TestUser [${tag}]`,
+              );
             });
           });
         });
@@ -116,14 +102,12 @@ describe('ow-info: !platform', function () {
         this.message.member.nickname = 'UserNickname [NULL]';
       });
 
-      it(`replaces the tag`, function (done) {
+      it(`replaces the tag`, async function () {
         sinon.spy(this.message.member, 'setNickname');
-
-        this.test$.pipe(
-          tap(() => expect(this.message.member.setNickname).to.have.been.calledWith(
-            `UserNickname [PC]`,
-          )),
-        ).subscribe(() => done(), (error) => done(error));
+        await this.test$.toPromise();
+        expect(this.message.member.setNickname).to.have.been.calledWith(
+          `UserNickname [PC]`,
+        );
       });
     });
 
@@ -133,14 +117,12 @@ describe('ow-info: !platform', function () {
         this.message.member.nickname = 'UserNickname';
       });
 
-      it(`updates the user's nickname`, function (done) {
+      it(`updates the user's nickname`, async function () {
         sinon.spy(this.message.member, 'setNickname');
-
-        this.test$.pipe(
-          tap(() => expect(this.message.member.setNickname).to.have.been.calledWith(
-            `UserNickname [PC]`,
-          )),
-        ).subscribe(() => done(), (error) => done(error));
+        await this.test$.toPromise();
+        expect(this.message.member.setNickname).to.have.been.calledWith(
+          `UserNickname [PC]`,
+        );
       });
     });
 
@@ -153,22 +135,18 @@ describe('ow-info: !platform', function () {
         delete this.message.member;
       });
 
-      it('fetches the member and works normally', function (done) {
+      it('fetches the member and works normally', async function () {
         sinon.spy(this.member.guild, 'fetchMember');
         sinon.spy(this.message, 'reply');
         sinon.spy(this.member, 'setNickname');
 
-        this.test$.pipe(
-          tap(() => expect(this.message.guild.fetchMember).to.have.been.calledWith(
-            this.message.author,
-          )),
-          tap(() => expect(this.message.reply).to.have.been.calledWith(
-            `I've updated your platform to PC`,
-          )),
-          tap(() => expect(this.member.setNickname).to.have.been.calledWith(
-            `TestUser [PC]`,
-          )),
-        ).subscribe(() => done(), (error) => done(error));
+        await this.test$.toPromise();
+        expect(this.message.guild.fetchMember)
+          .to.have.been.calledWith(this.message.author);
+        expect(this.message.reply)
+          .to.have.been.calledWith(`I've updated your platform to PC`);
+        expect(this.member.setNickname)
+          .to.have.been.calledWith(`TestUser [PC]`);
       });
     });
   });

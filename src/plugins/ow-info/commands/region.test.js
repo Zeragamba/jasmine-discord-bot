@@ -1,9 +1,7 @@
 const Discord = require('discord.js');
-const {of} = require('rxjs');
-const {flatMap, tap} = require('rxjs/operators');
 
 describe('ow-info: !region', function () {
-  beforeEach(function (done) {
+  beforeEach(async function () {
     this.jasmine = stubJasmine();
     this.test$ = this.jasmine.testCommand({
       pluginName: 'ow-info',
@@ -14,21 +12,17 @@ describe('ow-info: !region', function () {
 
     const pluginService = this.jasmine.getService('core', 'PluginService');
 
-    of('').pipe(
-      flatMap(() => this.jasmine.emit("guildCreate", this.message.guild)),
-      flatMap(() => pluginService.enablePlugin(this.message.guild.id, 'ow-info')),
-    ).subscribe(() => done(), (error) => done(error));
+    await this.jasmine.emit("guildCreate", this.message.guild).toPromise();
+    await pluginService.enablePlugin(this.message.guild.id, 'ow-info').toPromise();
   });
 
   describe('!region', function () {
-    it('responds with an error message', function (done) {
+    it('responds with an error message', async function () {
       sinon.spy(this.message.channel, "send");
-
-      this.test$.pipe(
-        tap(() => expect(this.message.channel.send).to.have.been.calledWith(
-          `I'm sorry, but I'm missing some information for that command:`,
-        )),
-      ).subscribe(() => done(), (error) => done(error));
+      await this.test$.toPromise();
+      expect(this.message.channel.send).to.have.been.calledWith(
+        `I'm sorry, but I'm missing some information for that command:`,
+      );
     });
   });
 
@@ -38,52 +32,46 @@ describe('ow-info: !region', function () {
     });
 
     context('when the region is mapped to a role', function () {
-      beforeEach(function (done) {
+      beforeEach(async function () {
         this.role = {
           id: Discord.SnowflakeUtil.generate(),
           name: 'testRole',
         };
         this.message.guild.roles.set(this.role.id, this.role);
 
-        let regionService = this.jasmine.getService('ow-info', 'RegionService');
-        regionService.mapRegion(this.message.guild, 'test', this.role)
-          .subscribe(() => done(), (error) => done(error));
+        await this.jasmine.getService('ow-info', 'RegionService')
+          .mapRegion(this.message.guild, 'test', this.role).toPromise();
       });
 
-      it('gives a success message', function (done) {
-        this.test$.pipe(
-          tap((response) => expect(response.replies).to.have.length(1)),
-          tap((response) => expect(response.replies).to.containSubset([
-            {
-              type: 'reply',
-              content: 'I\'ve updated your region to test',
-            },
-          ])),
-        ).subscribe(() => done(), (error) => done(error));
+      it('gives a success message', async function () {
+        const response = await this.test$.toPromise();
+        expect(response.replies).to.have.length(1);
+        expect(response.replies).to.containSubset([
+          {
+            type: 'reply',
+            content: 'I\'ve updated your region to test',
+          },
+        ]);
       });
 
-      it('adds the role to the user', function (done) {
+      it('adds the role to the user', async function () {
         sinon.spy(this.message.member, "addRole");
-
-        this.test$.pipe(
-          tap(() => expect(this.message.member.addRole).to.have.been.calledWith(
-            this.role.id,
-          )),
-        ).subscribe(() => done(), (error) => done(error));
+        await this.test$.toPromise();
+        expect(this.message.member.addRole).to.have.been.calledWith(
+          this.role.id,
+        );
       });
     });
 
     context('when the region is not mapped to a role', function () {
-      it('returns an error message', function (done) {
+      it('returns an error message', async function () {
         sinon.spy(this.message.channel, "send");
         sinon.spy(this.message.member, "addRole");
-
-        this.test$.pipe(
-          tap(() => expect(this.message.channel.send).to.have.been.calledWith(
-            'I\'m sorry, but \'test\' is not an available region.',
-          )),
-          tap(() => expect(this.message.member.addRole).not.to.have.been.called),
-        ).subscribe(() => done(), (error) => done(error));
+        await this.test$.toPromise();
+        expect(this.message.channel.send).to.have.been.calledWith(
+          'I\'m sorry, but \'test\' is not an available region.',
+        );
+        expect(this.message.member.addRole).not.to.have.been.called;
       });
     });
   });
@@ -94,7 +82,7 @@ describe('ow-info: !region', function () {
     });
 
     context('when the alias is mapped to a region', function () {
-      beforeEach(function (done) {
+      beforeEach(async function () {
         this.role = {
           id: Discord.SnowflakeUtil.generate(),
           name: 'testRole',
@@ -102,32 +90,28 @@ describe('ow-info: !region', function () {
         this.message.guild.roles.set(this.role.id, this.role);
 
         let regionService = this.jasmine.getService('ow-info', 'RegionService');
-        of('').pipe(
-          flatMap(() => regionService.mapRegion(this.message.guild, 'test', this.role)),
-          flatMap(() => regionService.mapAlias(this.message.guild, 'testAlias', 'test')),
-        ).subscribe(() => done(), (error) => done(error));
+        await regionService.mapRegion(this.message.guild, 'test', this.role).toPromise();
+        await regionService.mapAlias(this.message.guild, 'testAlias', 'test').toPromise();
       });
 
-      it('gives a success message', function (done) {
-        this.test$.pipe(
-          tap((response) => expect(response.replies).to.have.length(1)),
-          tap((response) => expect(response.replies).to.containSubset([
-            {
-              type: 'reply',
-              content: 'I\'ve updated your region to test',
-            },
-          ])),
-        ).subscribe(() => done(), (error) => done(error));
+      it('gives a success message', async function () {
+        const response = await this.test$.toPromise();
+        expect(response.replies).to.have.length(1);
+        expect(response.replies).to.containSubset([
+          {
+            type: 'reply',
+            content: 'I\'ve updated your region to test',
+          },
+        ]);
       });
 
-      it('adds the role to the user', function (done) {
+      it('adds the role to the user', async function () {
         sinon.spy(this.message.member, "addRole");
 
-        this.test$.pipe(
-          tap(() => expect(this.message.member.addRole).to.have.been.calledWith(
-            this.role.id,
-          )),
-        ).subscribe(() => done(), (error) => done(error));
+        await this.test$.toPromise();
+        expect(this.message.member.addRole).to.have.been.calledWith(
+          this.role.id,
+        );
       });
 
       context('when the user was not cached by Discord.js', function () {
@@ -139,22 +123,21 @@ describe('ow-info: !region', function () {
           delete this.message.member;
         });
 
-        it('fetches the member and works normally', function (done) {
+        it('fetches the member and works normally', async function () {
           sinon.spy(this.member.guild, 'fetchMember');
           sinon.spy(this.message, 'reply');
 
-          this.test$.pipe(
-            tap(() => expect(this.message.guild.fetchMember).to.have.been.calledWith(
-              this.message.author,
-            )),
-            tap((response) => expect(response.replies).to.have.length(1)),
-            tap((response) => expect(response.replies).to.containSubset([
-              {
-                type: 'reply',
-                content: 'I\'ve updated your region to test',
-              },
-            ])),
-          ).subscribe(() => done(), (error) => done(error));
+          const response = await this.test$.toPromise();
+          expect(this.message.guild.fetchMember).to.have.been.calledWith(
+            this.message.author,
+          );
+          expect(response.replies).to.have.length(1);
+          expect(response.replies).to.containSubset([
+            {
+              type: 'reply',
+              content: 'I\'ve updated your region to test',
+            },
+          ]);
         });
       });
     });

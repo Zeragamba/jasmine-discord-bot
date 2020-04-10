@@ -1,5 +1,4 @@
 const {of} = require('rxjs');
-const {tap} = require('rxjs/operators');
 const Collection = require('discord.js').Collection;
 
 describe('streaming: !config streaming removeStreamerRole', function () {
@@ -28,30 +27,27 @@ describe('streaming: !config streaming removeStreamerRole', function () {
           .returns(of(this.role));
       });
 
-      it('removes the streamer role from the guild', function (done) {
-        this.test$.pipe(
-          tap(() => expect(this.streamingService.removeStreamerRole).to.have.been.calledWith(this.test$.message.guild)),
-        ).subscribe(() => done(), (error) => done(error));
+      it('removes the streamer role from the guild', async function () {
+        await this.test$.toPromise();
+        expect(this.streamingService.removeStreamerRole).to.have.been.calledWith(this.test$.message.guild);
       });
 
-      it('returns a success message', function (done) {
-        this.test$.pipe(
-          tap((response) => expect(response).to.containSubset({
-            status: 200,
-            content: `I will no longer limit adding the live role to users with the role ${this.role.name}`,
-          })),
-        ).subscribe(() => done(), (error) => done(error));
+      it('returns a success message', async function () {
+        const response = await this.test$.toPromise();
+        expect(response).to.containSubset({
+          status: 200,
+          content: `I will no longer limit adding the live role to users with the role ${this.role.name}`,
+        });
       });
     });
 
     context('when there was no previous streamer role', function () {
-      it('gives a user readable error', function (done) {
-        this.test$.pipe(
-          tap((response) => expect(response).to.containSubset({
-            status: 400,
-            content: `No streamer role was set.`,
-          })),
-        ).subscribe(() => done(), (error) => done(error));
+      it('gives a user readable error', async function () {
+        const response = await this.test$.toPromise();
+        expect(response).to.containSubset({
+          status: 400,
+          content: `No streamer role was set.`,
+        });
       });
     });
   });

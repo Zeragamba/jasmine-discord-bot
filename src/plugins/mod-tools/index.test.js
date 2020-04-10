@@ -3,17 +3,13 @@ describe('Plugin: ModTools', function () {
     this.jasmine = stubJasmine();
   });
 
-  afterEach(function (done) {
+  afterEach(async function () {
     if (this.jasmine.listening) {
-      this.jasmine.shutdown()
-        .subscribe(() => done(), (error) => done(error));
-    } else {
-      done();
+      await this.jasmine.shutdown().toPromise();
     }
   });
 
-  it('can be loaded by Chaos', function (done) {
-    this.jasmine.listen()
-      .subscribe(() => done(), (error) => done(error));
+  it('can be loaded by Chaos', async function () {
+    await this.jasmine.listen().toPromise();
   });
 });

@@ -3,7 +3,7 @@ const {range, EMPTY} = require('rxjs');
 const {tap, map, last, delayWhen} = require('rxjs/operators');
 
 describe('owmains: !broadcast', function () {
-  beforeEach(function (done) {
+  beforeEach(async function () {
     this.jasmine = stubJasmine();
 
     const OwmnService = this.jasmine.getService('owmains', 'OwmnService');
@@ -17,55 +17,49 @@ describe('owmains: !broadcast', function () {
     this.test$.message.guild.id = OwmnService.owmnServerId;
     this.test$.message.member.displayName = "Test User";
 
-    PermissionsService.addUser(this.test$.message.guild, 'broadcaster', this.test$.message.member)
-      .subscribe(() => done(), (error) => done(error));
+    await PermissionsService.addUser(this.test$.message.guild, 'broadcaster', this.test$.message.member).toPromise();
   });
 
   context('when the user does not have broadcaster permissions', function () {
-    beforeEach(function (done) {
-      const PermissionsService = this.jasmine.getService('core', 'PermissionsService');
-      PermissionsService.removeUser(this.test$.message.guild, 'broadcaster', this.test$.message.member)
-        .subscribe(() => done(), (error) => done(error));
+    beforeEach(async function () {
+      await this.jasmine.getService('core', 'PermissionsService')
+        .removeUser(this.test$.message.guild, 'broadcaster', this.test$.message.member).toPromise();
     });
 
-    it('does not run the command', function (done) {
+    it('does not run the command', async function () {
       const command = this.jasmine.getCommand('broadcast');
       sinon.spy(command, 'run');
 
-      this.test$.pipe(
-        tap(() => expect(command.run).not.to.have.been.called),
-      ).subscribe(() => done(), (error) => done(error));
+      await this.test$.toPromise();
+      expect(command.run).not.to.have.been.called;
     });
   });
 
   context('when the server is not the OWMN server', function () {
-    beforeEach(function (done) {
+    beforeEach(async function () {
       this.test$.message.guild.id = Discord.SnowflakeUtil.generate();
 
       // Re-grant permission as the server id changed
-      const PermissionsService = this.jasmine.getService('core', 'PermissionsService');
-      PermissionsService.addUser(this.test$.message.guild, 'broadcaster', this.test$.message.member)
-        .subscribe(() => done(), (error) => done(error));
+      await this.jasmine.getService('core', 'PermissionsService')
+        .addUser(this.test$.message.guild, 'broadcaster', this.test$.message.member).toPromise();
     });
 
-    it('does nothing', function (done) {
-      this.test$.pipe(
-        tap((response) => expect(response.replies.length).to.eq(0)),
-      ).subscribe(() => done(), (error) => done(error));
+    it('does nothing', async function () {
+      const response = await this.test$.toPromise();
+      expect(response.replies.length).to.eq(0);
     });
   });
 
   describe('!broadcast', function () {
-    it('replies with a help message', function (done) {
+    it('replies with a help message', async function () {
       const command = this.jasmine.getCommand('broadcast');
       sinon.spy(command, 'run');
 
-      this.test$.pipe(
-        tap((response) => expect(response.replies.length).to.eq(1)),
-        tap((response) => expect(response.replies[0]).to.containSubset({
-          content: "I'm sorry, but I'm missing some information for that command:",
-        })),
-      ).subscribe(() => done(), (error) => done(error));
+      const response = await this.test$.toPromise();
+      expect(response.replies.length).to.eq(1);
+      expect(response.replies[0]).to.containSubset({
+        content: "I'm sorry, but I'm missing some information for that command:",
+      });
     });
   });
 
@@ -74,16 +68,15 @@ describe('owmains: !broadcast', function () {
       this.test$.args.type = "network";
     });
 
-    it('replies with a help message', function (done) {
+    it('replies with a help message', async function () {
       const command = this.jasmine.getCommand('broadcast');
       sinon.spy(command, 'run');
 
-      this.test$.pipe(
-        tap((response) => expect(response.replies.length).to.eq(1)),
-        tap((response) => expect(response.replies[0]).to.containSubset({
-          content: "I'm sorry, but I'm missing some information for that command:",
-        })),
-      ).subscribe(() => done(), (error) => done(error));
+      const response = await this.test$.toPromise();
+      expect(response.replies.length).to.eq(1);
+      expect(response.replies[0]).to.containSubset({
+        content: "I'm sorry, but I'm missing some information for that command:",
+      });
     });
   });
 
@@ -129,45 +122,41 @@ describe('owmains: !broadcast', function () {
         this.test$.args.type = "foobar";
       });
 
-      it('replies with an error message', function (done) {
-        this.test$.pipe(
-          tap((response) => expect(response.replies.length).to.eq(1)),
-          tap((response) => expect(response.replies[0]).to.containSubset({
-            content: "Broadcast type foobar is not valid. Valid types: blizzard, network, esports",
-          })),
-        ).subscribe(() => done(), (error) => done(error));
+      it('replies with an error message', async function () {
+        const response = await this.test$.toPromise();
+        expect(response.replies.length).to.eq(1);
+        expect(response.replies[0]).to.containSubset({
+          content: "Broadcast type foobar is not valid. Valid types: blizzard, network, esports",
+        });
       });
     });
 
-    it('runs the command', function (done) {
+    it('runs the command', async function () {
       const command = this.jasmine.getCommand('broadcast');
       sinon.stub(command, 'run').returns(EMPTY);
 
-      this.test$.pipe(
-        tap(() => expect(command.run).to.have.been.called),
-      ).subscribe(() => done(), (error) => done(error));
+      await this.test$.toPromise();
+      expect(command.run).to.have.been.called;
     });
 
-    it('sends a confirmation message', function (done) {
+    it('sends a confirmation message', async function () {
       sinon.spy(this.channel, 'send');
       sinon.spy(this.confirmMessage, 'react');
 
-      this.test$.pipe(
-        tap(() => expect(this.channel.send)
-          .to.have.been.calledWith('Broadcast this to "network"?')),
-        tap(() => expect(this.confirmMessage.react)
-          .to.have.been.calledWith(this.confirmYesEmoji)),
-        tap(() => expect(this.confirmMessage.react)
-          .to.have.been.calledWith(this.confirmNoEmoji)),
-      ).subscribe(() => done(), (error) => done(error));
+      await this.test$.toPromise();
+      expect(this.channel.send)
+        .to.have.been.calledWith('Broadcast this to "network"?');
+      expect(this.confirmMessage.react)
+        .to.have.been.calledWith(this.confirmYesEmoji);
+      expect(this.confirmMessage.react)
+        .to.have.been.calledWith(this.confirmNoEmoji);
     });
 
-    it("waits for the message to be confirmed", function (done) {
+    it("waits for the message to be confirmed", async function () {
       sinon.spy(this.confirmMessage, 'awaitReactions');
 
-      this.test$.pipe(
-        tap(() => expect(this.confirmMessage.awaitReactions).to.have.been.called),
-      ).subscribe(() => done(), (error) => done(error));
+      await this.test$.toPromise();
+      expect(this.confirmMessage.awaitReactions).to.have.been.called;
     });
 
     context('when the confirmation is canceled', function () {
@@ -177,22 +166,20 @@ describe('owmains: !broadcast', function () {
         ]);
       });
 
-      it('does not broadcast the message', function (done) {
+      it('does not broadcast the message', async function () {
         const BroadcastService = this.jasmine.getService('owmains', 'BroadcastService');
         sinon.stub(BroadcastService, 'broadcastMessage');
 
-        this.test$.pipe(
-          tap(() => expect(BroadcastService.broadcastMessage).not.to.have.been.called),
-        ).subscribe(() => done(), (error) => done(error));
+        await this.test$.toPromise();
+        expect(BroadcastService.broadcastMessage).not.to.have.been.called;
       });
 
-      it('replies that the broadcast was canceled', function (done) {
-        this.test$.pipe(
-          tap((response) => expect(response.replies.length).to.eq(1)),
-          tap((response) => expect(response.replies[0]).to.containSubset({
-            content: "Ok. Broadcast canceled",
-          })),
-        ).subscribe(() => done(), (error) => done(error));
+      it('replies that the broadcast was canceled', async function () {
+        const response = await this.test$.toPromise();
+        expect(response.replies.length).to.eq(1);
+        expect(response.replies[0]).to.containSubset({
+          content: "Ok. Broadcast canceled",
+        });
       });
     });
 
@@ -203,30 +190,27 @@ describe('owmains: !broadcast', function () {
         ]);
       });
 
-      it('broadcasts the message', function (done) {
+      it('broadcasts the message', async function () {
         const BroadcastService = this.jasmine.getService('owmains', 'BroadcastService');
         sinon.spy(BroadcastService, 'broadcastMessage');
 
-        this.test$.pipe(
-          tap(() => expect(BroadcastService.broadcastMessage).to.have.been.called),
-        ).subscribe(() => done(), (error) => done(error));
+        await this.test$.toPromise();
+        expect(BroadcastService.broadcastMessage).to.have.been.called;
       });
 
-      it('replies that it will broadcast', function (done) {
-        this.test$.pipe(
-          tap((response) => expect(response.replies[0]).to.containSubset({
-            content: "Ok, let me broadcast that then.",
-          })),
-        ).subscribe(() => done(), (error) => done(error));
+      it('replies that it will broadcast', async function () {
+        const response = await this.test$.toPromise();
+        expect(response.replies[0]).to.containSubset({
+          content: "Ok, let me broadcast that then.",
+        });
       });
 
       context('when no servers are subscribed', function () {
-        it('replies that there were no broadcasts', function (done) {
-          this.test$.pipe(
-            tap((response) => expect(response.replies[1]).to.containSubset({
-              content: "Done. Broadcasted to 0 servers",
-            })),
-          ).subscribe(() => done(), (error) => done(error));
+        it('replies that there were no broadcasts', async function () {
+          const response = await this.test$.toPromise();
+          expect(response.replies[1]).to.containSubset({
+            content: "Done. Broadcasted to 0 servers",
+          });
         });
       });
 
@@ -262,29 +246,25 @@ describe('owmains: !broadcast', function () {
           ).subscribe(() => done(), (error) => done(error));
         });
 
-        it('replies that there were broadcasts', function (done) {
-          this.test$.pipe(
-            tap((response) => expect(response.replies[1]).to.containSubset({
-              content: "Done. Broadcasted to 3 servers",
-            })),
-          ).subscribe(() => done(), (error) => done(error));
+        it('replies that there were broadcasts', async function () {
+          const response = await this.test$.toPromise();
+          expect(response.replies[1]).to.containSubset({
+            content: "Done. Broadcasted to 3 servers",
+          });
         });
 
-        it('broadcasts to each server', function (done) {
+        it('broadcasts to each server', async function () {
           this.subbedChannels.forEach((channel) => {
             sinon.spy(channel, 'send');
           });
 
-          this.test$.pipe(
-            tap(() => {
-              this.subbedChannels.forEach((channel) => {
-                expect(channel.send).to.have.been.calledWith(
-                  "This is a test message\n" +
-                  "*- Test User*",
-                );
-              });
-            }),
-          ).subscribe(() => done(), (error) => done(error));
+          await this.test$.toPromise();
+          this.subbedChannels.forEach((channel) => {
+            expect(channel.send).to.have.been.calledWith(
+              "This is a test message\n" +
+              "*- Test User*",
+            );
+          });
         });
       });
     });
@@ -294,31 +274,28 @@ describe('owmains: !broadcast', function () {
         this.test$.args.type = 'blizzard';
       });
 
-      it("requires a link", function (done) {
-        this.test$.pipe(
-          tap((response) => expect(response.replies.length).to.eq(1)),
-          tap((response) => expect(response.replies[0]).to.containSubset({
-            content: "A link is required for Blizzard broadcasts.",
-          })),
-        ).subscribe(() => done(), (error) => done(error));
+      it("requires a link", async function () {
+        const response = await this.test$.toPromise();
+        expect(response.replies.length).to.eq(1);
+        expect(response.replies[0]).to.containSubset({
+          content: "A link is required for Blizzard broadcasts.",
+        });
       });
 
-      it('does not send a confirmation message', function (done) {
+      it('does not send a confirmation message', async function () {
         sinon.spy(this.channel, 'send');
 
-        this.test$.pipe(
-          tap(() => expect(this.channel.send)
-            .not.to.have.been.calledWith('Broadcast this to "blizzard"?')),
-        ).subscribe(() => done(), (error) => done(error));
+        await this.test$.toPromise();
+        expect(this.channel.send)
+          .not.to.have.been.calledWith('Broadcast this to "blizzard"?');
       });
 
-      it('does not broadcast the message', function (done) {
+      it('does not broadcast the message', async function () {
         const BroadcastService = this.jasmine.getService('owmains', 'BroadcastService');
         sinon.stub(BroadcastService, 'broadcastMessage');
 
-        this.test$.pipe(
-          tap(() => expect(BroadcastService.broadcastMessage).not.to.have.been.called),
-        ).subscribe(() => done(), (error) => done(error));
+        await this.test$.toPromise();
+        expect(BroadcastService.broadcastMessage).not.to.have.been.called;
       });
     });
   });

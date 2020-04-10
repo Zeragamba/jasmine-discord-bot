@@ -1,5 +1,4 @@
 const Discord = require('discord.js');
-const {tap} = require('rxjs/operators');
 
 describe('ow-info: !config ow-info addRegion', function () {
   beforeEach(function () {
@@ -13,22 +12,20 @@ describe('ow-info: !config ow-info addRegion', function () {
   });
 
   describe('!config ow-info addRegion', function () {
-    it('responds with an error message', function (done) {
-      this.test$.pipe(
-        tap((response) => expect(response).to.containSubset({
-          status: 400,
-          content: `I'm sorry, but I'm missing some information for that command:`,
-        })),
-      ).subscribe(() => done(), (error) => done(error));
+    it('responds with an error message', async function () {
+      const response = await this.test$.toPromise();
+      expect(response).to.containSubset({
+        status: 400,
+        content: `I'm sorry, but I'm missing some information for that command:`,
+      });
     });
 
-    it('does not run the action', function (done) {
+    it('does not run the action', async function () {
       const action = this.jasmine.getConfigAction('ow-info', 'addRegion');
       sinon.spy(action, 'run');
 
-      this.test$.pipe(
-        tap(() => expect(action.run).not.to.have.been.called),
-      ).subscribe(() => done(), (error) => done(error));
+      await this.test$.toPromise();
+      expect(action.run).not.to.have.been.called;
     });
   });
 
@@ -37,22 +34,20 @@ describe('ow-info: !config ow-info addRegion', function () {
       this.test$.args.region = 'test';
     });
 
-    it('responds with an error message', function (done) {
-      this.test$.pipe(
-        tap((response) => expect(response).to.containSubset({
-          status: 400,
-          content: `I'm sorry, but I'm missing some information for that command:`,
-        })),
-      ).subscribe(() => done(), (error) => done(error));
+    it('responds with an error message', async function () {
+      const response = await this.test$.toPromise();
+      expect(response).to.containSubset({
+        status: 400,
+        content: `I'm sorry, but I'm missing some information for that command:`,
+      });
     });
 
-    it('does not run the action', function (done) {
+    it('does not run the action', async function () {
       const action = this.jasmine.getConfigAction('ow-info', 'addRegion');
       sinon.spy(action, 'run');
 
-      this.test$.pipe(
-        tap(() => expect(action.run).not.to.have.been.called),
-      ).subscribe(() => done(), (error) => done(error));
+      await this.test$.toPromise();
+      expect(action.run).not.to.have.been.called;
     });
   });
 
@@ -71,24 +66,22 @@ describe('ow-info: !config ow-info addRegion', function () {
         this.message.guild.roles.set(this.role.id, this.role);
       });
 
-      it('remaps the region', function (done) {
-        this.test$.pipe(
-          tap((response) => expect(response).to.containSubset({
-            status: 200,
-            content: `Mapped the region test to testRole`,
-          })),
-        ).subscribe(() => done(), (error) => done(error));
+      it('remaps the region', async function () {
+        const response = await this.test$.toPromise();
+        expect(response).to.containSubset({
+          status: 200,
+          content: `Mapped the region test to testRole`,
+        });
       });
     });
 
     context('when the role does not exist', function () {
-      it('responds with an error', function (done) {
-        this.test$.pipe(
-          tap((response) => expect(response).to.containSubset({
-            status: 400,
-            content: `The role 'testRole' could not be found`,
-          })),
-        ).subscribe(() => done(), (error) => done(error));
+      it('responds with an error', async function () {
+        const response = await this.test$.toPromise();
+        expect(response).to.containSubset({
+          status: 400,
+          content: `The role 'testRole' could not be found`,
+        });
       });
     });
   });

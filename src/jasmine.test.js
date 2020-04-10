@@ -3,11 +3,9 @@ describe('Jasmine', function () {
     this.jasmine = stubJasmine();
   });
 
-  afterEach(function (done) {
+  afterEach(async function () {
     if (this.jasmine.listening) {
-      this.jasmine.shutdown().subscribe(() => done(), (error) => done(error));
-    } else {
-      done();
+      await this.jasmine.shutdown().toPromise();
     }
   });
 
@@ -26,9 +24,8 @@ describe('Jasmine', function () {
     });
   });
 
-  it('is able to start', function (done) {
+  it('is able to start', async function () {
     this.jasmine = stubJasmine();
-    this.jasmine.listen()
-      .subscribe(() => done(), (error) => done(error));
+    await this.jasmine.listen().toPromise();
   });
 });

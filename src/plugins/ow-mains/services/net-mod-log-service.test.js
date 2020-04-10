@@ -1,6 +1,4 @@
 const Discord = require('discord.js');
-const {toArray, tap} = require('rxjs/operators');
-
 const DataKeys = require('../datakeys');
 
 describe('NetModLogService', function () {
@@ -55,7 +53,7 @@ describe('NetModLogService', function () {
     });
 
     context('when the network mod log is enabled', function () {
-      beforeEach(function (done) {
+      beforeEach(async function () {
         this.modLogChannel = {
           id: Discord.SnowflakeUtil.generate(),
           guild: this.owmnGuild,
@@ -63,8 +61,7 @@ describe('NetModLogService', function () {
         };
         this.owmnGuild.channels.set(this.modLogChannel.id, this.modLogChannel);
 
-        this.jasmine.setGuildData(this.owmnGuild.id, DataKeys.netModLogChannelId, this.modLogChannel.id)
-          .subscribe(() => done(), (error) => done(error));
+        await this.jasmine.setGuildData(this.owmnGuild.id, DataKeys.netModLogChannelId, this.modLogChannel.id).toPromise();
       });
 
       context('when the audit logs can not be read', function () {
@@ -80,56 +77,51 @@ describe('NetModLogService', function () {
           });
         });
 
-        it('Adds an error to the log entry', function (done) {
+        it('Adds an error to the log entry', async function () {
           sinon.spy(this.modLogChannel, 'send');
 
-          this.netModLogService.handleGuildBanAdd(this.guild, this.bannedMember).pipe(
-            toArray(),
-            tap(() => expect(this.modLogChannel.send).to.have.been.calledOnce),
-            tap(() => expect(this.modLogChannel.send.firstCall.args).to.containSubset([
-              {
-                embed: {
-                  author: {
-                    name: "banned#0001 banned from Other guild",
-                  },
-                  description:
-                    `User ID: ${this.bannedMember.id}\n` +
-                    `Reason: ERROR: Unable to view audit log. I need the 'View Audit Log' permission in 'Other guild'`,
+          await this.netModLogService.handleGuildBanAdd(this.guild, this.bannedMember).toPromise();
+          expect(this.modLogChannel.send).to.have.been.calledOnce;
+          expect(this.modLogChannel.send.firstCall.args).to.containSubset([
+            {
+              embed: {
+                author: {
+                  name: "banned#0001 banned from Other guild",
                 },
+                description:
+                  `User ID: ${this.bannedMember.id}\n` +
+                  `Reason: ERROR: Unable to view audit log. I need the 'View Audit Log' permission in 'Other guild'`,
               },
-            ])),
-          ).subscribe(() => done(), (error) => done(error));
+            },
+          ]);
         });
       });
 
       context('when no audit log entry was found', function () {
-        it('Adds a notice to the log entry', function (done) {
+        it('Adds a notice to the log entry', async function () {
           sinon.spy(this.modLogChannel, 'send');
 
-          this.netModLogService.handleGuildBanAdd(this.guild, this.bannedMember).pipe(
-            toArray(),
-            tap(() => expect(this.modLogChannel.send).to.have.been.calledOnce),
-            tap(() => expect(this.modLogChannel.send.firstCall.args).to.containSubset([
-              {
-                embed: {
-                  author: {
-                    name: "banned#0001 banned from Other guild",
-                  },
-                  description:
-                    `User ID: ${this.bannedMember.id}\n` +
-                    `Reason: ERROR: No audit records were found`,
+          await this.netModLogService.handleGuildBanAdd(this.guild, this.bannedMember).toPromise();
+          expect(this.modLogChannel.send).to.have.been.calledOnce;
+          expect(this.modLogChannel.send.firstCall.args).to.containSubset([
+            {
+              embed: {
+                author: {
+                  name: "banned#0001 banned from Other guild",
                 },
+                description:
+                  `User ID: ${this.bannedMember.id}\n` +
+                  `Reason: ERROR: No audit records were found`,
               },
-            ])),
-          ).subscribe(() => done(), (error) => done(error));
+            },
+          ]);
         });
 
-        it('retries fetching the logs three times', function (done) {
+        it('retries fetching the logs three times', async function () {
           sinon.spy(this.guild, 'fetchAuditLogs');
 
-          this.netModLogService.handleGuildBanAdd(this.guild, this.bannedMember).pipe(
-            tap(() => expect(this.guild.fetchAuditLogs).to.have.callCount(3)),
-          ).subscribe(() => done(), (error) => done(error));
+          await this.netModLogService.handleGuildBanAdd(this.guild, this.bannedMember).toPromise();
+          expect(this.guild.fetchAuditLogs).to.have.callCount(3);
         });
       });
 
@@ -149,23 +141,21 @@ describe('NetModLogService', function () {
           });
         });
 
-        it('Adds the reason to the log entry', function (done) {
+        it('Adds the reason to the log entry', async function () {
           sinon.spy(this.modLogChannel, 'send');
 
-          this.netModLogService.handleGuildBanAdd(this.guild, this.bannedMember).pipe(
-            toArray(),
-            tap(() => expect(this.modLogChannel.send).to.have.been.calledOnce),
-            tap(() => expect(this.modLogChannel.send.firstCall.args).to.containSubset([
-              {
-                embed: {
-                  author: {
-                    name: "banned#0001 banned from Other guild",
-                  },
-                  description: `User ID: ${this.bannedMember.id}\nReason: A Reason`,
+          await this.netModLogService.handleGuildBanAdd(this.guild, this.bannedMember).toPromise();
+          expect(this.modLogChannel.send).to.have.been.calledOnce;
+          expect(this.modLogChannel.send.firstCall.args).to.containSubset([
+            {
+              embed: {
+                author: {
+                  name: "banned#0001 banned from Other guild",
                 },
+                description: `User ID: ${this.bannedMember.id}\nReason: A Reason`,
               },
-            ])),
-          ).subscribe(() => done(), (error) => done(error));
+            },
+          ]);
         });
       });
     });
@@ -194,7 +184,7 @@ describe('NetModLogService', function () {
     });
 
     context('when the network mod log is enabled', function () {
-      beforeEach(function (done) {
+      beforeEach(async function () {
         this.modLogChannel = {
           id: Discord.SnowflakeUtil.generate(),
           guild: this.owmnGuild,
@@ -202,27 +192,24 @@ describe('NetModLogService', function () {
         };
         this.owmnGuild.channels.set(this.modLogChannel.id, this.modLogChannel);
 
-        this.jasmine.setGuildData(this.owmnGuild.id, DataKeys.netModLogChannelId, this.modLogChannel.id)
-          .subscribe(() => done(), (error) => done(error));
+        await this.jasmine.setGuildData(this.owmnGuild.id, DataKeys.netModLogChannelId, this.modLogChannel.id).toPromise();
       });
 
-      it('Adds a log entry', function (done) {
+      it('Adds a log entry', async function () {
         sinon.spy(this.modLogChannel, 'send');
 
-        this.netModLogService.handleGuildBanRemove(this.guild, this.bannedMember).pipe(
-          toArray(),
-          tap(() => expect(this.modLogChannel.send).to.have.been.calledOnce),
-          tap(() => expect(this.modLogChannel.send.firstCall.args).to.containSubset([
-            {
-              embed: {
-                author: {
-                  name: "banned#0001 unbanned from Other guild",
-                },
-                description: `User ID: ${this.bannedMember.id}`,
+        await this.netModLogService.handleGuildBanRemove(this.guild, this.bannedMember).toPromise();
+        expect(this.modLogChannel.send).to.have.been.calledOnce;
+        expect(this.modLogChannel.send.firstCall.args).to.containSubset([
+          {
+            embed: {
+              author: {
+                name: "banned#0001 unbanned from Other guild",
               },
+              description: `User ID: ${this.bannedMember.id}`,
             },
-          ])),
-        ).subscribe(() => done(), (error) => done(error));
+          },
+        ]);
       });
     });
   });

@@ -1,6 +1,5 @@
 const Discord = require('discord.js');
 const {of} = require('rxjs');
-const {tap} = require('rxjs/operators');
 
 describe('streaming: !config streaming setLiveRole', function () {
   beforeEach(function () {
@@ -15,13 +14,12 @@ describe('streaming: !config streaming setLiveRole', function () {
 
   describe('#run', function () {
     context('when role is missing', function () {
-      it('returns a user readable error', function (done) {
-        this.test$.pipe(
-          tap((response) => expect(response).to.containSubset({
-            status: 400,
-            content: `I'm sorry, but I'm missing some information for that command:`,
-          })),
-        ).subscribe(() => done(), (error) => done(error));
+      it('returns a user readable error', async function () {
+        const response = await this.test$.toPromise();
+        expect(response).to.containSubset({
+          status: 400,
+          content: `I'm sorry, but I'm missing some information for that command:`,
+        });
       });
     });
 
@@ -30,13 +28,12 @@ describe('streaming: !config streaming setLiveRole', function () {
         this.test$.args.role = "role-not-found";
       });
 
-      it('returns a user readable error', function (done) {
-        this.test$.pipe(
-          tap((response) => expect(response).to.containSubset({
-            status: 400,
-            content: `The role 'role-not-found' could not be found.`,
-          })),
-        ).subscribe(() => done(), (error) => done(error));
+      it('returns a user readable error', async function () {
+        const response = await this.test$.toPromise();
+        expect(response).to.containSubset({
+          status: 400,
+          content: `The role 'role-not-found' could not be found.`,
+        });
       });
     });
 
@@ -65,21 +62,19 @@ describe('streaming: !config streaming setLiveRole', function () {
             this.streamingService.setLiveRole = () => of(this.role);
           });
 
-          it('sets the live role to the correct role', function (done) {
+          it('sets the live role to the correct role', async function () {
             sinon.spy(this.streamingService, 'setLiveRole');
 
-            this.test$.pipe(
-              tap(() => expect(this.streamingService.setLiveRole).to.have.been.calledWith(this.test$.message.guild, this.role)),
-            ).subscribe(() => done(), (error) => done(error));
+            await this.test$.toPromise();
+            expect(this.streamingService.setLiveRole).to.have.been.calledWith(this.test$.message.guild, this.role);
           });
 
-          it('returns a success message', function (done) {
-            this.test$.pipe(
-              tap((response) => expect(response).to.containSubset({
-                status: 200,
-                content: `Live streamers will now be given the ${this.role.name} role.`,
-              })),
-            ).subscribe(() => done(), (error) => done(error));
+          it('returns a success message', async function () {
+            const response = await this.test$.toPromise();
+            expect(response).to.containSubset({
+              status: 200,
+              content: `Live streamers will now be given the ${this.role.name} role.`,
+            });
           });
         });
       });

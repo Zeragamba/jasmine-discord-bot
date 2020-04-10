@@ -1,5 +1,4 @@
 const {from} = require('rxjs');
-const {tap} = require('rxjs/operators');
 
 describe('streaming: !config streaming viewSettings', function () {
   beforeEach(function () {
@@ -18,15 +17,14 @@ describe('streaming: !config streaming viewSettings', function () {
         sinon.stub(this.streamingService, 'getLiveRole').returns(from([undefined]));
       });
 
-      it('Says the live role is not set', function (done) {
-        this.test$.pipe(
-          tap(({embed}) => expect(embed.fields).to.containSubset([
-            {
-              name: 'Live Role:',
-              value: '[Not set]',
-            },
-          ])),
-        ).subscribe(() => done(), (error) => done(error));
+      it('Says the live role is not set', async function () {
+        const response = await this.test$.toPromise();
+        expect(response.embed.fields).to.containSubset([
+          {
+            name: 'Live Role:',
+            value: '[Not set]',
+          },
+        ]);
       });
     });
 
@@ -36,12 +34,11 @@ describe('streaming: !config streaming viewSettings', function () {
         sinon.stub(this.streamingService, 'getLiveRole').returns(from([this.role]));
       });
 
-      it('Says the live role is not set', function (done) {
-        this.test$.pipe(
-          tap(({embed}) => expect(embed.fields).to.containSubset([
-            {name: 'Live Role:', value: 'liveRole'},
-          ])),
-        ).subscribe(() => done(), (error) => done(error));
+      it('Says the live role is not set', async function () {
+        const response = await this.test$.toPromise();
+        expect(response.embed.fields).to.containSubset([
+          {name: 'Live Role:', value: 'liveRole'},
+        ]);
       });
     });
 
@@ -50,12 +47,11 @@ describe('streaming: !config streaming viewSettings', function () {
         sinon.stub(this.streamingService, 'getStreamerRole').returns(from([undefined]));
       });
 
-      it('Says the live role is not set', function (done) {
-        this.test$.pipe(
-          tap(({embed}) => expect(embed.fields).to.containSubset([
-            {name: 'Streamer Role:', value: '[Not set]'},
-          ])),
-        ).subscribe(() => done(), (error) => done(error));
+      it('Says the live role is not set', async function () {
+        const response = await this.test$.toPromise();
+        expect(response.embed.fields).to.containSubset([
+          {name: 'Streamer Role:', value: '[Not set]'},
+        ]);
       });
     });
 
@@ -65,12 +61,11 @@ describe('streaming: !config streaming viewSettings', function () {
         sinon.stub(this.streamingService, 'getStreamerRole').returns(from([this.role]));
       });
 
-      it('Says the live role is not set', function (done) {
-        this.test$.pipe(
-          tap(({embed}) => expect(embed.fields).to.containSubset([
-            {name: 'Streamer Role:', value: 'streamerRole'},
-          ])),
-        ).subscribe(() => done(), (error) => done(error));
+      it('Says the live role is not set', async function () {
+        const response = await this.test$.toPromise();
+        expect(response.embed.fields).to.containSubset([
+          {name: 'Streamer Role:', value: 'streamerRole'},
+        ]);
       });
     });
   });
