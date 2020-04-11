@@ -1,7 +1,5 @@
-const {Collection} = require('discord.js');
+const {Collection, SnowflakeUtil} = require('discord.js');
 const {MockMessage} = require("chaos-core").test.discordMocks;
-const {of, throwError} = require('rxjs');
-const {UserNotFoundError} = require('chaos-core').errors;
 
 describe('modTools: !ban', function () {
   beforeEach(async function () {
@@ -34,29 +32,26 @@ describe('modTools: !ban', function () {
   describe('!ban {user}', function () {
     beforeEach(function () {
       this.userToBan = {
-        id: 'bannedUserId',
+        id: SnowflakeUtil.generate(),
         tag: 'bannedUser#0001',
       };
-      this.message.content = '!ban bannedUserId';
+      this.message.content = `!ban ${this.userToBan.id}`;
     });
 
     context('when the user could not be found', function () {
       it('It gives an error message', async function () {
         const responses = await this.jasmine.testMessage(this.message);
         expect(responses[0]).to.containSubset({
-          content: "The user 'bannedUserId' could not be found",
+          content: `The user '${this.userToBan.id}' could not be found`,
         });
       });
     });
 
     context('when the user can be found', function () {
       beforeEach(function () {
-        const userService = this.jasmine.getService('core', 'UserService');
-        userService.findUser = sinon.fake((userString) => {
+        this.jasmine.discord.fetchUser = sinon.fake(async (userString) => {
           if (userString === this.userToBan.id) {
-            return of(this.userToBan);
-          } else {
-            return throwError(new UserNotFoundError(`The user '${userString}' could not be found`));
+            return this.userToBan;
           }
         });
 
@@ -102,17 +97,14 @@ describe('modTools: !ban', function () {
   describe('!ban {user} {reason}', function () {
     beforeEach(function () {
       this.userToBan = {
-        id: 'bannedUserId',
+        id: SnowflakeUtil.generate(),
         tag: 'bannedUser#0001',
       };
-      this.message.content = '!ban bannedUserId the reason given';
+      this.message.content = `!ban ${this.userToBan.id} the reason given`;
 
-      const userService = this.jasmine.getService('core', 'UserService');
-      userService.findUser = sinon.fake((userString) => {
+      this.jasmine.discord.fetchUser = sinon.fake(async (userString) => {
         if (userString === this.userToBan.id) {
-          return of(this.userToBan);
-        } else {
-          return throwError(new UserNotFoundError(`The user '${userString}' could not be found`));
+          return this.userToBan;
         }
       });
 
