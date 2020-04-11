@@ -1,5 +1,7 @@
 const {throwError, from} = require('rxjs');
 const {map, flatMap, mapTo, catchError} = require('rxjs/operators');
+const {DiscordAPIError} = require('discord.js');
+const {ChaosError} = require('chaos-core').errors;
 
 const {ERRORS} = require('../utility');
 
@@ -50,7 +52,7 @@ module.exports = {
       flatMap((user) => from(guild.fetchBans()).pipe(
         map((bans) => {
           if (bans.get(user.id)) {
-            throw new Error(ERRORS.USER_ALREADY_BANNED);
+            throw new ChaosError(`${user.tag} is already banned.`);
           }
           return user;
         }),
@@ -65,41 +67,29 @@ module.exports = {
       }),
       flatMap((user) => response.send({content: `${user.tag} has been banned`})),
       catchError((error) => {
-        if (error.name === 'DiscordAPIError') {
+        if (error instanceof DiscordAPIError) {
           switch (error.message) {
             case 'Missing Permissions':
-              response.content =
-                `Whoops, I do not have permission to ban users. Can you check if I have the ` +
-                `"Ban members" permission?`;
-              break;
+              return response.send({
+                content:
+                  `Whoops, I do not have permission to ban users. Can you ` +
+                  `check if I have the "Ban members" permission?`,
+              });
             case 'Privilege is too low...':
-              response.content =
-                `I'm sorry, but I don't have permission to ban that user. They have higher permissions then me.`;
-              break;
+              return response.send({
+                content:
+                  `I'm sorry, but I don't have permission to ban that user. ` +
+                  `They have higher permissions then me.`,
+              });
             default:
-              response.content = `Err... Discord returned an unexpected error when I tried to ban that user.`;
-              this.chaos.messageOwner(
-                'I got this error when I tried to ban a user:',
-                {embed: this.chaos.createEmbedForError(error)},
-              );
+              return throwError(error);
           }
-
-          return response.send();
-        }
-
-        switch (error.message) {
-          case ERRORS.USER_ALREADY_BANNED:
-            return response.send({
-              content: `That user has already been banned`,
-            });
-          case ERRORS.USER_NOT_FOUND:
-            return response.send({
-              content:
-                `Sorry, but I wasn't able to find that user. I can only find users by User Tag if they are in ` +
-                `another guild I'm on. If you know their User ID I can find them by that.`,
-            });
-          default:
-            return throwError(error);
+        } else if (error instanceof ChaosError) {
+          return response.send({
+            content: error.message,
+          });
+        } else {
+          return throwError(error);
         }
       }),
     );
