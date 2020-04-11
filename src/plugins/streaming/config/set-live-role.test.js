@@ -1,37 +1,47 @@
 const Discord = require('discord.js');
 const {of} = require('rxjs');
+const {MockMessage} = require("chaos-core").test.discordMocks;
 
 describe('streaming: !config streaming setLiveRole', function () {
-  beforeEach(function () {
+  beforeEach(async function () {
     this.jasmine = stubJasmine();
-    this.test$ = this.jasmine.testConfigAction({
-      pluginName: 'streaming',
-      actionName: 'setLiveRole',
-    });
+    this.message = new MockMessage();
+
+    this.role = {id: 'role-00001', name: 'testRole'};
+
+    await this.jasmine.listen().toPromise();
+    await this.jasmine.getService('core', 'PluginService')
+      .enablePlugin(this.message.guild.id, 'streaming').toPromise();
+    await this.jasmine.getService('core', 'PermissionsService')
+      .addUser(this.message.guild, 'admin', this.message.member).toPromise();
 
     this.streamingService = this.jasmine.getService('streaming', 'StreamingService');
   });
 
-  describe('#run', function () {
+  describe('!config streaming setLiveRole', function () {
+    beforeEach(function () {
+      this.message.content = '!config streaming setLiveRole';
+    });
+
     context('when role is missing', function () {
       it('returns a user readable error', async function () {
-        const response = await this.test$.toPromise();
-        expect(response).to.containSubset({
-          status: 400,
+        const responses = await this.jasmine.testMessage(this.message);
+        expect(responses[0]).to.containSubset({
           content: `I'm sorry, but I'm missing some information for that command:`,
         });
       });
     });
+  });
 
+  describe('!config streaming setLiveRole {role}', function () {
     context('when the role can not be found', function () {
       beforeEach(function () {
-        this.test$.args.role = "role-not-found";
+        this.message.content = '!config streaming setLiveRole role-not-found';
       });
 
       it('returns a user readable error', async function () {
-        const response = await this.test$.toPromise();
-        expect(response).to.containSubset({
-          status: 400,
+        const responses = await this.jasmine.testMessage(this.message);
+        expect(responses[0]).to.containSubset({
           content: `The role 'role-not-found' could not be found.`,
         });
       });
@@ -46,8 +56,8 @@ describe('streaming: !config streaming setLiveRole', function () {
           id: roleId,
           name: roleName,
         };
-        this.test$.message.guild.roles = new Discord.Collection();
-        this.test$.message.guild.roles.set(this.role.id, this.role);
+        this.message.guild.roles = new Discord.Collection();
+        this.message.guild.roles.set(this.role.id, this.role);
       });
 
       Object.entries({
@@ -58,21 +68,20 @@ describe('streaming: !config streaming setLiveRole', function () {
       }).forEach(([contextMsg, value]) => {
         context(contextMsg, function () {
           beforeEach(function () {
-            this.test$.args.role = value;
+            this.message.content = `!config streaming setLiveRole ${value}`;
             this.streamingService.setLiveRole = () => of(this.role);
           });
 
           it('sets the live role to the correct role', async function () {
             sinon.spy(this.streamingService, 'setLiveRole');
 
-            await this.test$.toPromise();
-            expect(this.streamingService.setLiveRole).to.have.been.calledWith(this.test$.message.guild, this.role);
+            await this.jasmine.testMessage(this.message);
+            expect(this.streamingService.setLiveRole).to.have.been.calledWith(this.message.guild, this.role);
           });
 
           it('returns a success message', async function () {
-            const response = await this.test$.toPromise();
-            expect(response).to.containSubset({
-              status: 200,
+            const responses = await this.jasmine.testMessage(this.message);
+            expect(responses[0]).to.containSubset({
               content: `Live streamers will now be given the ${this.role.name} role.`,
             });
           });

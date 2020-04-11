@@ -1,24 +1,25 @@
 const {of} = require('rxjs');
-const Collection = require('discord.js').Collection;
+const {MockMessage} = require("chaos-core").test.discordMocks;
 
 describe('streaming: !config streaming removeStreamerRole', function () {
-  beforeEach(function () {
-    this.role = {id: 'role-00001', name: 'testRole'};
+  beforeEach(async function () {
     this.jasmine = stubJasmine();
-    this.test$ = this.jasmine.testConfigAction({
-      pluginName: 'streaming',
-      actionName: 'removeStreamerRole',
-    });
+    this.message = new MockMessage();
+
+    this.role = {id: 'role-00001', name: 'testRole'};
+
+    await this.jasmine.listen().toPromise();
+    await this.jasmine.getService('core', 'PluginService')
+      .enablePlugin(this.message.guild.id, 'streaming').toPromise();
+    await this.jasmine.getService('core', 'PermissionsService')
+      .addUser(this.message.guild, 'admin', this.message.member).toPromise();
 
     this.streamingService = this.jasmine.getService('streaming', 'StreamingService');
   });
 
-  describe('#run', function () {
+  describe('!config streaming removeStreamerRole', function () {
     beforeEach(function () {
-      this.test$.message.guild = {
-        id: 'guild-00001',
-        roles: new Collection(),
-      };
+      this.message.content = '!config streaming removeStreamerRole';
     });
 
     context('when there was a previous streamer role', function () {
@@ -28,14 +29,13 @@ describe('streaming: !config streaming removeStreamerRole', function () {
       });
 
       it('removes the streamer role from the guild', async function () {
-        await this.test$.toPromise();
-        expect(this.streamingService.removeStreamerRole).to.have.been.calledWith(this.test$.message.guild);
+        await this.jasmine.testMessage(this.message);
+        expect(this.streamingService.removeStreamerRole).to.have.been.calledWith(this.message.guild);
       });
 
       it('returns a success message', async function () {
-        const response = await this.test$.toPromise();
-        expect(response).to.containSubset({
-          status: 200,
+        const responses = await this.jasmine.testMessage(this.message);
+        expect(responses[0]).to.containSubset({
           content: `I will no longer limit adding the live role to users with the role ${this.role.name}`,
         });
       });
@@ -43,9 +43,8 @@ describe('streaming: !config streaming removeStreamerRole', function () {
 
     context('when there was no previous streamer role', function () {
       it('gives a user readable error', async function () {
-        const response = await this.test$.toPromise();
-        expect(response).to.containSubset({
-          status: 400,
+        const responses = await this.jasmine.testMessage(this.message);
+        expect(responses[0]).to.containSubset({
           content: `No streamer role was set.`,
         });
       });

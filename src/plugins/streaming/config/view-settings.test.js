@@ -1,25 +1,35 @@
 const {from} = require('rxjs');
+const {MockMessage} = require("chaos-core").test.discordMocks;
 
 describe('streaming: !config streaming viewSettings', function () {
-  beforeEach(function () {
+  beforeEach(async function () {
     this.jasmine = stubJasmine();
-    this.test$ = this.jasmine.testConfigAction({
-      pluginName: 'streaming',
-      actionName: 'viewSettings',
-    });
+    this.message = new MockMessage();
+
+    this.role = {id: 'role-00001', name: 'testRole'};
+
+    await this.jasmine.listen().toPromise();
+    await this.jasmine.getService('core', 'PluginService')
+      .enablePlugin(this.message.guild.id, 'streaming').toPromise();
+    await this.jasmine.getService('core', 'PermissionsService')
+      .addUser(this.message.guild, 'admin', this.message.member).toPromise();
 
     this.streamingService = this.jasmine.getService('streaming', 'StreamingService');
   });
 
-  describe('#run', function () {
+  describe('!config streaming viewSettings', function () {
+    beforeEach(function () {
+      this.message.content = '!config streaming viewSettings';
+    });
+
     context('when no live role is set', function () {
       beforeEach(function () {
         sinon.stub(this.streamingService, 'getLiveRole').returns(from([undefined]));
       });
 
       it('Says the live role is not set', async function () {
-        const response = await this.test$.toPromise();
-        expect(response.embed.fields).to.containSubset([
+        const responses = await this.jasmine.testMessage(this.message);
+        expect(responses[0].embed.fields).to.containSubset([
           {
             name: 'Live Role:',
             value: '[Not set]',
@@ -35,8 +45,8 @@ describe('streaming: !config streaming viewSettings', function () {
       });
 
       it('Says the live role is not set', async function () {
-        const response = await this.test$.toPromise();
-        expect(response.embed.fields).to.containSubset([
+        const responses = await this.jasmine.testMessage(this.message);
+        expect(responses[0].embed.fields).to.containSubset([
           {name: 'Live Role:', value: 'liveRole'},
         ]);
       });
@@ -48,8 +58,8 @@ describe('streaming: !config streaming viewSettings', function () {
       });
 
       it('Says the live role is not set', async function () {
-        const response = await this.test$.toPromise();
-        expect(response.embed.fields).to.containSubset([
+        const responses = await this.jasmine.testMessage(this.message);
+        expect(responses[0].embed.fields).to.containSubset([
           {name: 'Streamer Role:', value: '[Not set]'},
         ]);
       });
@@ -62,8 +72,8 @@ describe('streaming: !config streaming viewSettings', function () {
       });
 
       it('Says the live role is not set', async function () {
-        const response = await this.test$.toPromise();
-        expect(response.embed.fields).to.containSubset([
+        const responses = await this.jasmine.testMessage(this.message);
+        expect(responses[0].embed.fields).to.containSubset([
           {name: 'Streamer Role:', value: 'streamerRole'},
         ]);
       });
