@@ -15,6 +15,42 @@ describe('modTools: !unban', function () {
       .addUser(this.message.guild, 'mod', this.message.author).toPromise();
   });
 
+  describe("Permissions", function () {
+    beforeEach(async function () {
+      // Clear active permission levels for the user
+      await this.jasmine.getService('core', 'PermissionsService')
+        .removeUser(this.message.guild, 'mod', this.message.author).toPromise()
+        .catch(() => ''); //ignore errors
+      await this.jasmine.getService('core', 'PermissionsService')
+        .removeUser(this.message.guild, 'admin', this.message.author).toPromise()
+        .catch(() => '');
+      this.message.content = '!unban';
+    });
+
+    it('can not be run by normal users', async function () {
+      const responses = await this.jasmine.testMessage(this.message);
+      expect(responses.length).to.eq(0);
+    });
+
+    it('can be run by mod users', async function () {
+      await this.jasmine.getService('core', 'PermissionsService')
+        .addUser(this.message.guild, 'mod', this.message.author).toPromise()
+        .catch(() => '');
+
+      const responses = await this.jasmine.testMessage(this.message);
+      expect(responses.length).to.eq(1);
+    });
+
+    it('can be run by admin users', async function () {
+      await this.jasmine.getService('core', 'PermissionsService')
+        .addUser(this.message.guild, 'admin', this.message.author).toPromise()
+        .catch(() => '');
+
+      const responses = await this.jasmine.testMessage(this.message);
+      expect(responses.length).to.eq(1);
+    });
+  });
+
   describe('!unban', function () {
     beforeEach(function () {
       this.message.content = '!unban';

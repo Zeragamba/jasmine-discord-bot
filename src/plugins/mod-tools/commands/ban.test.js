@@ -15,13 +15,48 @@ describe('modTools: !ban', function () {
       .addUser(this.message.guild, 'mod', this.message.author).toPromise();
   });
 
+  describe("Permissions", function () {
+    beforeEach(async function () {
+      // Clear active permission levels for the user
+      await this.jasmine.getService('core', 'PermissionsService')
+        .removeUser(this.message.guild, 'mod', this.message.author).toPromise()
+        .catch(() => ''); //ignore errors
+      await this.jasmine.getService('core', 'PermissionsService')
+        .removeUser(this.message.guild, 'admin', this.message.author).toPromise()
+        .catch(() => '');
+      this.message.content = '!ban';
+    });
+
+    it('can not be run by normal users', async function () {
+      const responses = await this.jasmine.testMessage(this.message);
+      expect(responses.length).to.eq(0);
+    });
+
+    it('can be run by mod users', async function () {
+      await this.jasmine.getService('core', 'PermissionsService')
+        .addUser(this.message.guild, 'mod', this.message.author).toPromise()
+        .catch(() => '');
+
+      const responses = await this.jasmine.testMessage(this.message);
+      expect(responses.length).to.eq(1);
+    });
+
+    it('can be run by admin users', async function () {
+      await this.jasmine.getService('core', 'PermissionsService')
+        .addUser(this.message.guild, 'admin', this.message.author).toPromise()
+        .catch(() => '');
+
+      const responses = await this.jasmine.testMessage(this.message);
+      expect(responses.length).to.eq(1);
+    });
+  });
+
   describe('!ban', function () {
     beforeEach(function () {
       this.message.content = '!ban';
     });
 
     it('responds with an error message', async function () {
-      sinon.spy(this.message.channel, "send");
       const responses = await this.jasmine.testMessage(this.message);
       expect(responses[0]).to.containSubset({
         content: `I'm sorry, but I'm missing some information for that command:`,

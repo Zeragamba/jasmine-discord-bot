@@ -4,7 +4,7 @@ const {ChaosError} = require('chaos-core').errors;
 class BanCommand extends ChaosCore.Command {
   name = 'ban';
   description = 'Ban a user from the server';
-  permissions = ['mod'];
+  permissions = ['admin', 'mod'];
 
   flags = [
     {
