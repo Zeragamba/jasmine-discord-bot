@@ -1,16 +1,17 @@
 const {throwError, from} = require('rxjs');
 const {map, flatMap, mapTo, catchError} = require('rxjs/operators');
 const {DiscordAPIError} = require('discord.js');
+const ChaosCore = require('chaos-core');
 const {ChaosError} = require('chaos-core').errors;
 
 const {ERRORS} = require('../utility');
 
-module.exports = {
-  name: 'ban',
-  description: 'Ban a user from the server',
-  permissions: ['admin', 'mod'],
+class BanCommand extends ChaosCore.Command {
+  name = 'ban';
+  description = 'Ban a user from the server';
+  permissions = ['mod'];
 
-  flags: [
+  flags = [
     {
       name: 'days',
       shortAlias: 'd',
@@ -18,9 +19,9 @@ module.exports = {
       default: 2,
       type: 'int',
     },
-  ],
+  ];
 
-  args: [
+  args = [
     {
       name: 'user',
       description: 'The user to ban. Valid formats: User mention, User ID, or User Tag (case sensitive)',
@@ -32,7 +33,7 @@ module.exports = {
       required: false,
       greedy: true,
     },
-  ],
+  ];
 
   run(context, response) {
     let userService = this.chaos.getService('core', 'UserService');
@@ -93,5 +94,7 @@ module.exports = {
         }
       }),
     );
-  },
-};
+  }
+}
+
+module.exports = BanCommand;
