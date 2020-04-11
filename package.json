@@ -21,6 +21,7 @@
     "validate": "npm-run-all --parallel test lint"
   },
   "devDependencies": {
+    "babel-eslint": "^10.1.0",
     "chai": "^4.2.0",
     "chai-subset": "^1.6.0",
     "chaos-data-memory": "^4.3.0",
