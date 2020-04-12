@@ -131,16 +131,16 @@ describe('ow-info: !platform', function () {
 
       it('fetches the member and works normally', async function () {
         sinon.spy(this.member.guild, 'fetchMember');
-        sinon.spy(this.message, 'reply');
         sinon.spy(this.member, 'setNickname');
 
-        await this.jasmine.testMessage(this.message);
+        let responses = await this.jasmine.testMessage(this.message);
         expect(this.message.guild.fetchMember)
           .to.have.been.calledWith(this.message.author);
-        expect(this.message.reply)
-          .to.have.been.calledWith(`I've updated your platform to PC`);
         expect(this.member.setNickname)
           .to.have.been.calledWith(`TestUser [PC]`);
+        expect(responses[0]).to.containSubset({
+          content: `I've updated your platform to PC`,
+        });
       });
     });
   });
