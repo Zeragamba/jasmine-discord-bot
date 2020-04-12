@@ -48,8 +48,8 @@ describe('ow-info: !config ow-info rmRegionAlias', function () {
         this.message.guild.roles.set(this.role.id, this.role);
 
         const regionService = this.jasmine.getService('ow-info', 'RegionService');
-        await regionService.mapRegion(this.message.guild, 'test', this.role).toPromise();
-        await regionService.mapAlias(this.message.guild, 'test2', 'test').toPromise();
+        await regionService.mapRegion(this.message.guild, 'test', this.role);
+        await regionService.mapAlias(this.message.guild, 'test2', 'test');
       });
 
       it('removes the alias', async function () {

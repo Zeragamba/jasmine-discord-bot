@@ -69,7 +69,7 @@ describe('ow-info: !config ow-info addRegionAlias', function () {
         this.message.guild.roles.set(this.role.id, this.role);
 
         await this.jasmine.getService('ow-info', 'RegionService')
-          .mapRegion(this.message.guild, 'test', this.role).toPromise();
+          .mapRegion(this.message.guild, 'test', this.role);
       });
 
       it('remaps the region', async function () {

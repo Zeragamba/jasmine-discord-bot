@@ -48,7 +48,7 @@ describe('ow-info: !config ow-info rmRegion', function () {
         this.message.guild.roles.set(this.role.id, this.role);
 
         await this.jasmine.getService('ow-info', 'RegionService')
-          .mapRegion(this.message.guild, 'test', this.role).toPromise();
+          .mapRegion(this.message.guild, 'test', this.role);
       });
 
       it('removes the region', async function () {

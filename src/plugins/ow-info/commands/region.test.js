@@ -40,7 +40,7 @@ describe('ow-info: !region', function () {
         this.message.guild.roles.set(this.role.id, this.role);
 
         await this.jasmine.getService('ow-info', 'RegionService')
-          .mapRegion(this.message.guild, 'test', this.role).toPromise();
+          .mapRegion(this.message.guild, 'test', this.role);
       });
 
       it('gives a success message', async function () {
@@ -87,8 +87,8 @@ describe('ow-info: !region', function () {
         this.message.guild.roles.set(this.role.id, this.role);
 
         let regionService = this.jasmine.getService('ow-info', 'RegionService');
-        await regionService.mapRegion(this.message.guild, 'test', this.role).toPromise();
-        await regionService.mapAlias(this.message.guild, 'testAlias', 'test').toPromise();
+        await regionService.mapRegion(this.message.guild, 'test', this.role);
+        await regionService.mapAlias(this.message.guild, 'testAlias', 'test');
       });
 
       it('gives a success message', async function () {

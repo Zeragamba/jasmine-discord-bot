@@ -1,4 +1,4 @@
-const {zip} = require('rxjs');
+const {from, zip} = require('rxjs');
 const {map} = require('rxjs/operators');
 
 module.exports = {
@@ -10,8 +10,8 @@ module.exports = {
     let guild = context.guild;
 
     return zip(
-      regionService.getRegions(guild),
-      regionService.getAliases(guild),
+      from(regionService.getRegions(guild)),
+      from(regionService.getAliases(guild)),
     ).pipe(
       map(([regions, aliases]) => {
         let data = {

@@ -30,7 +30,7 @@ module.exports = {
         member = await context.guild.fetchMember(context.author);
       }
 
-      const region = await regionService.setUserRegion(member, context.args.region).toPromise();
+      const region = await regionService.setUserRegion(member, context.args.region);
       return response.send({
         content: `I've updated your region to ${region.name}`,
       });

@@ -1,4 +1,4 @@
-const {of, throwError} = require('rxjs');
+const {from, of, throwError} = require('rxjs');
 const {map, catchError} = require('rxjs/operators');
 
 const {RegionNotFoundError} = require('../errors');
@@ -18,7 +18,7 @@ module.exports = {
   run(context) {
     const regionService = this.chaos.getService('ow-info', 'regionService');
 
-    return regionService.removeRegion(context.guild, context.args.region).pipe(
+    return from(regionService.removeRegion(context.guild, context.args.region)).pipe(
       map((removedRegion) => ({
         status: 200,
         content: `Removed region '${removedRegion}'`,

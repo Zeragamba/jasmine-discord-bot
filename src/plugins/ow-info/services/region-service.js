@@ -1,5 +1,3 @@
-const {of, zip, throwError} = require('rxjs');
-const {flatMap, map, mapTo} = require('rxjs/operators');
 const Service = require('chaos-core').Service;
 
 const DATAKEYS = require('../datakeys');
@@ -39,185 +37,156 @@ class RegionService extends Service {
     return aliasMap;
   }
 
-  getRegions(guild) {
-    return this.chaos.getGuildData(guild.id, DATAKEYS.REGION_REGIONS).pipe(
-      flatMap((regions) => (
-        regions
-          ? of(regions)
-          : this.setRegions(guild, this.mapDefaultRoles(guild))
-      )),
-    );
+  async getRegions(guild) {
+    const regions = await this.getGuildData(guild.id, DATAKEYS.REGION_REGIONS);
+
+    if (regions) {
+      return regions;
+    } else {
+      return this.setRegions(guild, this.mapDefaultRoles(guild));
+    }
   }
 
-  setRegions(guild, roles) {
-    return this.chaos.setGuildData(guild.id, DATAKEYS.REGION_REGIONS, roles);
+  async setRegions(guild, roles) {
+    return this.setGuildData(guild.id, DATAKEYS.REGION_REGIONS, roles);
   }
 
-  getAliases(guild) {
-    return this.chaos.getGuildData(guild.id, DATAKEYS.REGION_ALIASES).pipe(
-      flatMap((aliases) => (
-        aliases
-          ? of(aliases)
-          : this.setAliases(guild, this.mapDefaultAliases())
-      )),
-    );
+  async getAliases(guild) {
+    const aliases = await this.getGuildData(guild.id, DATAKEYS.REGION_ALIASES);
+
+    if (aliases) {
+      return aliases;
+    } else {
+      return this.setAliases(guild, this.mapDefaultAliases(guild));
+    }
   }
 
-  setAliases(guild, aliases) {
-    return this.chaos.setGuildData(guild.id, DATAKEYS.REGION_ALIASES, aliases);
+  async setAliases(guild, aliases) {
+    return this.setGuildData(guild.id, DATAKEYS.REGION_ALIASES, aliases);
   }
 
-  mapRegion(guild, region, role) {
-    return this.getRegions(guild).pipe(
-      map((regions) => {
-        regions[region.toLowerCase()] = {
-          name: region,
-          roleId: role.id,
-        };
-        return regions;
-      }),
-      flatMap((regions) => this.setRegions(guild, regions)),
-      map((regions) => regions[region.toLowerCase()]),
-    );
+  async mapRegion(guild, region, role) {
+    let regions = await this.getRegions(guild);
+    regions[region.toLowerCase()] = {
+      name: region,
+      roleId: role.id,
+    };
+    regions = await this.setRegions(guild, regions);
+    return regions[region.toLowerCase()];
   }
 
-  removeRegion(guild, regionName) {
+  async removeRegion(guild, regionName) {
     regionName = regionName.toLowerCase();
 
-    return zip(
-      this.getAliases(guild),
+    const [regions, aliases] = await Promise.all([
       this.getRegions(guild),
-    ).pipe(
-      map(([aliases, regions]) => {
-        let regionData = regions[regionName.toLowerCase()];
-        if (!regionData) {
-          throw new RegionNotFoundError(regionName);
-        }
+      this.getAliases(guild),
+    ]);
 
-        Object.entries(aliases).forEach(([alias, aliasData]) => {
-          if (aliasData.region.toLowerCase() === regionName) {
-            delete aliases[alias];
-          }
-        });
+    let regionData = regions[regionName.toLowerCase()];
+    if (!regionData) {
+      throw new RegionNotFoundError(regionName);
+    }
 
-        delete regions[regionName];
+    delete regions[regionName];
+    Object.entries(aliases).forEach(([alias, aliasData]) => {
+      if (aliasData.region.toLowerCase() === regionName) {
+        delete aliases[alias];
+      }
+    });
 
-        return [aliases, regions, regionData];
-      }),
-      flatMap(([aliases, regions, regionData]) =>
-        zip(
-          this.setAliases(guild, aliases),
-          this.setRegions(guild, regions),
-        ).pipe(
-          mapTo(regionData.name),
-        ),
-      ),
-    );
+    await Promise.all([
+      this.setRegions(guild, regions),
+      this.setAliases(guild, aliases),
+    ]);
+
+    return regionData.name;
   }
 
-  mapAlias(guild, aliasName, regionName) {
-    return zip(
-      this.getAliases(guild),
+  async mapAlias(guild, aliasName, regionName) {
+    const [regions, aliases] = await Promise.all([
       this.getRegions(guild),
-    ).pipe(
-      map(([aliases, regions]) => {
-        let regionData = regions[regionName.toLowerCase()];
-        if (!regionData) {
-          throw new RegionNotFoundError(regionName);
-        }
+      this.getAliases(guild),
+    ]);
 
-        aliases[aliasName.toLowerCase()] = {
-          name: aliasName,
-          region: regionData.name,
-        };
+    let regionData = regions[regionName.toLowerCase()];
+    if (!regionData) {
+      throw new RegionNotFoundError(regionName);
+    }
 
-        return aliases;
-      }),
-      flatMap((aliases) => this.setAliases(guild, aliases)),
-      map((aliases) => aliases[aliasName.toLowerCase()]),
-    );
+    aliases[aliasName.toLowerCase()] = {
+      name: aliasName,
+      region: regionData.name,
+    };
+
+    return this.setAliases(guild, aliases)
+      .then((aliases) => aliases[aliasName.toLowerCase()]);
   }
 
-  removeAlias(guild, aliasName) {
+  async removeAlias(guild, aliasName) {
     aliasName = aliasName.toLowerCase();
+    const aliases = await this.getAliases(guild);
+    let aliasData = aliases[aliasName];
+    if (!aliasData) {
+      throw new AliasNotFoundError(aliasName);
+    }
 
-    return of('').pipe(
-      flatMap(() => this.getAliases(guild)),
-      map((aliases) => {
-        let aliasData = aliases[aliasName];
-        if (!aliasData) {
-          throw new AliasNotFoundError(aliasName);
-        }
+    delete aliases[aliasName];
+    await this.setAliases(guild, aliases);
 
-        delete aliases[aliasName];
-
-        return [aliases, aliasData];
-      }),
-      flatMap(([aliases, aliasData]) => this.setAliases(guild, aliases).pipe(
-        map(() => aliasData.name),
-      )),
-    );
+    return aliasData.name;
   }
 
-  getRegion(guild, regionOrAlias) {
+  async getRegion(guild, regionOrAlias) {
     regionOrAlias = regionOrAlias.toLowerCase();
 
-    return zip(
+    const [regions, aliases] = await Promise.all([
       this.getRegions(guild),
       this.getAliases(guild),
-    ).pipe(
-      map(([regions, alias]) => {
-        if (regions[regionOrAlias]) {
-          return regions[regionOrAlias];
-        }
+    ]);
 
-        if (alias[regionOrAlias]) {
-          let aliasData = alias[regionOrAlias];
-          let regionData = regions[aliasData.region.toLowerCase()];
+    if (regions[regionOrAlias]) {
+      return regions[regionOrAlias];
+    }
 
-          if (!regionData) {
-            throw new BrokenAliasError(aliasData.name, aliasData.region);
-          }
+    if (aliases[regionOrAlias]) {
+      let aliasData = aliases[regionOrAlias];
+      let regionData = regions[aliasData.region.toLowerCase()];
 
-          return regionData;
-        }
+      if (!regionData) {
+        throw new BrokenAliasError(aliasData.name, aliasData.region);
+      }
 
-        throw new RegionNotFoundError(regionOrAlias);
-      }),
-    );
+      return regionData;
+    }
+
+    throw new RegionNotFoundError(regionOrAlias);
   }
 
-  getRegionRole(guild, regionOrAlias) {
-    return this.getRegion(guild, regionOrAlias).pipe(
-      map((regionData) => {
-        let regionRole = guild.roles.get(regionData.roleId);
-        if (!regionRole) {
-          throw new UnmappedRegionError(regionData.name);
-        }
-        return regionRole;
-      }),
-    );
+  async getRegionRole(guild, regionOrAlias) {
+    const regionData = await this.getRegion(guild, regionOrAlias);
+    let regionRole = guild.roles.get(regionData.roleId);
+    if (!regionRole) {
+      throw new UnmappedRegionError(regionData.name);
+    }
+    return regionRole;
   }
 
-  setUserRegion(member, regionOrAlias) {
+  async setUserRegion(member, regionOrAlias) {
     let guild = member.guild;
+    const region = await this.getRegion(guild, regionOrAlias);
 
-    return this.getRegion(guild, regionOrAlias).pipe(
-      flatMap((region) => (
-        member.roles.get(region.roleId)
-          ? throwError(new RegionAlreadyAssigned(member, region.name))
-          : of(region)
-      )),
-      flatMap((region) => (
-        guild.roles.get(region.roleId)
-          ? of(region)
-          : throwError(new UnmappedRegionError(region.name))
-      )),
-      flatMap((region) => of('').pipe(
-        flatMap(() => member.addRole(region.roleId)),
-        mapTo(region),
-      )),
-    );
+    if (member.roles.get(region.roleId)) {
+      throw new RegionAlreadyAssigned(member, region.name);
+    }
+
+    if (!guild.roles.get(region.roleId)) {
+      throw new UnmappedRegionError(region.name);
+    }
+
+    await member.addRole(region.roleId);
+
+    return region;
   }
 }
 

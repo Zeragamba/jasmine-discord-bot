@@ -1,4 +1,4 @@
-const {of, throwError} = require('rxjs');
+const {from, of, throwError} = require('rxjs');
 const {map, catchError} = require('rxjs/operators');
 
 const {
@@ -19,7 +19,7 @@ module.exports = {
 
   run(context) {
     const regionService = this.chaos.getService('ow-info', 'regionService');
-    return regionService.removeAlias(context.guild, context.args.alias).pipe(
+    return from(regionService.removeAlias(context.guild, context.args.alias)).pipe(
       map((removedAlias) => ({
         status: 200,
         content: `Removed region alias '${removedAlias}'`,
