@@ -1,11 +1,7 @@
-const {
-  of, from, throwError, EMPTY, range, zip, timer,
-} = require('rxjs');
-const {
-  flatMap, tap, map, defaultIfEmpty, catchError, filter, mapTo, retryWhen,
-} = require('rxjs/operators');
+const {of, throwError, range, zip, timer} = require('rxjs');
+const {flatMap, map, retryWhen} = require('rxjs/operators');
 const Discord = require('discord.js');
-const Service = require('chaos-core').Service;
+const ChaosCore = require('chaos-core');
 
 const AuditLogActions = Discord.GuildAuditLogs.Actions;
 
@@ -14,128 +10,90 @@ const {
   LOG_TYPES,
 } = require('../utility');
 
-class ModLogService extends Service {
+class AuditLogReadError extends ChaosCore.errors.ChaosError {
+}
+
+class ModLogService extends ChaosCore.Service {
   constructor(chaos) {
     super(chaos);
 
-    this.chaos.on("guildMemberAdd", (member) => this.handleGuildMemberAdd(member));
-    this.chaos.on("guildMemberRemove", (member) => this.handleGuildMemberRemove(member));
-    this.chaos.on("guildBanAdd", ([guild, user]) => this.handleGuildBanAdd(guild, user));
-    this.chaos.on("guildBanRemove", ([guild, user]) => this.handleGuildBanRemove(guild, user));
+    this.chaos.on("guildMemberAdd", async (member) => await this.handleGuildMemberAdd(member).toPromise());
+    this.chaos.on("guildMemberRemove", async (member) => await this.handleGuildMemberRemove(member).toPromise());
+    this.chaos.on("guildBanAdd", async ([guild, user]) => await this.handleGuildBanAdd(guild, user).toPromise());
+    this.chaos.on("guildBanRemove", async ([guild, user]) => await this.handleGuildBanRemove(guild, user).toPromise());
   }
 
-  handleGuildMemberAdd(member) {
-    return of('').pipe(
-      tap(() => this.chaos.logger.debug(`[ModLog:${member.guild.name}] User ${member.user.tag} joined`)),
-      flatMap(() => this.addUserJoinedEntry(member)),
-      catchError((error) => {
-        this.chaos.handleError(error, [
-          {name: "Service", value: "ModLogService"},
-          {name: "Hook", value: "GuildMemberAdd"},
-          {name: "User that joined", value: member.toString()},
-          {name: "Guild", value: member.guild.toString()},
-        ]);
-        return EMPTY;
-      }),
-    );
+  async handleGuildMemberAdd(member) {
+    this.chaos.logger.debug(`[ModLog:${member.guild.name}] User ${member.user.tag} joined`);
+    await this.addUserJoinedEntry(member);
   }
 
-  handleGuildMemberRemove(member) {
-    return of('').pipe(
-      tap(() => this.chaos.logger.debug(`[ModLog:${member.guild.name}] User ${member.user.tag} left`)),
-      flatMap(() => from(member.guild.fetchBans()).pipe(
-        //filter out members who are banned
-        map((bans) => bans.get(member.id)),
-        filter((bannedUser) => !bannedUser),
-        mapTo(member),
-        catchError(() => of(member)), //Error occurred while trying to fetch bans, just continue anyway.
-      )),
-      flatMap(() => this.addUserLeftEntry(member)),
-      catchError((error) => {
-        this.chaos.handleError(error, [
-          {name: "Service", value: "ModLogService"},
-          {name: "Hook", value: "GuildMemberRemove"},
-          {name: "User that left", value: member.toString()},
-          {name: "Guild", value: member.guild.toString()},
-        ]);
-        return EMPTY;
-      }),
-    );
+  async handleGuildMemberRemove(member) {
+    this.chaos.logger.debug(`[ModLog:${member.guild.name}] User ${member.user.tag} left`);
+    try {
+      const bans = member.guild.fetchBans();
+      if (bans.get(member.id)) { return; } // Filter out banned users
+    } catch {
+      //Error occurred while trying to fetch bans, just continue anyway.
+    }
+    await this.addUserLeftEntry(member);
   }
 
-  handleGuildBanAdd(guild, user) {
-    return of('').pipe(
-      tap(() => this.chaos.logger.debug(`[ModLog:${guild.name}] User ${user.tag} banned`)),
-      flatMap(() => this.findReasonAuditLog(guild, user, {
+  async handleGuildBanAdd(guild, user) {
+    this.chaos.logger.debug(`[ModLog:${guild.name}] User ${user.tag} banned`);
+
+    let log;
+    try {
+      log = await this.findReasonAuditLog(guild, user, {
         type: AuditLogActions.MEMBER_BAN_ADD,
-      })),
-      catchError((error) => {
-        switch (error.name) {
-          case "TargetMatchError":
-            return of({
-              executor: {id: null},
-              reason: `ERROR: Unable to find matching log entry`,
-            });
-          case "AuditLogReadError":
-            return of({
-              executor: {id: null},
-              reason: `ERROR: ${error.message}`,
-            });
-          default:
-            return throwError(error);
-        }
-      }),
-      flatMap((log) => this.addBanEntry(guild, user, log.reason, log.executor)),
-      catchError((error) => {
-        this.chaos.handleError(error, [
-          {name: "Service", value: "ModLogService"},
-          {name: "Hook", value: "guildBanAdd"},
-          {name: "Banned User", value: user.toString()},
-          {name: "Guild", value: guild.toString()},
-        ]).pipe(
-          flatMap(() => EMPTY),
-        );
-      }),
-    );
+      });
+    } catch (error) {
+      if (error.name === "TargetMatchError") {
+        log = {
+          executor: {id: null},
+          reason: `ERROR: Unable to find matching log entry`,
+        };
+      } else if (error.name === "AuditLogReadError") {
+        log = {
+          executor: {id: null},
+          reason: `ERROR: ${error.message}`,
+        };
+      } else {
+        throw error;
+      }
+    }
+
+    await this.addBanEntry(guild, user, log.reason, log.executor);
   }
 
-  handleGuildBanRemove(guild, user) {
-    return of('').pipe(
-      tap(() => this.chaos.logger.debug(`[ModLog:${guild.name}] User ${user.tag} unbanned`)),
-      flatMap(() => this.findReasonAuditLog(guild, user, {
+  async handleGuildBanRemove(guild, user) {
+    this.chaos.logger.debug(`[ModLog:${guild.name}] User ${user.tag} unbanned`);
+
+    let log;
+    try {
+      log = await this.findReasonAuditLog(guild, user, {
         type: AuditLogActions.MEMBER_BAN_REMOVE,
-      })),
-      catchError((error) => {
-        switch (error.name) {
-          case "TargetMatchError":
-            return of({
-              executor: {id: null},
-              reason: `ERROR: Unable to find matching log entry`,
-            });
-          case "AuditLogReadError":
-            return of({
-              executor: {id: null},
-              reason: `ERROR: ${error.message}`,
-            });
-          default:
-            return throwError(error);
-        }
-      }),
-      flatMap((log) => this.addUnbanEntry(guild, user, log.executor)),
-      catchError((error) => {
-        this.chaos.handleError(error, [
-          {name: "Service", value: "ModLogService"},
-          {name: "Hook", value: "guildBanRemove"},
-          {name: "Unbanned User", value: user.toString()},
-          {name: "Guild", value: guild.toString()},
-        ]).pipe(
-          flatMap(() => EMPTY),
-        );
-      }),
-    );
+      });
+    } catch (error) {
+      if (error.name === "TargetMatchError") {
+        log = {
+          executor: {id: null},
+          reason: `ERROR: Unable to find matching log entry`,
+        };
+      } else if (error.name === "AuditLogReadError") {
+        log = {
+          executor: {id: null},
+          reason: `ERROR: ${error.message}`,
+        };
+      } else {
+        throw error;
+      }
+    }
+
+    return this.addUnbanEntry(guild, user, log.executor);
   }
 
-  addUserJoinedEntry(member) {
+  async addUserJoinedEntry(member) {
     let modLogEmbed = new Discord.RichEmbed();
     modLogEmbed
       .setAuthor(`${member.displayName} joined`, member.user.avatarURL)
@@ -146,7 +104,7 @@ class ModLogService extends Service {
     return this.addLogEntry(member.guild, modLogEmbed, "JoinLog");
   }
 
-  addUserLeftEntry(member) {
+  async addUserLeftEntry(member) {
     let modLogEmbed = new Discord.RichEmbed();
     modLogEmbed
       .setAuthor(`${member.displayName} left`, member.user.avatarURL)
@@ -157,7 +115,7 @@ class ModLogService extends Service {
     return this.addLogEntry(member.guild, modLogEmbed, "JoinLog");
   }
 
-  addWarnEntry(guild, user, reason, moderator) {
+  async addWarnEntry(guild, user, reason, moderator) {
     let modLogEmbed = new Discord.RichEmbed();
     modLogEmbed
       .setAuthor(`${user.tag} warned`, user.avatarURL)
@@ -169,7 +127,7 @@ class ModLogService extends Service {
     return this.addLogEntry(guild, modLogEmbed, "ModLog");
   }
 
-  addBanEntry(guild, user, reason, moderator) {
+  async addBanEntry(guild, user, reason, moderator) {
     let modLogEmbed = new Discord.RichEmbed();
     modLogEmbed
       .setAuthor(`${user.tag} banned`, user.avatarURL)
@@ -181,7 +139,7 @@ class ModLogService extends Service {
     return this.addLogEntry(guild, modLogEmbed, "ModLog");
   }
 
-  addUnbanEntry(guild, user, moderator) {
+  async addUnbanEntry(guild, user, moderator) {
     let modLogEmbed = new Discord.RichEmbed();
     modLogEmbed
       .setAuthor(`${user.tag} unbanned`, user.avatarURL)
@@ -193,31 +151,27 @@ class ModLogService extends Service {
     return this.addLogEntry(guild, modLogEmbed, "ModLog");
   }
 
-  addLogEntry(guild, embed, logTypeName) {
+  async addLogEntry(guild, embed, logTypeName) {
     this.chaos.logger.debug(`Adding mod log entry`);
 
     let logType = this.getLogType(logTypeName);
     if (!logType) { throw new Error(ERRORS.INVALID_LOG_TYPE); }
 
-    return this.chaos.getGuildData(guild.id, logType.channelDatakey).pipe(
-      filter((channelId) => typeof channelId !== 'undefined'),
-      map((channelId) => guild.channels.find((c) => c.id === channelId)),
-      filter((channel) => channel !== null),
-      flatMap((channel) => channel.send({embed})),
-      catchError((error) => {
-        if (error.name === 'DiscordAPIError') {
-          if (error.message === "Missing Access" || error.message === "Missing Permissions") {
-            // Bot does not have permission to send messages, we can ignore.
-            return EMPTY;
-          }
-        }
+    try {
+      const channelId = await this.getGuildData(guild.id, logType.channelDatakey).toPromise();
+      if (typeof channelId === 'undefined') { return; }
 
-        // Error was not handled, rethrow it
-        return throwError(error);
-      }),
-      mapTo(true),
-      defaultIfEmpty(true),
-    );
+      const channel = guild.channels.find((c) => c.id === channelId);
+      if (!channel) { return; }
+
+      await channel.send({embed});
+    } catch (error) {
+      if (error.message === "Missing Access" || error.message === "Missing Permissions") {
+        // Bot does not have permission to send messages, we can ignore.
+      } else {
+        throw error;
+      }
+    }
   }
 
   getLogType(name) {
@@ -227,18 +181,17 @@ class ModLogService extends Service {
   findReasonAuditLog(guild, target, options) {
     return of('').pipe(
       flatMap(() => this.getLatestAuditLogs(guild, {...options, limit: 1})),
-      defaultIfEmpty(null),
-      map((auditEntry) => {
-        if (auditEntry === null) {
+      map((auditEntries) => {
+        if (auditEntries.length === 0) {
           let error = new Error("No audit records were found");
           error.name = "NoAuditRecords";
           throw error;
-        } else if (auditEntry.target.id !== target.id) {
+        } else if (auditEntries[0].target.id !== target.id) {
           let error = new Error("Audit log entry does not match the target");
           error.name = "TargetMatchError";
           throw error;
         } else {
-          return auditEntry;
+          return auditEntries[0];
         }
       }),
       retryWhen((errors$) => {
@@ -261,21 +214,14 @@ class ModLogService extends Service {
     );
   }
 
-  getLatestAuditLogs(guild, options = {}) {
-    let filter = Object.assign({
-      limit: 1,
-    }, options);
-
+  async getLatestAuditLogs(guild, options = {}) {
     let canViewAuditLog = guild.member(this.chaos.discord.user).hasPermission(Discord.Permissions.FLAGS.VIEW_AUDIT_LOG);
     if (!canViewAuditLog) {
-      let error = new Error(`Unable to view audit log. I need the 'View Audit Log' permission in '${guild.name}'`);
-      error.name = "AuditLogReadError";
-      return throwError(error);
+      throw new AuditLogReadError(`Unable to view audit log. I need the 'View Audit Log' permission in '${guild.name}'`);
     }
 
-    return from(guild.fetchAuditLogs(filter)).pipe(
-      flatMap((logs) => from(logs.entries.array())),
-    );
+    const logs = await guild.fetchAuditLogs({limit: 1, ...options});
+    return logs.entries.array();
   }
 }
 
