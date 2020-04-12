@@ -1,17 +1,13 @@
-const {of, throwError, range, zip, timer} = require('rxjs');
-const {flatMap, map, retryWhen} = require('rxjs/operators');
 const Discord = require('discord.js');
 const ChaosCore = require('chaos-core');
 
 const AuditLogActions = Discord.GuildAuditLogs.Actions;
 
-const {
-  ERRORS,
-  LOG_TYPES,
-} = require('../utility');
+const {ERRORS, LOG_TYPES} = require('../utility');
 
-class AuditLogReadError extends ChaosCore.errors.ChaosError {
-}
+class AuditLogError extends ChaosCore.errors.ChaosError {}
+
+class AuditLogReadError extends AuditLogError {}
 
 class ModLogService extends ChaosCore.Service {
   constructor(chaos) {
@@ -42,26 +38,9 @@ class ModLogService extends ChaosCore.Service {
   async handleGuildBanAdd(guild, user) {
     this.chaos.logger.debug(`[ModLog:${guild.name}] User ${user.tag} banned`);
 
-    let log;
-    try {
-      log = await this.findReasonAuditLog(guild, user, {
-        type: AuditLogActions.MEMBER_BAN_ADD,
-      });
-    } catch (error) {
-      if (error.name === "TargetMatchError") {
-        log = {
-          executor: {id: null},
-          reason: `ERROR: Unable to find matching log entry`,
-        };
-      } else if (error.name === "AuditLogReadError") {
-        log = {
-          executor: {id: null},
-          reason: `ERROR: ${error.message}`,
-        };
-      } else {
-        throw error;
-      }
-    }
+    let log = await this.findReasonAuditLog(guild, user, {
+      type: AuditLogActions.MEMBER_BAN_ADD,
+    });
 
     await this.addBanEntry(guild, user, log.reason, log.executor);
   }
@@ -69,26 +48,9 @@ class ModLogService extends ChaosCore.Service {
   async handleGuildBanRemove(guild, user) {
     this.chaos.logger.debug(`[ModLog:${guild.name}] User ${user.tag} unbanned`);
 
-    let log;
-    try {
-      log = await this.findReasonAuditLog(guild, user, {
-        type: AuditLogActions.MEMBER_BAN_REMOVE,
-      });
-    } catch (error) {
-      if (error.name === "TargetMatchError") {
-        log = {
-          executor: {id: null},
-          reason: `ERROR: Unable to find matching log entry`,
-        };
-      } else if (error.name === "AuditLogReadError") {
-        log = {
-          executor: {id: null},
-          reason: `ERROR: ${error.message}`,
-        };
-      } else {
-        throw error;
-      }
-    }
+    let log = await this.findReasonAuditLog(guild, user, {
+      type: AuditLogActions.MEMBER_BAN_REMOVE,
+    });
 
     return this.addUnbanEntry(guild, user, log.executor);
   }
@@ -178,40 +140,32 @@ class ModLogService extends ChaosCore.Service {
     return LOG_TYPES.find((type) => type.name.toLowerCase() === name.toLowerCase());
   }
 
-  findReasonAuditLog(guild, target, options) {
-    return of('').pipe(
-      flatMap(() => this.getLatestAuditLogs(guild, {...options, limit: 1})),
-      map((auditEntries) => {
-        if (auditEntries.length === 0) {
-          let error = new Error("No audit records were found");
-          error.name = "NoAuditRecords";
-          throw error;
-        } else if (auditEntries[0].target.id !== target.id) {
-          let error = new Error("Audit log entry does not match the target");
-          error.name = "TargetMatchError";
-          throw error;
+  async findReasonAuditLog(guild, target, options) {
+    try {
+      for (let tries = 0; tries < 3; tries++) {
+        let auditEntries = await this.getLatestAuditLogs(guild, {...options, limit: 1});
+        if (auditEntries.length === 0 || auditEntries[0].target.id !== target.id) {
+          await new Promise((resolve) => setTimeout(resolve, 500));
         } else {
           return auditEntries[0];
         }
-      }),
-      retryWhen((errors$) => {
-        return zip(
-          range(1, 3),
-          errors$,
-        ).pipe(
-          flatMap(([attempt, error]) => {
-            if (attempt === 3) { return throwError(error); }
-            switch (error.name) {
-              case "TargetMatchError":
-              case "NoAuditRecords":
-                return timer(500);
-              default:
-                return throwError(error);
-            }
-          }),
-        );
-      }),
-    );
+      }
+
+      return {
+        executor: {id: null},
+        reason: `ERROR: Unable to find matching log entry`,
+      };
+    } catch (error) {
+      if (error instanceof AuditLogError) {
+        return {
+          executor: {id: null},
+          reason: `ERROR: ${error.message}`,
+        };
+      } else {
+        throw error;
+      }
+    }
+
   }
 
   async getLatestAuditLogs(guild, options = {}) {

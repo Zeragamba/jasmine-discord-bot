@@ -72,7 +72,12 @@ describe('NetModLogService', function () {
             user: user,
 
             hasPermission: (flag) => {
-              return flag !== Discord.Permissions.FLAGS.VIEW_AUDIT_LOG;
+              switch (flag) {
+                case Discord.Permissions.FLAGS.VIEW_AUDIT_LOG:
+                  return false;
+                default:
+                  return true;
+              }
             },
           });
         });
@@ -111,7 +116,7 @@ describe('NetModLogService', function () {
                 },
                 description:
                   `User ID: ${this.bannedMember.id}\n` +
-                  `Reason: ERROR: No audit records were found`,
+                  `Reason: ERROR: Unable to find matching log entry`,
               },
             },
           ]);
