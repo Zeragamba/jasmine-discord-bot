@@ -46,12 +46,9 @@ describe('ow-info: !region', function () {
       it('gives a success message', async function () {
         const responses = await this.jasmine.testMessage(this.message);
         expect(responses).to.have.length(1);
-        expect(responses).to.containSubset([
-          {
-            type: 'reply',
-            content: 'I\'ve updated your region to test',
-          },
-        ]);
+        expect(responses[0]).to.containSubset({
+          content: 'I\'ve updated your region to test',
+        });
       });
 
       it('adds the role to the user', async function () {
@@ -97,12 +94,9 @@ describe('ow-info: !region', function () {
       it('gives a success message', async function () {
         const responses = await this.jasmine.testMessage(this.message);
         expect(responses).to.have.length(1);
-        expect(responses).to.containSubset([
-          {
-            type: 'reply',
-            content: 'I\'ve updated your region to test',
-          },
-        ]);
+        expect(responses[0]).to.containSubset({
+          content: 'I\'ve updated your region to test',
+        });
       });
 
       it('adds the role to the user', async function () {
@@ -128,16 +122,12 @@ describe('ow-info: !region', function () {
           sinon.spy(this.message, 'reply');
 
           const responses = await this.jasmine.testMessage(this.message);
-          expect(this.message.guild.fetchMember).to.have.been.calledWith(
-            this.message.author,
-          );
+          expect(this.message.guild.fetchMember)
+            .to.have.been.calledWith(this.message.author);
           expect(responses).to.have.length(1);
-          expect(responses).to.containSubset([
-            {
-              type: 'reply',
-              content: 'I\'ve updated your region to test',
-            },
-          ]);
+          expect(responses[0]).to.containSubset({
+            content: 'I\'ve updated your region to test',
+          });
         });
       });
     });

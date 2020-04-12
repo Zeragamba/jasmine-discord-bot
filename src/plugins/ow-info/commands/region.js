@@ -1,9 +1,7 @@
-const {throwError, zip, iif, of} = require('rxjs');
-const {flatMap, catchError} = require('rxjs/operators');
 const {DiscordAPIError} = require('discord.js');
+const ChaosCore = require('chaos-core');
 
 const {
-  RegionError,
   UnmappedRegionError,
   BrokenAliasError,
   RegionNotFoundError,
@@ -23,94 +21,73 @@ module.exports = {
     },
   ],
 
-  run(context, response) {
+  async run(context, response) {
     const regionService = this.chaos.getService('ow-info', 'regionService');
 
-    return iif(
-      () => context.member,
-      of(context.member),
-      of('').pipe(
-        flatMap(() => context.guild.fetchMember(context.author)),
-      ),
-    ).pipe(
-      flatMap((member) => regionService.setUserRegion(member, context.args.region)),
-      flatMap((region) =>
-        response.send({
-          type: 'reply',
-          content: `I've updated your region to ${region.name}`,
-        }),
-      ),
-      catchError((error) => {
-        switch (true) {
-          case error instanceof RegionError:
-            return handleRegionError(error, context, response);
-          case error instanceof DiscordAPIError:
-            return handleDiscordApiError(error, context, response);
-          default:
-            return throwError(error);
-        }
-      }),
-    );
+    try {
+      let member = context.member;
+      if (!member) {
+        member = await context.guild.fetchMember(context.author);
+      }
+
+      const region = await regionService.setUserRegion(member, context.args.region).toPromise();
+      return response.send({
+        content: `I've updated your region to ${region.name}`,
+      });
+    } catch (error) {
+      switch (true) {
+        case error instanceof ChaosCore.errors.ChaosError:
+          return handleChaosError(error, context, response);
+        case error instanceof DiscordAPIError:
+          return handleDiscordApiError(error, context, response);
+        default:
+          throw  error;
+      }
+    }
   },
 };
 
-function handleRegionError(error, context, response) {
-  if (error instanceof RegionAlreadyAssigned) {
-    return response.send({content: `Looks like you already have the role for ${error.regionName}`});
-  }
-
-  if (error instanceof UnmappedRegionError) {
-    return response.send({
-      content:
-        `I'm sorry, but '${error.regionName}' is not mapped to a valid role. Can you ask an Admin to update that?`,
-    });
-  }
-
-  if (error instanceof BrokenAliasError) {
-    return response.send({
-      content:
-        `I'm sorry, but the alias '${error.aliasName}' is not mapped to a valid region. Can you ask an Admin to ` +
-        `update that?`,
-    });
-  }
-
-  if (error instanceof RegionNotFoundError || error instanceof AliasNotFoundError) {
-    return response.send({content: `I'm sorry, but '${error.regionName}' is not an available region.`});
+function handleChaosError(error, context, response) {
+  switch (true) {
+    case error instanceof RegionAlreadyAssigned:
+      return response.send({
+        content: `Looks like you already have the role for ${error.regionName}`,
+      });
+    case error instanceof UnmappedRegionError:
+      return response.send({
+        content:
+          `I'm sorry, but '${error.regionName}' is not mapped to a valid role. ` +
+          `Can you ask an Admin to update that?`,
+      });
+    case error instanceof BrokenAliasError:
+      return response.send({
+        content:
+          `I'm sorry, but the alias '${error.aliasName}' is not mapped to a valid ` +
+          `region. Can you ask an Admin to update that?`,
+      });
+    case error instanceof RegionNotFoundError:
+    case error instanceof AliasNotFoundError:
+      return response.send({
+        content: `I'm sorry, but '${error.regionName}' is not an available region.`,
+      });
+    default:
+      throw error;
   }
 }
 
 function handleDiscordApiError(error, context, response) {
-  if (error.message === "Missing Permissions") {
-    return response.send({
-      type: 'message',
-      content:
-        `Whoops, I do not have permission to update user roles. Can you ask an admin to grant me the ` +
-        `"Manage Roles" permission?`,
-    });
+  switch (error.message) {
+    case "Missing Permissions":
+      return response.send({
+        content:
+          `Whoops, I do not have permission to update user roles. Can you ask ` +
+          `an admin to grant me the "Manage Roles" permission?`,
+      });
+    case "Privilege is too low...":
+      return response.send({
+        content: `I'm unable to change your roles; Your permissions outrank mine.`,
+      });
+    default:
+      throw error;
   }
-
-  if (error.message === "Privilege is too low...") {
-    return response.send({
-      type: 'message',
-      content: `I'm unable to change your roles; Your permissions outrank mine.`,
-    });
-  }
-
-  return zip(
-    response.send({
-      type: 'message',
-      content: `Err... Discord returned an unexpected error when I tried to update your roles.`,
-    }),
-    this.chaos.messageOwner(
-      `I got this error when I tried to update ${context.author.tag}'s platform:`,
-      {
-        embed: this.chaos.createEmbedForError(error, [
-          {name: "guild", value: context.guild.name},
-          {name: "channel", value: context.channel.name},
-          {name: "command", value: "region"},
-          {name: "user", value: context.author.tag},
-        ]),
-      },
-    ),
-  );
 }

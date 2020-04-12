@@ -1,4 +1,6 @@
-class RegionError extends Error {
+const ChaosCore = require('chaos-core');
+
+class RegionError extends ChaosCore.errors.ChaosError {
 }
 
 class UnmappedRegionError extends RegionError {
