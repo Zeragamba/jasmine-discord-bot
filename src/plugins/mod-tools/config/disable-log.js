@@ -1,5 +1,3 @@
-const {map} = require('rxjs/operators');
-
 const {LOG_TYPES} = require('../utility');
 
 const VALID_LOG_TYPES_NAMES = LOG_TYPES.map((t) => t.name);
@@ -16,7 +14,7 @@ module.exports = {
     },
   ],
 
-  run(context) {
+  async run(context) {
     let modLogService = this.chaos.getService('modTools', 'ModLogService');
 
     let guild = context.guild;
@@ -30,11 +28,10 @@ module.exports = {
       };
     }
 
-    return this.chaos.setGuildData(guild.id, logType.channelDatakey, null).pipe(
-      map(() => ({
-        status: 200,
-        content: `I have disabled the ${logType.name}.`,
-      })),
-    );
+    await this.setGuildData(guild.id, logType.channelDatakey, null);
+    return {
+      status: 200,
+      content: `I have disabled the ${logType.name}.`,
+    };
   },
 };

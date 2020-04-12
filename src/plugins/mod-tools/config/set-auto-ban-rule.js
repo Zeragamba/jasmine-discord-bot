@@ -1,10 +1,4 @@
-const {of, throwError} = require('rxjs');
-const {map, catchError} = require('rxjs/operators');
-
-const {
-  AutoBanError,
-  RuleNotFoundError,
-} = require("../errors");
+const {RuleNotFoundError} = require("../errors");
 
 module.exports = {
   name: 'setAutoBanRule',
@@ -23,36 +17,28 @@ module.exports = {
     },
   ],
 
-  run(context) {
+  async run(context) {
     let autoBanService = this.chaos.getService('modTools', 'autoBanService');
     let guild = context.guild;
 
     let rule = context.args.rule;
     let enabled = context.args.enabled === "true";
 
-    return autoBanService.setAutoBanRule(guild, rule, enabled).pipe(
-      map(([rule, enabled]) => ({
+    try {
+
+      [rule, enabled] = await autoBanService.setAutoBanRule(guild, rule, enabled).toPromise();
+      return {
         status: 200,
         content: `${rule} is now ${enabled ? "enabled" : "disabled"}`,
-      })),
-      catchError((error) => {
-        if (error instanceof AutoBanError) {
-          return handleAutoBanError(error, context);
-        }
-
-        return throwError(error);
-      }),
-    );
+      };
+    } catch (error) {
+      if (error instanceof RuleNotFoundError) {
+        return {
+          status: 404,
+          content: error.message,
+        };
+      }
+      throw error;
+    }
   },
 };
-
-function handleAutoBanError(error) {
-  if (error instanceof RuleNotFoundError) {
-    return of(({
-      status: 404,
-      content: error.message,
-    }));
-  }
-
-  return throwError(error);
-}
