@@ -1,8 +1,5 @@
-const {of, throwError} = require('rxjs');
-const {flatMap, map, catchError, mapTo} = require('rxjs/operators');
 const Discord = require('discord.js');
-
-const {ERRORS} = require('../utility');
+const {ChaosError} = require('chaos-core').errors;
 
 module.exports = {
   name: 'warn',
@@ -23,7 +20,7 @@ module.exports = {
     },
   ],
 
-  run(context, response) {
+  async run(context, response) {
     let modLogService = this.chaos.getService('modTools', 'ModLogService');
     let userService = this.chaos.getService('core', 'UserService');
 
@@ -42,61 +39,30 @@ module.exports = {
       warningEmbed.setDescription(reason);
     }
 
-    return userService.findUser(userString).pipe(
-      map((member) => {
-        if (!member) { throw new Error(ERRORS.USER_NOT_FOUND); }
-        return member;
-      }),
-      flatMap((user) => of('').pipe(
-        flatMap(() => user.send({
-          content: 'You have been issued a warning.',
-          embed: warningEmbed,
-        })),
-        map(user),
-      )),
-      flatMap((user) => modLogService.addWarnEntry(guild, user, reason, context.author).pipe(
-        mapTo(user),
-      )),
-      flatMap((user) => {
-        response.content = `${user.tag} has been warned`;
-        return response.send();
-      }),
-      catchError((error) => {
-        if (error.name === 'DiscordAPIError') {
-          switch (error.message) {
-            case "Cannot send messages to this user":
-              response.content = `Sorry, I'm not able to direct message that user.`;
-              break;
-            default:
-              response.content = `Err... Discord returned an unexpected error when I tried to ban that user.`;
-              this.chaos.messageOwner(
-                "I got this error when I tried to ban a user:",
-                {
-                  embed: this.chaos.createEmbedForError(error, [
-                    {name: "guild", inline: true, value: context.guild.name},
-                    {name: "channel", inline: true, value: context.channel.name},
-                    {name: "command", inline: true, value: "ban"},
-                    {name: "user to ban", inline: true, value: userString},
-                    {name: "user banning", inline: true, value: context.author.tag},
-                  ]),
-                },
-              );
-          }
+    try {
+      const user = await userService.findUser(userString).toPromise();
 
-          return response.send();
-        }
+      await user.send({
+        content: 'You have been issued a warning.',
+        embed: warningEmbed,
+      });
+      await modLogService.addWarnEntry(guild, user, reason, context.author).toPromise();
 
-        switch (error.message) {
-          case ERRORS.USER_NOT_FOUND:
-            return response.send({
-              content:
-                `Sorry, but I wasn't able to find that user. I can only find users by User Tag if they are in ` +
-                `another guild I'm on. If you know their User ID I can find them by that.`,
-            });
-          default:
-            return throwError(error);
-        }
-      }),
-    );
+      return response.send({
+        content: `${user.tag} has been warned`,
+      });
+    } catch (error) {
+      if (error instanceof ChaosError) {
+        return response.send({
+          content: error.message,
+        });
+      } else if (error.message === "Cannot send messages to this user") {
+        return response.send({
+          content: `Sorry, I'm not able to direct message that user.`,
+        });
+      } else {
+        throw error;
+      }
+    }
   },
 };
