@@ -8,8 +8,8 @@ module.exports = {
     let guild = context.guild;
 
     const [autoBanEnabled, rules] = await Promise.all([
-      autoBanService.isAutoBanEnabled(guild).toPromise(),
-      autoBanService.getRules(guild).toPromise(),
+      autoBanService.isAutoBanEnabled(guild),
+      autoBanService.getRules(guild),
     ]);
 
     let message = [

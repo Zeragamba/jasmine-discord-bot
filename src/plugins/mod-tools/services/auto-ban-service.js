@@ -1,160 +1,105 @@
-const {of, from} = require('rxjs');
-const {flatMap, tap, map, reduce, first, filter} = require('rxjs/operators');
 const Service = require('chaos-core').Service;
 
-const {
-  RuleNotFoundError,
-} = require("../errors");
-const {
-  DATAKEYS,
-  AUTO_BAN_RULES,
-} = require('../utility');
+const {RuleNotFoundError} = require("../errors");
+const {DATAKEYS, AUTO_BAN_RULES} = require('../utility');
 
 class AutoBanService extends Service {
+  rules = [
+    {
+      name: AUTO_BAN_RULES.BAN_DISCORD_INVITE,
+      test: (member) => {
+        let hasLink = this.memberNameMatches(member, /discord\.gg[/\\]/i);
+        this.chaos.logger.debug(`${member.user.tag} has Discord invite in name: ${hasLink}`);
+        return hasLink;
+      },
+      reason: "Username contains or was changed to a Discord invite",
+    },
+    {
+      name: AUTO_BAN_RULES.BAN_TWITCH_LINK,
+      test: (member) => {
+        let hasLink = this.memberNameMatches(member, /twitch\.tv[/\\]/i);
+        this.chaos.logger.debug(`${member.user.tag} has Twitch link in name: ${hasLink}`);
+        return hasLink;
+      },
+      reason: "Username contains or was changed to a Twitch link",
+    },
+  ];
+
   constructor(chaos) {
     super(chaos);
 
-    this.rules = [
-      {
-        name: AUTO_BAN_RULES.BAN_DISCORD_INVITE,
-        test: (member) => {
-          let hasLink = this.memberNameMatches(member, /discord\.gg[/\\]/i);
-          this.chaos.logger.debug(`${member.user.tag} has Discord invite in name: ${hasLink}`);
-          return hasLink;
-        },
-        reason: "Username contains or was changed to a Discord invite",
-      },
-      {
-        name: AUTO_BAN_RULES.BAN_TWITCH_LINK,
-        test: (member) => {
-          let hasLink = this.memberNameMatches(member, /twitch\.tv[/\\]/i);
-          this.chaos.logger.debug(`${member.user.tag} has Twitch link in name: ${hasLink}`);
-          return hasLink;
-        },
-        reason: "Username contains or was changed to a Twitch link",
-      },
-    ];
-
-    this.chaos.on('guildMemberAdd', (member) => {
-      return this.handleGuildMemberAdd(member).pipe(
-        this.chaos.catchError([
-          {name: "Service", value: "AutoBanService"},
-          {name: "Hook", value: "guildMemberAdd$"},
-          {name: "Member", value: member.toString()},
-          {name: "Guild", value: member.guild.toString()},
-        ]),
-      );
+    this.chaos.on('guildMemberAdd', async (member) => {
+      await this.doAutoBans(member);
     });
 
-    this.chaos.on('guildMemberUpdate', ([oldMember, newMember]) => {
-      return this.handleGuildMemberUpdate(oldMember, newMember).pipe(
-        this.chaos.catchError([
-          {name: "Service", value: "AutoBanService"},
-          {name: "Hook", value: "guildMemberUpdate$"},
-          {name: "Member", value: newMember.toString()},
-          {name: "Guild", value: newMember.guild.toString()},
-        ]),
-      );
+    this.chaos.on('guildMemberUpdate', async ([_oldMember, newMember]) => {
+      await this.doAutoBans(newMember);
     });
-  }
-
-  handleGuildMemberAdd(member) {
-    return of('').pipe(
-      flatMap(() => this.doAutoBans(member)),
-    );
-  }
-
-  handleGuildMemberUpdate(oldMember, newMember) {
-    return of('').pipe(
-      flatMap(() => this.doAutoBans(newMember)),
-    );
   }
 
   getAutoBanRule(rule) {
     let foundRule = Object.values(AUTO_BAN_RULES).find((r) => r.toLowerCase() === rule.toLowerCase());
     if (!foundRule) {
-      return new RuleNotFoundError(rule);
+      throw new RuleNotFoundError(rule);
     }
     return foundRule;
   }
 
-  setAutoBansEnabled(guild, newValue) {
-    return this.chaos
-      .setGuildData(guild.id, DATAKEYS.AUTO_BAN_ENABLED, newValue);
+  async setAutoBansEnabled(guild, newValue) {
+    return this.setGuildData(guild.id, DATAKEYS.AUTO_BAN_ENABLED, newValue);
   }
 
-  setAutoBanRule(guild, rule, newValue) {
+  async setAutoBanRule(guild, rule, newValue) {
     rule = this.getAutoBanRule(rule);
-
-    return this.chaos.setGuildData(guild.id, DATAKEYS.AUTO_BAN_RULE(rule), newValue).pipe(
-      map((enabled) => ([rule, enabled])),
-    );
+    return this.setGuildData(guild.id, DATAKEYS.AUTO_BAN_RULE(rule), newValue);
   }
 
-  doAutoBans(member) {
-    return of('').pipe(
-      flatMap(() => this.isAutoBanEnabled(member.guild)),
-      filter(Boolean),
-      tap(() => this.chaos.logger.info(`Checking if ${member.user.tag} should be auto banned...`)),
-      flatMap(() => from(this.rules).pipe(
-        flatMap((rule) => this.runRule(rule, member)),
-        first((reason) => reason, ''),
-      )),
-      filter((reason) => reason !== ''),
-      tap((reason) => this.chaos.logger.info(`Auto banning ${member.user.tag}; reason: ${reason}`)),
-      flatMap((reason) =>
-        member.guild.ban(member, {
-          days: 1,
-          reason: `[AutoBan] ${reason}`,
-        }),
-      ),
-    );
+  async doAutoBans(member) {
+    if (await this.isAutoBanEnabled(member.guild)) {
+      this.chaos.logger.info(`Checking if ${member.user.tag} should be auto banned...`);
+      const reasons = await Promise.all(this.rules.map((rule) => this.runRule(rule, member)))
+        .then((reasons) => reasons.filter((reason) => reason !== ''));
+
+      if (reasons.length >= 1) {
+        this.chaos.logger.info(`Auto banning ${member.user.tag}; reasons: ${reasons.join(',')}`);
+        await member.guild.ban(member, {reason: `[AutoBan] ${reasons.join('; ')}`});
+      }
+    }
   }
 
-  runRule(rule, member) {
-    return of('').pipe(
-      flatMap(() => this.isAutoBanRuleEnabled(member.guild, rule.name)),
-      filter(Boolean),
-      filter(() => rule.test(member)),
-      map(() => rule.reason),
-    );
+  async runRule(rule, member) {
+    if (await this.isAutoBanRuleEnabled(member.guild, rule.name) && rule.test(member)) {
+      return rule.reason;
+    }
   }
 
-  isAutoBanEnabled(guild) {
-    return this.chaos
-      .getGuildData(guild.id, DATAKEYS.AUTO_BAN_ENABLED);
+  async isAutoBanEnabled(guild) {
+    return this.getGuildData(guild.id, DATAKEYS.AUTO_BAN_ENABLED)
+      .then((enabled) => (typeof enabled === "undefined" ? false : enabled));
   }
 
-  isAutoBanRuleEnabled(guild, rule) {
+  async isAutoBanRuleEnabled(guild, rule) {
     rule = this.getAutoBanRule(rule);
-
-    return this.chaos
-      .getGuildData(guild.id, DATAKEYS.AUTO_BAN_RULE(rule));
+    return this.getGuildData(guild.id, DATAKEYS.AUTO_BAN_RULE(rule));
   }
 
-  getRules(guild) {
-    return from(Object.values(AUTO_BAN_RULES)).pipe(
-      flatMap((rule) => this.isAutoBanRuleEnabled(guild, rule).pipe(
-        map((enabled) => [rule, enabled])),
-      ),
-      reduce((rules, [rule, enabled]) => {
-        rules[rule] = enabled;
-        return rules;
-      }, {}),
-    );
+  async getRules(guild) {
+    const rules = {};
+    for (const rule of Object.values(AUTO_BAN_RULES)) {
+      rules[rule] = await this.isAutoBanRuleEnabled(guild, rule);
+    }
+    return rules;
   }
 
   memberNameMatches(member, regex) {
-    // check username
-    let usernameHasLink = !!member.user.username.match(regex);
+    const names = [
+      member.user.username,
+      member.nickname,
+    ];
 
-    // check nickname if there is one
-    let nicknameHasLink = false;
-    if (member.nickname) {
-      nicknameHasLink = !!member.nickname.match(regex);
-    }
-
-    return usernameHasLink || nicknameHasLink;
+    return names
+      .filter((name) => name)
+      .some((name) => name.match(regex));
   }
 }
 

@@ -4,7 +4,7 @@ module.exports = {
 
   async run(context) {
     await this.chaos.getService('modTools', 'autoBanService')
-      .setAutoBansEnabled(context.guild, false).toPromise();
+      .setAutoBansEnabled(context.guild, false);
 
     return {
       status: 200,

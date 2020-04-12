@@ -25,8 +25,7 @@ module.exports = {
     let enabled = context.args.enabled === "true";
 
     try {
-
-      [rule, enabled] = await autoBanService.setAutoBanRule(guild, rule, enabled).toPromise();
+      enabled = await autoBanService.setAutoBanRule(guild, rule, enabled);
       return {
         status: 200,
         content: `${rule} is now ${enabled ? "enabled" : "disabled"}`,

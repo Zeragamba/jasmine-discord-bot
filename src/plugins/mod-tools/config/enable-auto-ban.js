@@ -7,7 +7,7 @@ module.exports = {
 
     let guild = context.guild;
 
-    await autoBanService.setAutoBansEnabled(guild, true).toPromise();
+    await autoBanService.setAutoBansEnabled(guild, true);
     return {
       status: 200,
       content: `Autobanning is now enabled.`,

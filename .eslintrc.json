@@ -39,6 +39,12 @@
     "chai-expect/missing-assertion": "error",
     "chai-expect/terminating-properties": "error",
     "chai-expect/no-inner-compare": "error",
-    "eol-last": "error"
+    "eol-last": "error",
+    "no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_"
+      }
+    ]
   }
 }
