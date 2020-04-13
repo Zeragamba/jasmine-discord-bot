@@ -1,6 +1,5 @@
-const {of, throwError, EMPTY} = require('rxjs');
-const {flatMap, tap, catchError, filter} = require('rxjs/operators');
-const { Command } = require('chaos-core');
+const {EMPTY} = require('rxjs');
+const {Command} = require('chaos-core');
 
 const {
   BroadcastingNotAllowedError,
@@ -40,36 +39,31 @@ class BroadcastCommand extends Command {
     }
   }
 
-  run(context, response) {
+  async run(context, response) {
     const broadcastService = this.chaos.getService('owMains', 'broadcastService');
     const guild = context.guild;
     const broadcastType = context.args.type.toLowerCase();
     const broadcastBody = context.args.message + `\n*- ${context.member.displayName}*`;
 
-    return of('').pipe(
-      tap(() => broadcastService.checkBroadcastAllowed(guild)),
-      tap(() => broadcastService.checkValidBroadcast(broadcastType, broadcastBody)),
-      flatMap(() => broadcastService.confirmBroadcast(context, broadcastType, broadcastBody)),
-      filter(Boolean),
-      flatMap(() => response.send({content: `Ok, let me broadcast that then.`})),
-      flatMap(() => broadcastService.broadcastMessage(broadcastType, broadcastBody)),
-      flatMap((sentMessages) => response.send({content: `Done. Broadcasted to ${sentMessages.length} servers`})),
-      catchError((error) => {
-        if (error instanceof InvalidBroadcastError) {
-          return response.send({
-            content: error.message,
-          });
-        } else if (error instanceof BroadcastingNotAllowedError) {
-          return EMPTY;
-        } else if (error instanceof BroadcastCanceledError) {
-          return response.send({
-            content: `Ok. Broadcast canceled`,
-          });
-        } else {
-          return throwError(error);
-        }
-      }),
-    );
+    try {
+      broadcastService.checkBroadcastAllowed(guild);
+      broadcastService.checkValidBroadcast(broadcastType, broadcastBody);
+      if (await broadcastService.confirmBroadcast(context, broadcastType, broadcastBody).toPromise()) {
+        await response.send({content: `Ok, let me broadcast that then.`}).toPromise();
+        const sentMessages = await broadcastService.broadcastMessage(broadcastType, broadcastBody).toPromise();
+        await response.send({content: `Done. Broadcasted to ${sentMessages.length} servers`}).toPromise();
+      }
+    } catch (error) {
+      if (error instanceof InvalidBroadcastError) {
+        return response.send({content: error.message});
+      } else if (error instanceof BroadcastingNotAllowedError) {
+        // User is not allowed to broadcast. Ignore.
+      } else if (error instanceof BroadcastCanceledError) {
+        return response.send({content: `Ok. Broadcast canceled`});
+      } else {
+        throw error;
+      }
+    }
   }
 }
 
