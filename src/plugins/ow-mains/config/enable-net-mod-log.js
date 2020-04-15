@@ -1,5 +1,3 @@
-const {of, throwError} = require('rxjs');
-const {flatMap, map, catchError} = require('rxjs/operators');
 const DataKeys = require('../datakeys');
 
 module.exports = {
@@ -13,13 +11,15 @@ module.exports = {
     },
   ],
 
-  run(context) {
+  async run(context) {
     const owmnService = this.chaos.getService('owMains', 'OwmnService');
     const guild = context.guild;
     const channelString = context.args.channel;
 
     if (!owmnService.isOwmnGuild(guild)) {
-      return {content: "NetModLog can only be enabled on the OWMN server."};
+      return {
+        content: "NetModLog can only be enabled on the OWMN server.",
+      };
     }
 
     let channel = guild.channels.find((c) => c.toString() === channelString || c.id.toString() === channelString);
@@ -29,27 +29,23 @@ module.exports = {
       };
     }
 
-    return this.chaos.setGuildData(guild.id, DataKeys.netModLogChannelId, channel.id).pipe(
-      flatMap(() => channel.send('I will post the network moderation log here now.')),
-      map(() => ({
+    try {
+      await this.setGuildData(guild.id, DataKeys.netModLogChannelId, channel.id);
+      await channel.send('I will post the network moderation log here now.').toPromise();
+
+      return {
         status: 200,
         content: `This server will now receive the network moderation log.`,
-      })),
-      catchError((error) => {
-        switch (error.name) {
-          case 'DiscordAPIError':
-            if (error.message === "Missing Permissions") {
-              return of({
-                status: 400,
-                content: `Whoops, I do not have permission to talk in that channel.`,
-              });
-            } else {
-              return throwError(error);
-            }
-          default:
-            return throwError(error);
-        }
-      }),
-    );
+      };
+    } catch (error) {
+      if (error.message === "Missing Permissions") {
+        return {
+          status: 400,
+          content: `Whoops, I do not have permission to talk in that channel.`,
+        };
+      } else {
+        throw error;
+      }
+    }
   },
 };

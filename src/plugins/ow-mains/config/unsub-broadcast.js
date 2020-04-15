@@ -1,5 +1,3 @@
-const {of} = require('rxjs');
-const {map} = require('rxjs/operators');
 const DataKeys = require('../datakeys');
 
 module.exports = {
@@ -19,16 +17,15 @@ module.exports = {
     const broadcastType = context.args.type;
 
     if (!broadcastService.isValidType(broadcastType)) {
-      return of({
+      return {
         content: `${broadcastType} is not a valid broadcast type. Valid types: ${broadcastService.broadcastTypes.join(', ')}`,
-      });
+      };
     }
 
-    return this.chaos.setGuildData(guild.id, DataKeys.broadcastChannelId(broadcastType), null).pipe(
-      map(() => ({
-        status: 200,
-        content: `I have disabled ${broadcastType} broadcasts`,
-      })),
-    );
+    this.setGuildData(guild.id, DataKeys.broadcastChannelId(broadcastType), null);
+    return {
+      status: 200,
+      content: `I have disabled ${broadcastType} broadcasts`,
+    };
   },
 };
