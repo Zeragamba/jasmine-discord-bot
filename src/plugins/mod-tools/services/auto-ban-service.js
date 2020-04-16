@@ -60,7 +60,7 @@ class AutoBanService extends Service {
       const reasons = await Promise.all(this.rules.map((rule) => this.runRule(rule, member)))
         .then((reasons) => reasons.filter((reason) => reason !== ''));
 
-      if (reasons.length >= 1) {
+      if (reasons.some(Boolean)) {
         this.chaos.logger.info(`Auto banning ${member.user.tag}; reasons: ${reasons.join(',')}`);
         await member.guild.ban(member, {reason: `[AutoBan] ${reasons.join('; ')}`});
       }
@@ -74,8 +74,14 @@ class AutoBanService extends Service {
   }
 
   async isAutoBanEnabled(guild) {
-    return this.getGuildData(guild.id, DATAKEYS.AUTO_BAN_ENABLED)
-      .then((enabled) => (typeof enabled === "undefined" ? false : enabled));
+    let checks = await Promise.all([
+      this.chaos.getService('core', 'PluginService')
+        .isPluginEnabled(guild.id, 'modTools'),
+      this.getGuildData(guild.id, DATAKEYS.AUTO_BAN_ENABLED)
+        .then((enabled) => (typeof enabled === "undefined" ? false : enabled)),
+    ]);
+
+    return checks.every(Boolean);
   }
 
   async isAutoBanRuleEnabled(guild, rule) {
