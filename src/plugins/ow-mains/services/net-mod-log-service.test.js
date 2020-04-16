@@ -2,7 +2,7 @@ const Discord = require('discord.js');
 const DataKeys = require('../datakeys');
 
 describe('NetModLogService', function () {
-  beforeEach(function () {
+  beforeEach(async function () {
     this.jasmine = stubJasmine();
     this.jasmine.handleError = (error, embedFields) => {
       error.embedFields = embedFields;
@@ -17,6 +17,7 @@ describe('NetModLogService', function () {
     };
     this.jasmine.config.owmnServerId = this.owmnGuild.id;
     this.jasmine.discord.guilds.set(this.owmnGuild.id, this.owmnGuild);
+    await this.jasmine.listen().toPromise();
   });
 
   describe('#handleGuildBanAdd', function () {
@@ -85,7 +86,7 @@ describe('NetModLogService', function () {
         it('Adds an error to the log entry', async function () {
           sinon.spy(this.modLogChannel, 'send');
 
-          await this.netModLogService.handleGuildBanAdd(this.guild, this.bannedMember).toPromise();
+          await this.netModLogService.handleGuildBanAdd(this.guild, this.bannedMember);
           expect(this.modLogChannel.send).to.have.been.calledOnce;
           expect(this.modLogChannel.send.firstCall.args).to.containSubset([
             {
@@ -106,7 +107,7 @@ describe('NetModLogService', function () {
         it('Adds a notice to the log entry', async function () {
           sinon.spy(this.modLogChannel, 'send');
 
-          await this.netModLogService.handleGuildBanAdd(this.guild, this.bannedMember).toPromise();
+          await this.netModLogService.handleGuildBanAdd(this.guild, this.bannedMember);
           expect(this.modLogChannel.send).to.have.been.calledOnce;
           expect(this.modLogChannel.send.firstCall.args).to.containSubset([
             {
@@ -125,7 +126,7 @@ describe('NetModLogService', function () {
         it('retries fetching the logs three times', async function () {
           sinon.spy(this.guild, 'fetchAuditLogs');
 
-          await this.netModLogService.handleGuildBanAdd(this.guild, this.bannedMember).toPromise();
+          await this.netModLogService.handleGuildBanAdd(this.guild, this.bannedMember);
           expect(this.guild.fetchAuditLogs).to.have.callCount(3);
         });
       });
@@ -149,7 +150,7 @@ describe('NetModLogService', function () {
         it('Adds the reason to the log entry', async function () {
           sinon.spy(this.modLogChannel, 'send');
 
-          await this.netModLogService.handleGuildBanAdd(this.guild, this.bannedMember).toPromise();
+          await this.netModLogService.handleGuildBanAdd(this.guild, this.bannedMember);
           expect(this.modLogChannel.send).to.have.been.calledOnce;
           expect(this.modLogChannel.send.firstCall.args).to.containSubset([
             {
@@ -203,7 +204,7 @@ describe('NetModLogService', function () {
       it('Adds a log entry', async function () {
         sinon.spy(this.modLogChannel, 'send');
 
-        await this.netModLogService.handleGuildBanRemove(this.guild, this.bannedMember).toPromise();
+        await this.netModLogService.handleGuildBanRemove(this.guild, this.bannedMember);
         expect(this.modLogChannel.send).to.have.been.calledOnce;
         expect(this.modLogChannel.send.firstCall.args).to.containSubset([
           {

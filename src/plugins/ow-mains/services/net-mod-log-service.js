@@ -1,5 +1,3 @@
-const {of, throwError, EMPTY} = require('rxjs');
-const {flatMap, tap, map, mapTo, defaultIfEmpty, catchError, filter} = require('rxjs/operators');
 const Discord = require('discord.js');
 const Service = require('chaos-core').Service;
 
@@ -10,80 +8,58 @@ class NetModLogService extends Service {
   constructor(chaos) {
     super(chaos);
 
-    this.modLogService = this.chaos.getService('modTools', 'ModLogService');
-    this.owmnService = this.chaos.getService('owMains', 'owmnService');
+    this.chaos.on("chaos.startup", () => {
+      this.modLogService = this.chaos.getService('modTools', 'ModLogService');
+      this.owmnService = this.chaos.getService('owMains', 'owmnService');
+    });
 
-    this.chaos.on("guildBanAdd", ([guild, user]) => this.handleGuildBanAdd(guild, user));
-    this.chaos.on("guildBanRemove", ([guild, user]) => this.handleGuildBanRemove(guild, user));
+    this.chaos.on("guildBanAdd", async ([guild, user]) => await this.handleGuildBanAdd(guild, user));
+    this.chaos.on("guildBanRemove", async ([guild, user]) => await this.handleGuildBanRemove(guild, user));
   }
 
-  handleGuildBanAdd(guild, user) {
-    return of('').pipe(
-      flatMap(() => this.modLogService.findReasonAuditLog(
+  async handleGuildBanAdd(guild, user) {
+    let log;
+    try {
+      log = await this.modLogService.findReasonAuditLog(
         guild, user, {type: AuditLogActions.MEMBER_BAN_ADD},
-      )),
-      catchError((error) => {
-        switch (error.name) {
-          case "TargetMatchError":
-            return of({
-              executor: {id: null},
-              reason: `ERROR: Unable to find matching log entry`,
-            });
-          case "NoAuditRecords":
-          case "AuditLogReadError":
-            return of({
-              executor: {id: null},
-              reason: `ERROR: ${error.message}`,
-            });
-          default:
-            return throwError(error);
-        }
-      }),
-      filter((log) => !log.reason || !log.reason.match(/\[AutoBan]/i)),
-      map((log) => {
-        let reason = log.reason;
+      );
+    } catch (error) {
+      if (error.name === "TargetMatchError") {
+        log = {
+          executor: {id: null},
+          reason: `ERROR: Unable to find matching log entry`,
+        };
+      } else if (error.name === "NoAuditRecords" || error.name === "AuditLogReadError") {
+        log = {
+          executor: {id: null},
+          reason: `ERROR: ${error.message}`,
+        };
+      } else {
+        throw error;
+      }
+    }
 
-        if (log.executor.id === this.chaos.discord.user.id) {
-          //the ban was made by Jasmine, strip the moderator from the reason
-          reason = reason.replace(/\| Banned.*$/, '');
-        }
+    if (log.reason && log.reason.match(/\[AutoBan]/i)) {
+      return;
+    }
 
-        return {...log, reason};
-      }),
-      tap((log) => this.chaos.logger.debug(`NetModLog: User ${user.tag} banned in ${guild.id} for reason: ${log.reason}`)),
-      flatMap((log) => this.addBanEntry(guild, user, log.reason)),
-      catchError((error) => {
-        this.chaos.handleError(error, [
-          {name: 'Service', value: 'NetModLogService'},
-          {name: 'Hook', value: 'guildBanAdd$'},
-          {name: 'Guild Name', value: guild.name},
-          {name: 'Guild ID', value: guild.id},
-          {name: 'Banned User', value: user.tag.toString()},
-        ]);
-        return EMPTY;
-      }),
-    );
+    if (log.executor.id === this.chaos.discord.user.id) {
+      //the ban was made by Jasmine, strip the moderator from the reason
+      log.reason = log.reason.replace(/\| Banned.*$/, '');
+    }
+
+    this.logger.debug(`NetModLog: User ${user.tag} banned in ${guild.id} for reason: ${log.reason}`);
+    await this.addBanEntry(guild, user, log.reason);
   }
 
-  handleGuildBanRemove(guild, user) {
-    return of('').pipe(
-      tap(() => this.chaos.logger.debug(`NetModLog: User ${user.tag} unbanned in ${guild.id}`)),
-      flatMap(() => this.addUnbanEntry(guild, user)),
-      catchError((error) => {
-        this.chaos.handleError(error, [
-          {name: 'Service', value: 'NetModLogService'},
-          {name: 'Hook', value: 'guildBanRemove$'},
-          {name: 'Guild Name', value: guild.name},
-          {name: 'Guild ID', value: guild.id},
-          {name: 'Unbanned User', value: user.tag.toString()},
-        ]);
-        return EMPTY;
-      }),
-    );
+  async handleGuildBanRemove(guild, user) {
+    this.logger.debug(`NetModLog: User ${user.tag} unbanned in ${guild.id}`);
+    await this.addUnbanEntry(guild, user);
   }
 
-  addBanEntry(guild, user, reason) {
+  async addBanEntry(guild, user, reason) {
     let modLogEmbed = new Discord.RichEmbed();
+
     modLogEmbed
       .setAuthor(`${user.tag} banned from ${guild.name}`, user.avatarURL)
       .setColor(Discord.Constants.Colors.DARK_RED)
@@ -93,8 +69,9 @@ class NetModLogService extends Service {
     return this.addAuditEntry(guild, modLogEmbed);
   }
 
-  addUnbanEntry(guild, user) {
+  async addUnbanEntry(guild, user) {
     let modLogEmbed = new Discord.RichEmbed();
+
     modLogEmbed
       .setAuthor(`${user.tag} unbanned from ${guild.name}`, user.avatarURL)
       .setColor(Discord.Constants.Colors.DARK_GREEN)
@@ -104,28 +81,23 @@ class NetModLogService extends Service {
     return this.addAuditEntry(guild, modLogEmbed);
   }
 
-  addAuditEntry(fromGuild, embed) {
-    this.chaos.logger.debug(`Adding network mod log entry`);
+  async addAuditEntry(fromGuild, embed) {
+    this.logger.debug(`Adding network mod log entry`);
 
-    return of('').pipe(
-      flatMap(() => this.chaos.getGuildData(this.owmnService.owmnServer.id, DataKeys.netModLogChannelId)),
-      map((channelId) => this.owmnService.owmnServer.channels.get(channelId)),
-      filter((channel) => channel !== null),
-      flatMap((channel) => channel.send({embed})),
-      catchError((error) => {
-        if (error.name === 'DiscordAPIError') {
-          if (error.message === "Missing Access" || error.message === "Missing Permissions") {
-            // Bot does not have permission to send messages, we can ignore.
-            return EMPTY;
-          }
-        }
+    const channelId = await this.getGuildData(this.owmnService.owmnServer.id, DataKeys.netModLogChannelId);
+    const channel = this.owmnService.owmnServer.channels.get(channelId);
+    if (!channel) return;
 
-        // Error was not handled, rethrow it
-        return throwError(error);
-      }),
-      mapTo(true),
-      defaultIfEmpty(true),
-    );
+    try {
+      await channel.send({embed});
+    } catch (error) {
+      if (error.message === "Missing Access" || error.message === "Missing Permissions") {
+        // Bot does not have permission to send messages, we can ignore.
+
+      } else {
+        throw error;
+      }
+    }
   }
 }
 
