@@ -5,11 +5,11 @@ describe('Plugin: ModTools', function () {
 
   afterEach(async function () {
     if (this.jasmine.listening) {
-      await this.jasmine.shutdown().toPromise();
+      await this.jasmine.shutdown();
     }
   });
 
   it('can be loaded by Chaos', async function () {
-    await this.jasmine.listen().toPromise();
+    await this.jasmine.listen();
   });
 });

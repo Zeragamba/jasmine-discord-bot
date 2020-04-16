@@ -5,7 +5,7 @@ describe('Jasmine', function () {
 
   afterEach(async function () {
     if (this.jasmine.listening) {
-      await this.jasmine.shutdown().toPromise();
+      await this.jasmine.shutdown();
     }
   });
 
@@ -26,6 +26,6 @@ describe('Jasmine', function () {
 
   it('is able to start', async function () {
     this.jasmine = stubJasmine();
-    await this.jasmine.listen().toPromise();
+    await this.jasmine.listen();
   });
 });

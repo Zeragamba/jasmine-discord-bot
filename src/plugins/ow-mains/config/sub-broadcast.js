@@ -35,8 +35,8 @@ module.exports = {
     }
 
     try {
-      await this.setGuildData(guild.id, DataKeys.broadcastChannelId(broadcastType), channel.id).toPromise();
-      await channel.send(`I will send ${broadcastType} broadcasts here.`).toPromise();
+      await this.setGuildData(guild.id, DataKeys.broadcastChannelId(broadcastType), channel.id);
+      await channel.send(`I will send ${broadcastType} broadcasts here.`);
 
       return {
         content: `I have enabled ${broadcastType} broadcasts in the channel ${channel}`,

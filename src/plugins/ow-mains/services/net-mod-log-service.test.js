@@ -17,7 +17,7 @@ describe('NetModLogService', function () {
     };
     this.jasmine.config.owmnServerId = this.owmnGuild.id;
     this.jasmine.discord.guilds.set(this.owmnGuild.id, this.owmnGuild);
-    await this.jasmine.listen().toPromise();
+    await this.jasmine.listen();
   });
 
   describe('#handleGuildBanAdd', function () {
@@ -62,7 +62,7 @@ describe('NetModLogService', function () {
         };
         this.owmnGuild.channels.set(this.modLogChannel.id, this.modLogChannel);
 
-        await this.jasmine.setGuildData(this.owmnGuild.id, DataKeys.netModLogChannelId, this.modLogChannel.id).toPromise();
+        await this.jasmine.setGuildData(this.owmnGuild.id, DataKeys.netModLogChannelId, this.modLogChannel.id);
       });
 
       context('when the audit logs can not be read', function () {
@@ -198,7 +198,7 @@ describe('NetModLogService', function () {
         };
         this.owmnGuild.channels.set(this.modLogChannel.id, this.modLogChannel);
 
-        await this.jasmine.setGuildData(this.owmnGuild.id, DataKeys.netModLogChannelId, this.modLogChannel.id).toPromise();
+        await this.jasmine.setGuildData(this.owmnGuild.id, DataKeys.netModLogChannelId, this.modLogChannel.id);
       });
 
       it('Adds a log entry', async function () {

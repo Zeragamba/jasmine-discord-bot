@@ -31,7 +31,7 @@ module.exports = {
 
     try {
       await this.setGuildData(guild.id, DataKeys.netModLogChannelId, channel.id);
-      await channel.send('I will post the network moderation log here now.').toPromise();
+      await channel.send('I will post the network moderation log here now.');
 
       return {
         status: 200,

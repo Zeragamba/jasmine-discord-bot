@@ -6,11 +6,11 @@ describe('ow-info: !config ow-info rmRegion', function () {
     this.jasmine = stubJasmine();
     this.message = new MockMessage();
 
-    await this.jasmine.listen().toPromise();
+    await this.jasmine.listen();
     await this.jasmine.getService('core', 'PluginService')
-      .enablePlugin(this.message.guild.id, 'ow-info').toPromise();
+      .enablePlugin(this.message.guild.id, 'ow-info');
     await this.jasmine.getService('core', 'PermissionsService')
-      .addUser(this.message.guild, 'admin', this.message.member).toPromise();
+      .addUser(this.message.guild, 'admin', this.message.member);
   });
 
   describe('!config ow-info rmRegion', function () {

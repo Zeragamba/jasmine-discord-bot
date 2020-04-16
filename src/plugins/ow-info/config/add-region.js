@@ -22,7 +22,7 @@ module.exports = {
   async run(context) {
     try {
       const role = await this.chaos.getService('core', 'RoleService')
-        .findRole(context.guild, context.args.role).toPromise();
+        .findRole(context.guild, context.args.role);
       const region = await this.chaos.getService('ow-info', 'RegionService')
         .mapRegion(context.guild, context.args.region, role);
 

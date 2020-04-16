@@ -8,21 +8,21 @@ describe('modTools: !ban', function () {
     this.message.author.username = 'modUser';
     this.message.author.discriminator = '0001';
 
-    await this.jasmine.listen().toPromise();
+    await this.jasmine.listen();
     await this.jasmine.getService('core', 'PluginService')
-      .enablePlugin(this.message.guild.id, 'modTools').toPromise();
+      .enablePlugin(this.message.guild.id, 'modTools');
     await this.jasmine.getService('core', 'PermissionsService')
-      .addUser(this.message.guild, 'mod', this.message.author).toPromise();
+      .addUser(this.message.guild, 'mod', this.message.author);
   });
 
   describe("Permissions", function () {
     beforeEach(async function () {
       // Clear active permission levels for the user
       await this.jasmine.getService('core', 'PermissionsService')
-        .removeUser(this.message.guild, 'mod', this.message.author).toPromise()
+        .removeUser(this.message.guild, 'mod', this.message.author)
         .catch(() => ''); //ignore errors
       await this.jasmine.getService('core', 'PermissionsService')
-        .removeUser(this.message.guild, 'admin', this.message.author).toPromise()
+        .removeUser(this.message.guild, 'admin', this.message.author)
         .catch(() => '');
       this.message.content = '!ban';
     });
@@ -34,7 +34,7 @@ describe('modTools: !ban', function () {
 
     it('can be run by mod users', async function () {
       await this.jasmine.getService('core', 'PermissionsService')
-        .addUser(this.message.guild, 'mod', this.message.author).toPromise()
+        .addUser(this.message.guild, 'mod', this.message.author)
         .catch(() => '');
 
       const responses = await this.jasmine.testMessage(this.message);
@@ -43,7 +43,7 @@ describe('modTools: !ban', function () {
 
     it('can be run by admin users', async function () {
       await this.jasmine.getService('core', 'PermissionsService')
-        .addUser(this.message.guild, 'admin', this.message.author).toPromise()
+        .addUser(this.message.guild, 'admin', this.message.author)
         .catch(() => '');
 
       const responses = await this.jasmine.testMessage(this.message);

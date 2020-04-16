@@ -17,10 +17,10 @@ describe('ow-info: !platform', function () {
       return Promise.resolve(this.member);
     };
 
-    await this.jasmine.listen().toPromise();
-    await this.jasmine.emit("guildCreate", this.message.guild).toPromise();
+    await this.jasmine.listen();
+    await this.jasmine.emit("guildCreate", this.message.guild);
     await this.jasmine.getService('core', 'PluginService')
-      .enablePlugin(this.message.guild.id, 'ow-info').toPromise();
+      .enablePlugin(this.message.guild.id, 'ow-info');
   });
 
   describe('!platform', function () {

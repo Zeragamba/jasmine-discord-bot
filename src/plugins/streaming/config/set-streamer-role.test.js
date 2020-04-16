@@ -7,11 +7,11 @@ describe('streaming: !config streaming setStreamerRole', function () {
 
     this.role = {id: 'role-00001', name: 'testRole'};
 
-    await this.jasmine.listen().toPromise();
+    await this.jasmine.listen();
     await this.jasmine.getService('core', 'PluginService')
-      .enablePlugin(this.message.guild.id, 'streaming').toPromise();
+      .enablePlugin(this.message.guild.id, 'streaming');
     await this.jasmine.getService('core', 'PermissionsService')
-      .addUser(this.message.guild, 'admin', this.message.member).toPromise();
+      .addUser(this.message.guild, 'admin', this.message.member);
 
     this.streamingService = this.jasmine.getService('streaming', 'StreamingService');
   });

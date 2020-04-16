@@ -6,10 +6,10 @@ describe('ow-info: !region', function () {
     this.jasmine = stubJasmine();
     this.message = new MockMessage();
 
-    await this.jasmine.listen().toPromise();
-    await this.jasmine.emit("guildCreate", this.message.guild).toPromise();
+    await this.jasmine.listen();
+    await this.jasmine.emit("guildCreate", this.message.guild);
     await this.jasmine.getService('core', 'PluginService')
-      .enablePlugin(this.message.guild.id, 'ow-info').toPromise();
+      .enablePlugin(this.message.guild.id, 'ow-info');
   });
 
   describe('!region', function () {

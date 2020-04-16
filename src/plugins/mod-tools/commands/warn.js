@@ -40,13 +40,13 @@ module.exports = {
     }
 
     try {
-      const user = await userService.findUser(userString).toPromise();
+      const user = await userService.findUser(userString);
 
       await user.send({
         content: 'You have been issued a warning.',
         embed: warningEmbed,
       });
-      await modLogService.addWarnEntry(guild, user, reason, context.author).toPromise();
+      await modLogService.addWarnEntry(guild, user, reason, context.author);
 
       return response.send({
         content: `${user.tag} has been warned`,

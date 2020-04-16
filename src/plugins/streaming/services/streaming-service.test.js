@@ -8,7 +8,7 @@ const {RoleNotFoundError} = require('../lib/errors');
 describe('streaming: StreamingService', function () {
   beforeEach(async function () {
     this.jasmine = stubJasmine();
-    await this.jasmine.listen().toPromise();
+    await this.jasmine.listen();
     this.streamingService = this.jasmine.getService('streaming', 'StreamingService');
   });
 
@@ -24,12 +24,12 @@ describe('streaming: StreamingService', function () {
     });
 
     it('calls #handlePresenceUpdate', async function () {
-      await this.jasmine.emit('presenceUpdate', this.eventPayload).toPromise();
+      await this.jasmine.emit('presenceUpdate', this.eventPayload);
       expect(this.streamingService.handlePresenceUpdate).to.have.been.called;
     });
 
     it('passes #handlePresenceUpdate oldMember and newMember', async function () {
-      await this.jasmine.emit('presenceUpdate', this.eventPayload).toPromise();
+      await this.jasmine.emit('presenceUpdate', this.eventPayload);
       expect(this.streamingService.handlePresenceUpdate).to.have.been.calledWith(this.oldMember, this.newMember);
     });
   });
@@ -63,7 +63,7 @@ describe('streaming: StreamingService', function () {
     context('when the module is enabled', function () {
       beforeEach(async function () {
         await this.jasmine.getService('core', 'pluginService')
-          .enablePlugin(this.guild.id, 'streaming').toPromise();
+          .enablePlugin(this.guild.id, 'streaming');
       });
 
       context('when a live role is not set', function () {
@@ -269,7 +269,7 @@ describe('streaming: StreamingService', function () {
 
     context('when there is a role set', function () {
       beforeEach(async function () {
-        await this.jasmine.setGuildData(this.guild.id, DATAKEYS.LIVE_ROLE, this.role.id).toPromise();
+        await this.jasmine.setGuildData(this.guild.id, DATAKEYS.LIVE_ROLE, this.role.id);
       });
 
       it('returns the role to assign', async function () {
@@ -280,7 +280,7 @@ describe('streaming: StreamingService', function () {
 
     context('when there is no role set', function () {
       beforeEach(async function () {
-        await this.jasmine.setGuildData(this.guild.id, DATAKEYS.LIVE_ROLE, null).toPromise();
+        await this.jasmine.setGuildData(this.guild.id, DATAKEYS.LIVE_ROLE, null);
       });
 
       it('returns undefined', async function () {
@@ -306,7 +306,7 @@ describe('streaming: StreamingService', function () {
 
       it('saves the role id', async function () {
         await this.streamingService.setLiveRole(this.guild, this.role);
-        const savedData = await this.jasmine.getGuildData(this.guild.id, DATAKEYS.LIVE_ROLE).toPromise();
+        const savedData = await this.jasmine.getGuildData(this.guild.id, DATAKEYS.LIVE_ROLE);
         expect(savedData).to.eq(this.role.id);
       });
 
@@ -319,7 +319,7 @@ describe('streaming: StreamingService', function () {
     context('when passed null', function () {
       it('saves null', async function () {
         await this.streamingService.setLiveRole(this.guild, null);
-        const savedData = await this.jasmine.getGuildData(this.guild.id, DATAKEYS.LIVE_ROLE).toPromise();
+        const savedData = await this.jasmine.getGuildData(this.guild.id, DATAKEYS.LIVE_ROLE);
         expect(savedData).to.eq(null);
       });
 
@@ -340,7 +340,7 @@ describe('streaming: StreamingService', function () {
 
     it('sets the live role to null', async function () {
       await this.streamingService.removeLiveRole(this.guild);
-      const savedData = await this.jasmine.getGuildData(this.guild.id, DATAKEYS.LIVE_ROLE).toPromise();
+      const savedData = await this.jasmine.getGuildData(this.guild.id, DATAKEYS.LIVE_ROLE);
       expect(savedData).to.eq(null);
     });
 
@@ -349,7 +349,7 @@ describe('streaming: StreamingService', function () {
         this.role = {id: 'role-00001', name: 'test-role'};
         this.guild.roles.set(this.role.id, this.role);
 
-        await this.jasmine.setGuildData(this.guild.id, DATAKEYS.LIVE_ROLE, this.role.id).toPromise();
+        await this.jasmine.setGuildData(this.guild.id, DATAKEYS.LIVE_ROLE, this.role.id);
       });
 
       it('returns the previously set role', async function () {
@@ -360,7 +360,7 @@ describe('streaming: StreamingService', function () {
 
     context('when a previous role was set, but no longer exists', function () {
       beforeEach(async function () {
-        await this.jasmine.setGuildData(this.guild.id, DATAKEYS.LIVE_ROLE, 'role-00001').toPromise();
+        await this.jasmine.setGuildData(this.guild.id, DATAKEYS.LIVE_ROLE, 'role-00001');
       });
 
       it('returns the previously set role', async function () {
@@ -371,7 +371,7 @@ describe('streaming: StreamingService', function () {
 
     context('when a previous role was not set', function () {
       beforeEach(async function () {
-        await this.jasmine.setGuildData(this.guild.id, DATAKEYS.LIVE_ROLE, null).toPromise();
+        await this.jasmine.setGuildData(this.guild.id, DATAKEYS.LIVE_ROLE, null);
       });
 
       it('returns undefined', async function () {
@@ -488,7 +488,7 @@ describe('streaming: StreamingService', function () {
 
     context('when there is a role set', function () {
       beforeEach(async function () {
-        await this.jasmine.setGuildData(this.guild.id, DATAKEYS.STREAMER_ROLE, this.role.id).toPromise();
+        await this.jasmine.setGuildData(this.guild.id, DATAKEYS.STREAMER_ROLE, this.role.id);
       });
 
       it('returns the role to assign', async function () {
@@ -499,7 +499,7 @@ describe('streaming: StreamingService', function () {
 
     context('when there is no role set', function () {
       beforeEach(async function () {
-        await this.jasmine.setGuildData(this.guild.id, DATAKEYS.STREAMER_ROLE, null).toPromise();
+        await this.jasmine.setGuildData(this.guild.id, DATAKEYS.STREAMER_ROLE, null);
       });
 
       it('returns undefined', async function () {
@@ -525,7 +525,7 @@ describe('streaming: StreamingService', function () {
 
       it('saves the role id', async function () {
         await this.streamingService.setStreamerRole(this.guild, this.role);
-        const savedData = await this.jasmine.getGuildData(this.guild.id, DATAKEYS.STREAMER_ROLE).toPromise();
+        const savedData = await this.jasmine.getGuildData(this.guild.id, DATAKEYS.STREAMER_ROLE);
         expect(savedData).to.eq(this.role.id);
       });
 
@@ -538,7 +538,7 @@ describe('streaming: StreamingService', function () {
     context('when passed null', function () {
       it('saves null', async function () {
         await this.streamingService.setStreamerRole(this.guild, null);
-        const savedData = await this.jasmine.getGuildData(this.guild.id, DATAKEYS.STREAMER_ROLE).toPromise();
+        const savedData = await this.jasmine.getGuildData(this.guild.id, DATAKEYS.STREAMER_ROLE);
         expect(savedData).to.eq(null);
       });
 
@@ -562,12 +562,12 @@ describe('streaming: StreamingService', function () {
         this.role = {id: 'role-00001', name: 'test-role'};
         this.guild.roles.set(this.role.id, this.role);
 
-        await this.jasmine.setGuildData(this.guild.id, DATAKEYS.STREAMER_ROLE, this.role.id).toPromise();
+        await this.jasmine.setGuildData(this.guild.id, DATAKEYS.STREAMER_ROLE, this.role.id);
       });
 
       it('sets the live role to null', async function () {
         await this.streamingService.removeStreamerRole(this.guild);
-        const savedData = await this.jasmine.getGuildData(this.guild.id, DATAKEYS.STREAMER_ROLE).toPromise();
+        const savedData = await this.jasmine.getGuildData(this.guild.id, DATAKEYS.STREAMER_ROLE);
         expect(savedData).to.eq(null);
       });
 
@@ -579,7 +579,7 @@ describe('streaming: StreamingService', function () {
 
     context('when a previous role was set, but no longer exists', function () {
       beforeEach(async function () {
-        await this.jasmine.setGuildData(this.guild.id, DATAKEYS.STREAMER_ROLE, 'role-00001').toPromise();
+        await this.jasmine.setGuildData(this.guild.id, DATAKEYS.STREAMER_ROLE, 'role-00001');
       });
 
       it('throws a RoleNotFoundError', async function () {
@@ -595,7 +595,7 @@ describe('streaming: StreamingService', function () {
 
     context('when a previous role was not set', function () {
       beforeEach(async function () {
-        await this.jasmine.setGuildData(this.guild.id, DATAKEYS.STREAMER_ROLE, null).toPromise();
+        await this.jasmine.setGuildData(this.guild.id, DATAKEYS.STREAMER_ROLE, null);
       });
 
       it('throws a RoleNotFoundError', async function () {

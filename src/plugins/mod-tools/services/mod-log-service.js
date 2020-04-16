@@ -13,10 +13,10 @@ class ModLogService extends ChaosCore.Service {
   constructor(chaos) {
     super(chaos);
 
-    this.chaos.on("guildMemberAdd", async (member) => await this.handleGuildMemberAdd(member).toPromise());
-    this.chaos.on("guildMemberRemove", async (member) => await this.handleGuildMemberRemove(member).toPromise());
-    this.chaos.on("guildBanAdd", async ([guild, user]) => await this.handleGuildBanAdd(guild, user).toPromise());
-    this.chaos.on("guildBanRemove", async ([guild, user]) => await this.handleGuildBanRemove(guild, user).toPromise());
+    this.chaos.on("guildMemberAdd", async (member) => await this.handleGuildMemberAdd(member));
+    this.chaos.on("guildMemberRemove", async (member) => await this.handleGuildMemberRemove(member));
+    this.chaos.on("guildBanAdd", async ([guild, user]) => await this.handleGuildBanAdd(guild, user));
+    this.chaos.on("guildBanRemove", async ([guild, user]) => await this.handleGuildBanRemove(guild, user));
   }
 
   async handleGuildMemberAdd(member) {
@@ -120,7 +120,7 @@ class ModLogService extends ChaosCore.Service {
     if (!logType) { throw new Error(ERRORS.INVALID_LOG_TYPE); }
 
     try {
-      const channelId = await this.getGuildData(guild.id, logType.channelDatakey).toPromise();
+      const channelId = await this.getGuildData(guild.id, logType.channelDatakey);
       if (typeof channelId === 'undefined') { return; }
 
       const channel = guild.channels.find((c) => c.id === channelId);

@@ -11,11 +11,11 @@ describe('owmains: !broadcast', function () {
     this.message.guild.id = this.jasmine.getService('owmains', 'OwmnService')
       .owmnServerId;
 
-    await this.jasmine.listen().toPromise();
+    await this.jasmine.listen();
     await this.jasmine.getService('core', 'PluginService')
-      .enablePlugin(this.message.guild.id, 'owmains').toPromise();
+      .enablePlugin(this.message.guild.id, 'owmains');
     await this.jasmine.getService('core', 'PermissionsService')
-      .addUser(this.message.guild, 'broadcaster', this.message.member).toPromise();
+      .addUser(this.message.guild, 'broadcaster', this.message.member);
   });
   describe('!broadcast', function () {
     beforeEach(function () {
@@ -25,7 +25,7 @@ describe('owmains: !broadcast', function () {
     context('when the user does not have broadcaster permissions', function () {
       beforeEach(async function () {
         await this.jasmine.getService('core', 'PermissionsService')
-          .removeUser(this.message.guild, 'broadcaster', this.message.member).toPromise();
+          .removeUser(this.message.guild, 'broadcaster', this.message.member);
       });
 
       it('does not run the command', async function () {
@@ -43,7 +43,7 @@ describe('owmains: !broadcast', function () {
 
         // Re-grant permission as the server id changed
         await this.jasmine.getService('core', 'PermissionsService')
-          .addUser(this.message.guild, 'broadcaster', this.message.member).toPromise();
+          .addUser(this.message.guild, 'broadcaster', this.message.member);
       });
 
       it('does nothing', async function () {

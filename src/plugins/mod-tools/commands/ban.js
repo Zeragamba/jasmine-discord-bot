@@ -39,7 +39,7 @@ class BanCommand extends ChaosCore.Command {
     let days = context.flags.days;
 
     try {
-      const user = await userService.findUser(userString).toPromise();
+      const user = await userService.findUser(userString);
       const bans = await guild.fetchBans();
       if (bans.get(user.id)) {
         return response.send({

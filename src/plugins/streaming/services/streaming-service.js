@@ -28,7 +28,7 @@ class StreamingService extends Service {
       liveRole,
       isStreamer,
     ] = await Promise.all([
-      this.pluginService.isPluginEnabled(newMember.guild.id, 'streaming').toPromise(),
+      this.pluginService.isPluginEnabled(newMember.guild.id, 'streaming'),
       this.getLiveRole(newMember.guild),
       this.memberIsStreamer(newMember),
     ]);
@@ -93,7 +93,7 @@ class StreamingService extends Service {
   async addLiveRoleToMember(member) {
     const liveRole = await this.getLiveRole(member.guild);
     if (liveRole && !member.roles.has(liveRole.id)) {
-      this.chaos.logger.debug(`${logPrefix(member)} Adding role ${liveRole.name} to ${member.user.tag}`);
+      this.chaos.logger.info(`${logPrefix(member)} ${member.user.tag} started streaming. Adding role ${liveRole.name}.`);
       await member.addRole(liveRole);
     }
   }
@@ -101,7 +101,7 @@ class StreamingService extends Service {
   async removeLiveRoleFromMember(member) {
     const liveRole = await this.getLiveRole(member.guild);
     if (liveRole && member.roles.has(liveRole.id)) {
-      this.chaos.logger.debug(`${logPrefix(member)} Removing role ${liveRole.name} from ${member.user.tag}`);
+      this.chaos.logger.info(`${logPrefix(member)} ${member.user.tag} stopped streaming. Removing role ${liveRole.name}.`);
       await member.removeRole(liveRole);
     }
   }
