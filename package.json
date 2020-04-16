@@ -37,7 +37,7 @@
   "repository": "https://github.com/SpyMaster356/jasmine-discord-bot",
   "license": "MIT",
   "dependencies": {
-    "chaos-core": "https://github.com/chaos-core/chaos-core#v4.3.2-dev",
+    "chaos-core": "^4.3.2",
     "chaos-data-disk": "^4.3.0",
     "chaos-plugin-auto-role": "^4.3.0",
     "chaos-plugin-user-roles": "^4.3.1",
