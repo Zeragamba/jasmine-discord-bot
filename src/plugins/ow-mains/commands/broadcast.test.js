@@ -1,5 +1,4 @@
 const Discord = require('discord.js');
-const {EMPTY} = require('rxjs');
 const {range} = require('range');
 const {MockMessage} = require("chaos-core").test.discordMocks;
 
@@ -135,14 +134,6 @@ describe('owmains: !broadcast', function () {
     context('when the message type is valid', function () {
       beforeEach(function () {
         this.message.content = '!broadcast network This is a test message';
-      });
-
-      it('runs the command', async function () {
-        const command = this.jasmine.getCommand('broadcast');
-        sinon.stub(command, 'run').returns(EMPTY);
-
-        await this.jasmine.testMessage(this.message);
-        expect(command.run).to.have.been.called;
       });
 
       it('sends a confirmation message', async function () {

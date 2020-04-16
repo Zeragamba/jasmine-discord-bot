@@ -1,4 +1,3 @@
-const {EMPTY} = require('rxjs');
 const {Command} = require('chaos-core');
 
 const {
@@ -34,8 +33,6 @@ class BroadcastCommand extends Command {
     const OwmnService = this.chaos.getService('owMains', 'OwmnService');
     if (context.guild.id === OwmnService.owmnServerId) {
       return super.execCommand(context, response);
-    } else {
-      return EMPTY; // Treat it as a disabled command
     }
   }
 

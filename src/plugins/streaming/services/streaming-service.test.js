@@ -1,4 +1,3 @@
-const {of, throwError} = require('rxjs');
 const Collection = require('discord.js').Collection;
 const DiscordAPIError = require('discord.js').DiscordAPIError;
 const {MockGuild, MockUser, MockGuildMember} = require("chaos-core").test.discordMocks;
@@ -56,16 +55,15 @@ describe('streaming: StreamingService', function () {
       this.pluginService = this.jasmine.getService('core', 'pluginService');
       this.streamingService.pluginService = this.pluginService;
 
-      sinon.stub(this.pluginService, 'isPluginEnabled').returns(of(false));
       sinon.stub(this.streamingService, 'getLiveRole').resolves();
       sinon.stub(this.streamingService, 'memberIsStreamer').resolves(true);
-
       sinon.stub(this.streamingService, 'updateMemberRoles').resolves();
     });
 
     context('when the module is enabled', function () {
-      beforeEach(function () {
-        this.streamingService.pluginService.isPluginEnabled.returns(of(true));
+      beforeEach(async function () {
+        await this.jasmine.getService('core', 'pluginService')
+          .enablePlugin(this.guild.id, 'streaming').toPromise();
       });
 
       context('when a live role is not set', function () {
@@ -115,7 +113,7 @@ describe('streaming: StreamingService', function () {
             beforeEach(function () {
               this.error = sinon.createStubInstance(DiscordAPIError);
               this.error.message = 'Missing Permissions';
-              this.streamingService.updateMemberRoles.returns(throwError(this.error));
+              this.streamingService.updateMemberRoles.rejects(this.error);
             });
 
             it('silences the error', async function () {
@@ -187,7 +185,7 @@ describe('streaming: StreamingService', function () {
         guild: {name: 'testGuild'},
         user: {tag: 'member#0001'},
         roles: new Collection(),
-        addRole: sinon.fake.returns(of('')),
+        addRole: sinon.fake.resolves(),
       };
     });
 
@@ -227,7 +225,7 @@ describe('streaming: StreamingService', function () {
         guild: {name: 'testGuild'},
         user: {tag: 'member#0001'},
         roles: new Collection(),
-        removeRole: sinon.fake.returns(of('')),
+        removeRole: sinon.fake.resolves(),
       };
     });
 
