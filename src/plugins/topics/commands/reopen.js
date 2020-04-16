@@ -1,6 +1,3 @@
-const {of} = require('rxjs');
-const {flatMap, catchError} = require('rxjs/operators');
-
 module.exports = {
   name: 'reopen',
   description: 'reopen the current topic, or specify a topic to reopen.',
@@ -15,7 +12,7 @@ module.exports = {
     },
   ],
 
-  run(context, response) {
+  async run(context, response) {
     const topicService = this.chaos.getService('topics', 'topicService');
     const guild = context.guild;
     const channelName = context.args.channelName;
@@ -57,46 +54,25 @@ module.exports = {
       return response.send();
     }
 
-    return of('').pipe(
-      flatMap(topicChannel.setParent(openCategory)),
-      flatMap((topicChannel) => topicChannel.send('===== Reopened =====').then(() => topicChannel)),
-      flatMap((topicChannel) => {
-        if (topicChannel.id !== context.channel.id) {
-          response.type = 'reply';
-          response.content = `I have reopened the channel ${topicChannel.toString()}.`;
-          return response.send();
-        }
-        return of(topicChannel);
-      }),
-      catchError((error) => {
-        response.type = 'message';
+    try {
+      await topicChannel.setParent(openCategory);
+      await topicChannel.send('===== Reopened =====');
 
-        if (error.name === 'DiscordAPIError') {
-          if (error.message === "Missing Permissions") {
-            response.content = `I'm sorry, but I do not have permission to move channels. I need the "Manage Channels" permission.`;
-          } else {
-            response.content = `I'm sorry, Discord returned an unexpected error when I tried to move the channel.`;
-            this.chaos.handleError(error, [
-              {name: "command", value: "reopen"},
-              {name: "guild", value: context.guild.name},
-              {name: "channel", value: context.channel.name},
-              {name: "args", value: JSON.stringify(context.args)},
-              {name: "flags", value: JSON.stringify(context.flags)},
-            ]);
-          }
-        } else {
-          response.content = `I'm sorry, I ran into an unexpected problem.`;
-          this.chaos.handleError(error, [
-            {name: "command", value: "reopen"},
-            {name: "guild", value: context.guild.name},
-            {name: "channel", value: context.channel.name},
-            {name: "args", value: JSON.stringify(context.args)},
-            {name: "flags", value: JSON.stringify(context.flags)},
-          ]);
-        }
-
+      if (topicChannel.id !== context.channel.id) {
+        response.type = 'reply';
+        response.content = `I have reopened the channel ${topicChannel.toString()}.`;
         return response.send();
-      }),
-    );
+      }
+    } catch (error) {
+      if (error.message === "Missing Permissions") {
+        return response.send({
+          content:
+            `I'm sorry, but I do not have permission to move channels. I ` +
+            `need the "Manage Channels" permission.`,
+        });
+      } else {
+        throw error;
+      }
+    }
   },
 };

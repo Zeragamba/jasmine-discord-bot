@@ -1,6 +1,3 @@
-const {of} = require('rxjs');
-const {flatMap, catchError} = require('rxjs/operators');
-
 module.exports = {
   name: 'rename',
   description: 'rename the current topic',
@@ -15,7 +12,7 @@ module.exports = {
     },
   ],
 
-  run(context, response) {
+  async run(context, response) {
     const topicService = this.chaos.getService('topics', 'topicService');
     const guild = context.guild;
     const channelName = topicService.channelNameSafeString(context.args.channelName);
@@ -45,38 +42,21 @@ module.exports = {
       return response.send();
     }
 
-    return of('').pipe(
-      flatMap(() => topicChannel.setName(channelName)),
-      flatMap((topicChannel) => topicChannel.send('===== Renamed =====').then(() => topicChannel)),
-      catchError((error) => {
-        response.type = 'message';
+    try {
+      await topicChannel.setName(channelName);
+      await topicChannel.send('===== Renamed =====');
+    } catch (error) {
+      response.type = 'message';
 
-        if (error.name === 'DiscordAPIError') {
-          if (error.message === "Missing Permissions") {
-            response.content = `I'm sorry, but I do not have permission to rename channels. I need the "Manage Channels" permission.`;
-          } else {
-            response.content = `I'm sorry, Discord returned an unexpected error when I tried to rename the channel.`;
-            this.chaos.handleError(error, [
-              {name: "command", value: "rename"},
-              {name: "guild", value: context.guild.name},
-              {name: "channel", value: context.channel.name},
-              {name: "args", value: JSON.stringify(context.args)},
-              {name: "flags", value: JSON.stringify(context.flags)},
-            ]);
-          }
-        } else {
-          response.content = `I'm sorry, I ran into an unexpected problem.`;
-          this.chaos.handleError(error, [
-            {name: "command", value: "rename"},
-            {name: "guild", value: context.guild.name},
-            {name: "channel", value: context.channel.name},
-            {name: "args", value: JSON.stringify(context.args)},
-            {name: "flags", value: JSON.stringify(context.flags)},
-          ]);
-        }
-
-        return response.send();
-      }),
-    );
+      if (error.message === "Missing Permissions") {
+        return response.send({
+          content:
+            `I'm sorry, but I do not have permission to rename channels. I ` +
+            `need the "Manage Channels" permission.`,
+        });
+      } else {
+        throw error;
+      }
+    }
   },
 };
