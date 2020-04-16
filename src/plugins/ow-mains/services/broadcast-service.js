@@ -1,5 +1,3 @@
-const {of, from} = require('rxjs');
-const {flatMap, tap, map, delayWhen} = require('rxjs/operators');
 const Discord = require('discord.js');
 const Service = require('chaos-core').Service;
 
@@ -83,46 +81,40 @@ class BroadcastService extends Service {
   /**
    * @returns {Observable<any>}
    */
-  confirmBroadcast(context, broadcastType, broadcastBody) {
-    return of('').pipe(
-      map(() => (new Discord.RichEmbed()).setDescription(broadcastBody)),
-      flatMap((broadcastEmbed) => context.message.channel.send(
-        `Broadcast this to "${broadcastType}"?`,
-        {embed: broadcastEmbed},
-      )),
-      delayWhen((confirmMessage) => from(this.addConfirmReactions(confirmMessage))),
-      flatMap((confirmMessage) => {
-        let allowedEmojiNames = [
-          CONFIRM_YES_EMOJI_NAME,
-          CONFIRM_NO_EMOJI_NAME,
-          FALLBACK_YES,
-          FALLBACK_NO,
-        ];
-
-        let yesEmojiNames = [
-          CONFIRM_YES_EMOJI_NAME,
-          FALLBACK_YES,
-        ];
-
-        const reactionFilter = (reaction, user) => (
-          user.id === context.message.author.id
-          && allowedEmojiNames.includes(reaction.emoji.name.toLowerCase())
-        );
-
-        return of('').pipe(
-          flatMap(() => confirmMessage.awaitReactions(reactionFilter, {max: 1})),
-          flatMap((reactions) => {
-            if (reactions.find((r) => yesEmojiNames.includes(r.emoji.name.toLowerCase()))) {
-              return of({confirmMessage, result: true});
-            } else {
-              return of({confirmMessage, result: false});
-            }
-          }),
-        );
-      }),
-      delayWhen(({confirmMessage}) => from(this.removeOwnReactions(confirmMessage))),
-      tap(({result}) => { if (!result) throw new BroadcastCanceledError(); }),
+  async confirmBroadcast(context, broadcastType, broadcastBody) {
+    const broadcastEmbed = new Discord.RichEmbed();
+    broadcastEmbed.setDescription(broadcastBody);
+    const confirmMessage = await context.message.channel.send(
+      `Broadcast this to "${broadcastType}"?`,
+      {embed: broadcastEmbed},
     );
+
+    let allowedEmojiNames = [
+      CONFIRM_YES_EMOJI_NAME,
+      CONFIRM_NO_EMOJI_NAME,
+      FALLBACK_YES,
+      FALLBACK_NO,
+    ];
+
+    let yesEmojiNames = [
+      CONFIRM_YES_EMOJI_NAME,
+      FALLBACK_YES,
+    ];
+
+    const reactionFilter = (reaction, user) => (
+      user.id === context.message.author.id
+      && allowedEmojiNames.includes(reaction.emoji.name.toLowerCase())
+    );
+
+    await this.addConfirmReactions(confirmMessage);
+    const reactions = await confirmMessage.awaitReactions(reactionFilter, {max: 1});
+    await this.removeOwnReactions(confirmMessage);
+
+    if (reactions.find((r) => yesEmojiNames.includes(r.emoji.name.toLowerCase()))) {
+      return true;
+    } else {
+      throw new BroadcastCanceledError();
+    }
   }
 
   async broadcastMessage(broadcastType, broadcastBody) {

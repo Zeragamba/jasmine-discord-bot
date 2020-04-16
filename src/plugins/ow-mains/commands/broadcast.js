@@ -48,7 +48,7 @@ class BroadcastCommand extends Command {
     try {
       broadcastService.checkBroadcastAllowed(guild);
       broadcastService.checkValidBroadcast(broadcastType, broadcastBody);
-      if (await broadcastService.confirmBroadcast(context, broadcastType, broadcastBody).toPromise()) {
+      if (await broadcastService.confirmBroadcast(context, broadcastType, broadcastBody)) {
         await response.send({content: `Ok, let me broadcast that then.`}).toPromise();
         const sentMessages = await broadcastService.broadcastMessage(broadcastType, broadcastBody);
         await response.send({content: `Done. Broadcasted to ${sentMessages.length} servers`}).toPromise();
