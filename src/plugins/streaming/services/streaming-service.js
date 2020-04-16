@@ -15,47 +15,19 @@ class StreamingService extends Service {
       this.pluginService = this.chaos.getService('core', 'PluginService');
     });
 
-    this.chaos.on("presenceUpdate", async ([oldMember, newMember]) => {
-      await this.handlePresenceUpdate(oldMember, newMember);
+    this.chaos.on("chaos.ready", async () => {
+      const guilds = this.chaos.discord.guilds.array();
+      await Promise.all(guilds.map(async (guild) => this.updateAllMembers(guild)));
+    });
+
+    this.chaos.on("presenceUpdate", async ([_, newMember]) => {
+      await this.updateMemberRoles(newMember);
     });
   }
 
   async handlePresenceUpdate(oldMember, newMember) {
     this.chaos.logger.debug(`${logPrefix(newMember)} Handling presence update for ${newMember.user.tag} in ${newMember.guild.name}`);
-
-    const [
-      pluginEnabled,
-      liveRole,
-      isStreamer,
-    ] = await Promise.all([
-      this.pluginService.isPluginEnabled(newMember.guild.id, 'streaming'),
-      this.getLiveRole(newMember.guild),
-      this.memberIsStreamer(newMember),
-    ]);
-
-    this.chaos.logger.debug(`${logPrefix(newMember)} Plugin is ${pluginEnabled ? "enabled" : "disabled"} in ${newMember.guild.name}`);
-    this.chaos.logger.debug(`${logPrefix(newMember)} Live role in ${newMember.guild.name} is ${liveRole ? liveRole.name : "<none>"}`);
-    this.chaos.logger.debug(`${logPrefix(newMember)} ${newMember.user.tag} ${isStreamer ? "is" : "is not"} a streamer.`);
-
-    if (!pluginEnabled || !liveRole || !isStreamer) {
-      return;
-    }
-
-    try {
-      await this.updateMemberRoles(newMember);
-    } catch (error) {
-      switch (error.message) {
-        case "Adding the role timed out.":
-        case "Removing the role timed out.":
-          this.chaos.logger.debug(`${logPrefix(newMember)} Ignored timeout error: ${error.toString()}`);
-          return;
-        case "Missing Permissions":
-          this.chaos.logger.debug(`${logPrefix(newMember)} Missing permissions to add/remove roles`);
-          return;
-        default:
-          throw error;
-      }
-    }
+    await this.updateMemberRoles(newMember);
   }
 
   async memberIsStreamer(member) {
@@ -68,8 +40,33 @@ class StreamingService extends Service {
     }
   }
 
+  async updateAllMembers(guild) {
+    const allMembers = guild.members.array();
+    await Promise.all(allMembers.map(async (member) => {
+      await this.updateMemberRoles(member);
+    }));
+  }
+
   async updateMemberRoles(member) {
     try {
+      const [
+        pluginEnabled,
+        liveRole,
+        isStreamer,
+      ] = await Promise.all([
+        this.pluginService.isPluginEnabled(member.guild.id, 'streaming'),
+        this.getLiveRole(member.guild),
+        this.memberIsStreamer(member),
+      ]);
+
+      this.chaos.logger.debug(`${logPrefix(member)} Plugin is ${pluginEnabled ? "enabled" : "disabled"} in ${member.guild.name}`);
+      this.chaos.logger.debug(`${logPrefix(member)} Live role in ${member.guild.name} is ${liveRole ? liveRole.name : "<none>"}`);
+      this.chaos.logger.debug(`${logPrefix(member)} ${member.user.tag} ${isStreamer ? "is" : "is not"} a streamer.`);
+
+      if (!pluginEnabled || !liveRole || !isStreamer) {
+        return;
+      }
+
       this.chaos.logger.debug(`${logPrefix(member)} Will update roles for ${member.user.tag}`);
       const isStreaming = this.memberIsStreaming(member);
 
@@ -83,6 +80,10 @@ class StreamingService extends Service {
       switch (error.message) {
         case "Adding the role timed out.":
         case "Removing the role timed out.":
+          this.chaos.logger.debug(`${logPrefix(member)} Ignored timeout error: ${error.toString()}`);
+          return;
+        case "Missing Permissions":
+          this.chaos.logger.debug(`${logPrefix(member)} Missing permissions to add/remove roles`);
           return;
         default:
           throw error;
@@ -108,7 +109,9 @@ class StreamingService extends Service {
 
   async setLiveRole(guild, role) {
     await this.setGuildData(guild.id, DATAKEYS.LIVE_ROLE, role ? role.id : null);
-    return this.getLiveRole(guild);
+    let liveRole = await this.getLiveRole(guild);
+    await this.updateAllMembers(guild);
+    return liveRole;
   }
 
   async getLiveRole(guild) {
@@ -129,17 +132,14 @@ class StreamingService extends Service {
    * @return {Boolean} true, if the member is streaming
    */
   memberIsStreaming(member) {
-    let presence = member.presence;
-    if (!presence.game) {
-      return false;
-    } else {
-      return presence.game.streaming;
-    }
+    return member.presence.activities.some((game) => game.streaming);
   }
 
   async setStreamerRole(guild, role) {
     await this.setGuildData(guild.id, DATAKEYS.STREAMER_ROLE, role ? role.id : null);
-    return this.getStreamerRole(guild);
+    let streamerRole = this.getStreamerRole(guild);
+    await this.updateAllMembers(guild);
+    return streamerRole;
   }
 
   async getStreamerRole(guild) {

@@ -1,5 +1,4 @@
 const Collection = require('discord.js').Collection;
-const DiscordAPIError = require('discord.js').DiscordAPIError;
 const {MockGuild, MockUser, MockGuildMember} = require("chaos-core").test.discordMocks;
 
 const DATAKEYS = require('../lib/datakeys');
@@ -10,171 +9,182 @@ describe('streaming: StreamingService', function () {
     this.jasmine = stubJasmine();
     await this.jasmine.listen();
     this.streamingService = this.jasmine.getService('streaming', 'StreamingService');
+
+    this.guild = new MockGuild({
+      client: this.jasmine.discord,
+    });
   });
 
   describe('on presence update', function () {
     beforeEach(function () {
-      this.guild = new MockGuild({client: this.jasmine.discord});
       this.user = new MockUser({client: this.jasmine.discord});
       this.oldMember = new MockGuildMember({guild: this.guild, user: this.user});
       this.newMember = new MockGuildMember({guild: this.guild, user: this.user});
       this.eventPayload = [this.oldMember, this.newMember];
 
-      sinon.stub(this.streamingService, 'handlePresenceUpdate').resolves();
-    });
-
-    it('calls #handlePresenceUpdate', async function () {
-      await this.jasmine.emit('presenceUpdate', this.eventPayload);
-      expect(this.streamingService.handlePresenceUpdate).to.have.been.called;
-    });
-
-    it('passes #handlePresenceUpdate oldMember and newMember', async function () {
-      await this.jasmine.emit('presenceUpdate', this.eventPayload);
-      expect(this.streamingService.handlePresenceUpdate).to.have.been.calledWith(this.oldMember, this.newMember);
-    });
-  });
-
-  describe('#handlePresenceUpdate', function () {
-    beforeEach(function () {
-      this.guild = {
-        id: 'guild-00001',
-        name: 'testGuild',
-      };
-
-      this.oldMember = {
-        name: 'oldMember',
-        guild: this.guild,
-      };
-
-      this.newMember = {
-        name: 'newMember',
-        user: {tag: 'newMember#0001'},
-        guild: this.guild,
-      };
-
-      this.pluginService = this.jasmine.getService('core', 'pluginService');
-      this.streamingService.pluginService = this.pluginService;
-
-      sinon.stub(this.streamingService, 'getLiveRole').resolves();
-      sinon.stub(this.streamingService, 'memberIsStreamer').resolves(true);
       sinon.stub(this.streamingService, 'updateMemberRoles').resolves();
     });
 
-    context('when the module is enabled', function () {
-      beforeEach(async function () {
-        await this.jasmine.getService('core', 'pluginService')
-          .enablePlugin(this.guild.id, 'streaming');
-      });
+    it('calls #updateMemberRoles', async function () {
+      await this.jasmine.emit('presenceUpdate', this.eventPayload);
+      expect(this.streamingService.updateMemberRoles).to.have.been.called;
+    });
 
-      context('when a live role is not set', function () {
-        beforeEach(function () {
-          this.streamingService.getLiveRole.resolves();
-        });
-
-        it('does not call #updateMemberRoles', async function () {
-          await this.streamingService.handlePresenceUpdate(this.oldMember, this.newMember);
-          expect(this.streamingService.updateMemberRoles).not.to.have.been.called;
-        });
-      });
-
-      context('when a live role is set', function () {
-        beforeEach(function () {
-          this.liveRole = {id: 'role-00001', name: 'liveRole'};
-          this.streamingService.getLiveRole.resolves(this.liveRole);
-        });
-
-        context('when the user is not a streamer', function () {
-          beforeEach(function () {
-            this.streamingService.memberIsStreamer.returns(false);
-          });
-
-          it('does not call #updateMemberRoles', async function () {
-            await this.streamingService.handlePresenceUpdate(this.oldMember, this.newMember);
-            expect(this.streamingService.updateMemberRoles).not.to.have.been.called;
-          });
-        });
-
-        context('when the user is a streamer', function () {
-          beforeEach(function () {
-            this.streamingService.memberIsStreamer.returns(true);
-          });
-
-          it('calls #updateMemberRoles', async function () {
-            await this.streamingService.handlePresenceUpdate(this.oldMember, this.newMember);
-            expect(this.streamingService.updateMemberRoles).to.have.been.called;
-          });
-
-          it('passes the new member to #updateMemberRoles', async function () {
-            await this.streamingService.handlePresenceUpdate(this.oldMember, this.newMember);
-            expect(this.streamingService.updateMemberRoles).to.have.been.calledWith(this.newMember);
-          });
-
-          context('when #updateMemberRoles raises an Discord "Missing Permissions" error', function () {
-            beforeEach(function () {
-              this.error = sinon.createStubInstance(DiscordAPIError);
-              this.error.message = 'Missing Permissions';
-              this.streamingService.updateMemberRoles.rejects(this.error);
-            });
-
-            it('silences the error', async function () {
-              await this.streamingService.handlePresenceUpdate(this.oldMember, this.newMember);
-            });
-          });
-        });
-      });
+    it('passes #updateMemberRoles newMember', async function () {
+      await this.jasmine.emit('presenceUpdate', this.eventPayload);
+      expect(this.streamingService.updateMemberRoles).to.have.been.calledWith(this.newMember);
     });
   });
 
   describe('#updateMemberRoles', function () {
-    beforeEach(function () {
+    beforeEach(async function () {
       this.member = {
-        guild: {name: 'testGuild'},
+        id: 'testMember',
+        guild: this.guild,
         user: {tag: 'member#0001'},
+        roles: new Collection(),
+        presence: {
+          activities: [],
+        },
+
+        addRole: async (role) => this.member.roles.set(role.id, role),
+        removeRole: async (role) => this.member.roles.delete(role.id),
       };
-      sinon.stub(this.streamingService, 'memberIsStreaming').returns(false);
-      sinon.stub(this.streamingService, 'addLiveRoleToMember').resolves();
-      sinon.stub(this.streamingService, 'removeLiveRoleFromMember').resolves();
+
+      this.guild.members.set(this.member.id, this.member);
+
+      this.liveRole = {id: 'liveRoleId'};
+      this.guild.roles.set(this.liveRole.id, this.liveRole);
+
+      this.streamerRole = {id: 'streamerRoleId'};
+      this.guild.roles.set(this.streamerRole.id, this.streamerRole);
+
+      await this.jasmine.getService('core', 'PluginService')
+        .enablePlugin(this.guild.id, 'streaming');
+      await this.streamingService.setLiveRole(this.guild, this.liveRole);
     });
 
-    it('calls #memberIsStreaming', async function () {
-      await this.streamingService.updateMemberRoles(this.member);
-      expect(this.streamingService.memberIsStreaming).to.have.been.called;
-    });
-
-    it('passes the member to #memberIsStreaming', async function () {
-      await this.streamingService.updateMemberRoles(this.member);
-      expect(this.streamingService.memberIsStreaming).to.have.been.calledWith(this.member);
-    });
-
-    context('when member is streaming', function () {
+    context("when the user has gone live", function () {
       beforeEach(function () {
-        this.streamingService.memberIsStreaming.returns(true);
+        this.member.presence.activities = [
+          {streaming: true},
+        ];
       });
 
-      it('calls #addLiveRoleToMember', async function () {
+      it("adds the live role", async function () {
+        sinon.spy(this.member, 'addRole');
         await this.streamingService.updateMemberRoles(this.member);
-        expect(this.streamingService.addLiveRoleToMember).to.have.been.called;
+        expect(this.member.addRole).to.have.been.calledWith(this.liveRole);
       });
 
-      it('passes the member to #addLiveRoleToMember', async function () {
-        await this.streamingService.updateMemberRoles(this.member);
-        expect(this.streamingService.addLiveRoleToMember).to.have.been.calledWith(this.member);
+      context("when the user already has the live role", function () {
+        beforeEach(async function () {
+          await this.member.addRole(this.liveRole);
+        });
+
+        it("does not change the user's roles", async function () {
+          sinon.spy(this.member, 'addRole');
+          sinon.spy(this.member, 'removeRole');
+
+          await this.streamingService.updateMemberRoles(this.member);
+          expect(this.member.addRole).not.to.have.been.called;
+          expect(this.member.removeRole).not.to.have.been.called;
+        });
+      });
+
+      context("when the user is not a streamer", function () {
+        beforeEach(async function () {
+          await this.streamingService.setStreamerRole(this.guild, this.streamerRole);
+        });
+
+        it("does not change the user's roles", async function () {
+          sinon.spy(this.member, 'addRole');
+          sinon.spy(this.member, 'removeRole');
+
+          await this.streamingService.updateMemberRoles(this.member);
+          expect(this.member.addRole).not.to.have.been.called;
+          expect(this.member.removeRole).not.to.have.been.called;
+        });
+      });
+
+      context("when the plugin is disabled", function () {
+        beforeEach(async function () {
+          await this.jasmine.getService('core', 'PluginService')
+            .disablePlugin(this.guild.id, 'streaming');
+        });
+
+        it("does not change the user's roles", async function () {
+          sinon.spy(this.member, 'addRole');
+          sinon.spy(this.member, 'removeRole');
+
+          await this.streamingService.updateMemberRoles(this.member);
+          expect(this.member.addRole).not.to.have.been.called;
+          expect(this.member.removeRole).not.to.have.been.called;
+        });
       });
     });
 
-    context('when member is not streaming', function () {
-      beforeEach(function () {
-        this.streamingService.memberIsStreaming.returns(false);
+    context("when the user has gone offline", function () {
+      beforeEach(async function () {
+        this.member.presence.activities = [
+          {streaming: false},
+        ];
+        await this.member.addRole(this.liveRole);
       });
 
-      it('calls #removeLiveRoleFromMember', async function () {
+      it("removes the live role", async function () {
+        sinon.spy(this.member, 'removeRole');
+
         await this.streamingService.updateMemberRoles(this.member);
-        expect(this.streamingService.removeLiveRoleFromMember).to.have.been.called;
+        expect(this.member.removeRole).to.have.been.calledWith(this.liveRole);
       });
 
-      it('passes the member to #removeLiveRoleFromMember', async function () {
-        await this.streamingService.updateMemberRoles(this.member);
-        expect(this.streamingService.removeLiveRoleFromMember).to.have.been.calledWith(this.member);
+      context("when the user doesn't have the live role", function () {
+        beforeEach(async function () {
+          await this.member.removeRole(this.liveRole);
+        });
+
+        it("does not change the user's roles", async function () {
+          sinon.spy(this.member, 'addRole');
+          sinon.spy(this.member, 'removeRole');
+
+          await this.streamingService.updateMemberRoles(this.member);
+          expect(this.member.addRole).not.to.have.been.called;
+          expect(this.member.removeRole).not.to.have.been.called;
+        });
+      });
+
+      context("when the user is not a streamer", function () {
+        beforeEach(async function () {
+          this.streamerRole = {id: "streamerRoleId"};
+          this.guild.roles.set(this.streamerRole.id, this.streamerRole);
+          await this.streamingService.setStreamerRole(this.guild, this.streamerRole);
+        });
+
+        it("does not change the user's roles", async function () {
+          sinon.spy(this.member, 'addRole');
+          sinon.spy(this.member, 'removeRole');
+
+          await this.streamingService.updateMemberRoles(this.member);
+          expect(this.member.addRole).not.to.have.been.called;
+          expect(this.member.removeRole).not.to.have.been.called;
+        });
+      });
+
+      context("when the plugin is disabled", function () {
+        beforeEach(async function () {
+          await this.jasmine.getService('core', 'PluginService')
+            .disablePlugin(this.guild.id, 'streaming');
+        });
+
+        it("does not change the user's roles", async function () {
+          sinon.spy(this.member, 'addRole');
+          sinon.spy(this.member, 'removeRole');
+
+          await this.streamingService.updateMemberRoles(this.member);
+          expect(this.member.addRole).not.to.have.been.called;
+          expect(this.member.removeRole).not.to.have.been.called;
+        });
       });
     });
   });
@@ -182,7 +192,7 @@ describe('streaming: StreamingService', function () {
   describe('#addLiveRoleToMember', function () {
     beforeEach(function () {
       this.member = {
-        guild: {name: 'testGuild'},
+        guild: this.guild,
         user: {tag: 'member#0001'},
         roles: new Collection(),
         addRole: sinon.fake.resolves(),
@@ -222,7 +232,7 @@ describe('streaming: StreamingService', function () {
   describe('#removeLiveRoleFromMember', function () {
     beforeEach(function () {
       this.member = {
-        guild: {name: 'testGuild'},
+        guild: this.guild,
         user: {tag: 'member#0001'},
         roles: new Collection(),
         removeRole: sinon.fake.resolves(),
@@ -257,14 +267,7 @@ describe('streaming: StreamingService', function () {
   describe('#getLiveRole', function () {
     beforeEach(function () {
       this.role = {id: 'role-00001', name: 'test-role'};
-
-      this.roles = new Map();
-      this.roles.set(this.role.id, this.role);
-
-      this.guild = {
-        id: 'guild-00001',
-        roles: this.roles,
-      };
+      this.guild.roles.set(this.role.id, this.role);
     });
 
     context('when there is a role set', function () {
@@ -291,13 +294,6 @@ describe('streaming: StreamingService', function () {
   });
 
   describe('#setLiveRole', function () {
-    beforeEach(function () {
-      this.guild = {
-        id: 'guild-00001',
-        roles: new Map(),
-      };
-    });
-
     context('when passed a role', function () {
       beforeEach(function () {
         this.role = {id: 'role-00001', name: 'test-role'};
@@ -331,13 +327,6 @@ describe('streaming: StreamingService', function () {
   });
 
   describe('#removeLiveRole', function () {
-    beforeEach(function () {
-      this.guild = {
-        id: 'guild-00001',
-        roles: new Map(),
-      };
-    });
-
     it('sets the live role to null', async function () {
       await this.streamingService.removeLiveRole(this.guild);
       const savedData = await this.jasmine.getGuildData(this.guild.id, DATAKEYS.LIVE_ROLE);
@@ -434,13 +423,13 @@ describe('streaming: StreamingService', function () {
   describe('#memberIsStreaming', function () {
     beforeEach(function () {
       this.member = {
-        presence: {},
+        presence: {activities: []},
       };
     });
 
     context('when the member is not playing a game', function () {
       beforeEach(function () {
-        delete this.member.presence.game;
+        this.member.presence.activities = [];
       });
 
       it('returns false', function () {
@@ -450,9 +439,9 @@ describe('streaming: StreamingService', function () {
 
     context('when the member is playing a game, but not streaming', function () {
       beforeEach(function () {
-        this.member.presence.game = {
-          streaming: false,
-        };
+        this.member.presence.activities = [
+          {streaming: false},
+        ];
       });
 
       it('returns false', function () {
@@ -462,9 +451,9 @@ describe('streaming: StreamingService', function () {
 
     context('when the member is streaming', function () {
       beforeEach(function () {
-        this.member.presence.game = {
-          streaming: true,
-        };
+        this.member.presence.activities = [
+          {streaming: true},
+        ];
       });
 
       it('returns true', function () {
@@ -476,14 +465,7 @@ describe('streaming: StreamingService', function () {
   describe('#getStreamerRole', function () {
     beforeEach(function () {
       this.role = {id: 'role-00001', name: 'test-role'};
-
-      this.roles = new Map();
-      this.roles.set(this.role.id, this.role);
-
-      this.guild = {
-        id: 'guild-00001',
-        roles: this.roles,
-      };
+      this.guild.roles.set(this.role.id, this.role);
     });
 
     context('when there is a role set', function () {
@@ -510,13 +492,6 @@ describe('streaming: StreamingService', function () {
   });
 
   describe('#setStreamerRole', function () {
-    beforeEach(function () {
-      this.guild = {
-        id: 'guild-00001',
-        roles: new Map(),
-      };
-    });
-
     context('when passed a role', function () {
       beforeEach(function () {
         this.role = {id: 'role-00001', name: 'test-role'};
@@ -550,13 +525,6 @@ describe('streaming: StreamingService', function () {
   });
 
   describe('#removeStreamerRole', function () {
-    beforeEach(function () {
-      this.guild = {
-        id: 'guild-00001',
-        roles: new Map(),
-      };
-    });
-
     context('when a previous role was set', function () {
       beforeEach(async function () {
         this.role = {id: 'role-00001', name: 'test-role'};

@@ -14,6 +14,7 @@ describe('NetModLogService', function () {
     this.owmnGuild = {
       id: Discord.SnowflakeUtil.generate(),
       channels: new Discord.Collection(),
+      members: new Discord.Collection(),
     };
     this.jasmine.config.owmnServerId = this.owmnGuild.id;
     this.jasmine.discord.guilds.set(this.owmnGuild.id, this.owmnGuild);
