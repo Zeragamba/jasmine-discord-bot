@@ -1,5 +1,5 @@
 const {of, from} = require('rxjs');
-const {flatMap, tap, map, filter, delayWhen, toArray} = require('rxjs/operators');
+const {flatMap, tap, map, delayWhen} = require('rxjs/operators');
 const Discord = require('discord.js');
 const Service = require('chaos-core').Service;
 
@@ -60,19 +60,17 @@ class BroadcastService extends Service {
     }
   }
 
-  addConfirmReactions(message) {
+  async addConfirmReactions(message) {
     let emoji = this.getConfirmEmoji(message.guild);
-
-    return of('').pipe(
-      flatMap(() => message.react(emoji.yes || FALLBACK_YES)),
-      flatMap(() => message.react(emoji.no || FALLBACK_NO)),
-    );
+    await message.react(emoji.yes || FALLBACK_YES);
+    await message.react(emoji.no || FALLBACK_NO);
   }
 
-  removeOwnReactions(message) {
-    return from(message.reactions.values()).pipe(
-      filter((reaction) => reaction.remove(this.chaos.discord.user)),
-    );
+  async removeOwnReactions(message) {
+    const reactions = message.reactions.array();
+    return Promise.all(reactions.map(async (reaction) => {
+      return reaction.remove(this.chaos.discord.user);
+    }));
   }
 
   getConfirmEmoji(guild) {
@@ -92,7 +90,7 @@ class BroadcastService extends Service {
         `Broadcast this to "${broadcastType}"?`,
         {embed: broadcastEmbed},
       )),
-      delayWhen((confirmMessage) => this.addConfirmReactions(confirmMessage)),
+      delayWhen((confirmMessage) => from(this.addConfirmReactions(confirmMessage))),
       flatMap((confirmMessage) => {
         let allowedEmojiNames = [
           CONFIRM_YES_EMOJI_NAME,
@@ -122,30 +120,38 @@ class BroadcastService extends Service {
           }),
         );
       }),
-      delayWhen(({confirmMessage}) => this.removeOwnReactions(confirmMessage)),
+      delayWhen(({confirmMessage}) => from(this.removeOwnReactions(confirmMessage))),
       tap(({result}) => { if (!result) throw new BroadcastCanceledError(); }),
     );
   }
 
-  broadcastMessage(broadcastType, broadcastBody) {
-    return from(this.chaos.discord.guilds.values()).pipe(
-      flatMap((guild) => this.getBroadcastChannel(broadcastType, guild)),
-      flatMap((channel) => channel.send(broadcastBody)),
-      toArray(),
-    );
+  async broadcastMessage(broadcastType, broadcastBody) {
+    const subscribedChannels = [];
+
+    for (const guild of this.chaos.discord.guilds.values()) {
+      const channel = await this.getBroadcastChannel(broadcastType, guild);
+      if (channel) subscribedChannels.push(channel);
+    }
+
+    return Promise.all(subscribedChannels.map(async (channel) => channel.send(broadcastBody)));
   }
 
-  setBroadcastChannel(guild, broadcastType, channel) {
-    return this.chaos.setGuildData(guild.id, DataKeys.broadcastChannelId(broadcastType), channel.id);
+  async setBroadcastChannel(guild, broadcastType, channel) {
+    return this.setGuildData(guild.id, DataKeys.broadcastChannelId(broadcastType), channel.id);
   }
 
-  getBroadcastChannel(broadcastType, guild) {
-    return this.chaos.getGuildData(guild.id, DataKeys.broadcastChannelId(broadcastType)).pipe(
-      filter((channelId) => channelId !== null),
-      map((channelId) => guild.channels.get(channelId)),
-      filter((channel) => typeof channel !== "undefined"),
-      filter((channel) => channel.permissionsFor(this.chaos.discord.user).has(Discord.Permissions.FLAGS.SEND_MESSAGES)),
-    );
+  async getBroadcastChannel(broadcastType, guild) {
+    const channelId = await this.getGuildData(guild.id, DataKeys.broadcastChannelId(broadcastType));
+    if (!channelId) {
+      return;
+    }
+
+    const channel = guild.channels.get(channelId);
+    if (!channel || !channel.permissionsFor(this.chaos.discord.user).has(Discord.Permissions.FLAGS.SEND_MESSAGES)) {
+      return;
+    }
+
+    return channel;
   }
 }
 

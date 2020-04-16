@@ -245,11 +245,7 @@ describe('owmains: !broadcast', function () {
               this.jasmine.discord.guilds.set(channel.guild.id, channel.guild);
               this.subbedChannels.push(channel);
 
-              await BroadcastService.setBroadcastChannel(
-                channel.guild,
-                "network",
-                channel,
-              ).toPromise();
+              await BroadcastService.setBroadcastChannel(channel.guild, "network", channel);
             }
           });
 

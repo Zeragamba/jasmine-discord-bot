@@ -10,7 +10,7 @@ module.exports = {
     const embed = new Discord.RichEmbed();
 
     for (const type of broadcastService.broadcastTypes) {
-      const channelName = await broadcastService.getBroadcastChannel(type, guild).toPromise()
+      const channelName = await broadcastService.getBroadcastChannel(type, guild)
         .then((channel) => (channel ? channel.toString() : "*none*"));
       embed.addField(type, channelName);
     }
