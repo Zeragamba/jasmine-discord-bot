@@ -3,8 +3,7 @@ module.exports = {
   description: `Stop assigning a role when a user goes live`,
 
   async run(context) {
-    await this.chaos.getService('streaming', 'StreamingService')
-      .removeLiveRole(context.guild).toPromise();
+    await this.chaos.getService('streaming', 'StreamingService').removeLiveRole(context.guild);
 
     return {
       status: 200,

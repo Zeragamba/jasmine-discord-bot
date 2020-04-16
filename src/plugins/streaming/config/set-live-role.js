@@ -16,7 +16,7 @@ module.exports = {
       let role = await this.chaos.getService('core', 'RoleService')
         .findRole(context.guild, context.args.role).toPromise();
       role = await this.chaos.getService('streaming', 'streamingService')
-        .setLiveRole(context.guild, role).toPromise();
+        .setLiveRole(context.guild, role);
 
       return {
         status: 200,

@@ -1,5 +1,4 @@
 const Discord = require('discord.js');
-const {of} = require('rxjs');
 const {MockMessage} = require("chaos-core").test.discordMocks;
 
 describe('streaming: !config streaming setLiveRole', function () {
@@ -69,7 +68,7 @@ describe('streaming: !config streaming setLiveRole', function () {
         context(contextMsg, function () {
           beforeEach(function () {
             this.message.content = `!config streaming setLiveRole ${value}`;
-            this.streamingService.setLiveRole = () => of(this.role);
+            this.streamingService.setLiveRole = async () => this.role;
           });
 
           it('sets the live role to the correct role', async function () {

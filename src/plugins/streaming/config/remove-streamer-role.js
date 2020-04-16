@@ -7,7 +7,7 @@ module.exports = {
   async run(context) {
     try {
       const prevRole = await this.chaos.getService('streaming', 'StreamingService')
-        .removeStreamerRole(context.guild).toPromise();
+        .removeStreamerRole(context.guild);
       return {
         status: 200,
         content: `I will no longer limit adding the live role to users with the role ${prevRole.name}`,

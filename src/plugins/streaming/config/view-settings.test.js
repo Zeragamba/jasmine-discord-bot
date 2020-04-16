@@ -1,4 +1,3 @@
-const {from} = require('rxjs');
 const {MockMessage} = require("chaos-core").test.discordMocks;
 
 describe('streaming: !config streaming viewSettings', function () {
@@ -24,7 +23,7 @@ describe('streaming: !config streaming viewSettings', function () {
 
     context('when no live role is set', function () {
       beforeEach(function () {
-        sinon.stub(this.streamingService, 'getLiveRole').returns(from([undefined]));
+        sinon.stub(this.streamingService, 'getLiveRole').resolves();
       });
 
       it('Says the live role is not set', async function () {
@@ -41,7 +40,7 @@ describe('streaming: !config streaming viewSettings', function () {
     context('when a live role is set', function () {
       beforeEach(function () {
         this.role = {id: 'role-00001', name: 'liveRole'};
-        sinon.stub(this.streamingService, 'getLiveRole').returns(from([this.role]));
+        sinon.stub(this.streamingService, 'getLiveRole').resolves(this.role);
       });
 
       it('Says the live role is not set', async function () {
@@ -54,7 +53,7 @@ describe('streaming: !config streaming viewSettings', function () {
 
     context('when no streamer role is set', function () {
       beforeEach(function () {
-        sinon.stub(this.streamingService, 'getStreamerRole').returns(from([undefined]));
+        sinon.stub(this.streamingService, 'getStreamerRole').resolves();
       });
 
       it('Says the live role is not set', async function () {
@@ -68,7 +67,7 @@ describe('streaming: !config streaming viewSettings', function () {
     context('when a streamer role is set', function () {
       beforeEach(function () {
         this.role = {id: 'role-00001', name: 'streamerRole'};
-        sinon.stub(this.streamingService, 'getStreamerRole').returns(from([this.role]));
+        sinon.stub(this.streamingService, 'getStreamerRole').resolves(this.role);
       });
 
       it('Says the live role is not set', async function () {

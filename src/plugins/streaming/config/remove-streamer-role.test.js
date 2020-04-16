@@ -1,4 +1,3 @@
-const {of} = require('rxjs');
 const {MockMessage} = require("chaos-core").test.discordMocks;
 
 describe('streaming: !config streaming removeStreamerRole', function () {
@@ -24,8 +23,7 @@ describe('streaming: !config streaming removeStreamerRole', function () {
 
     context('when there was a previous streamer role', function () {
       beforeEach(function () {
-        sinon.stub(this.streamingService, 'removeStreamerRole')
-          .returns(of(this.role));
+        sinon.stub(this.streamingService, 'removeStreamerRole').resolves(this.role);
       });
 
       it('removes the streamer role from the guild', async function () {

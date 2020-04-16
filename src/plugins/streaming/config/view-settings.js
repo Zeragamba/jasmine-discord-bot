@@ -8,8 +8,8 @@ module.exports = {
     const streamingService = this.chaos.getService('streaming', 'streamingService');
 
     const [liveRole, streamerRole] = await Promise.all([
-      streamingService.getLiveRole(context.guild).toPromise(),
-      streamingService.getStreamerRole(context.guild).toPromise(),
+      streamingService.getLiveRole(context.guild),
+      streamingService.getStreamerRole(context.guild),
     ]);
 
     let embed = new Discord.RichEmbed();
