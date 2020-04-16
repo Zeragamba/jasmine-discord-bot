@@ -1,5 +1,3 @@
-const {of} = require('rxjs');
-const {flatMap, tap, catchError, filter} = require('rxjs/operators');
 const Service = require("chaos-core").Service;
 
 class TopicService extends Service {
@@ -8,17 +6,17 @@ class TopicService extends Service {
 
     this.watchedChannels = {};
 
-    this.chaos.on("message", (message) => of(message).pipe(
-      filter((message) => !message.system),
-      filter((message) => this.watchedChannels[message.channel.id]),
-      tap((message) => delete this.watchedChannels[message.channel.id]),
-      tap((message) => this.chaos.logger.debug(`Message in ${message.channel.name}: ${message.content}`)),
-      flatMap((message) => message.pin()),
-      catchError((error) => {
-        this.chaos.logger.error(error);
-        return of('');
-      }),
-    ));
+    this.chaos.on("message", async (message) => this.onMessage(message));
+  }
+
+  async onMessage(message) {
+    if (message.system) return;
+    if (!this.watchedChannels[message.channel.id]) return;
+    delete this.watchedChannels[message.channel.id];
+    this.chaos.logger.debug(`Message in ${message.channel.name}: ${message.content}`);
+    await message.pin().catch((error) => {
+      this.chaos.logger.error(error);
+    });
   }
 
   watchChannel(channel) {
@@ -28,18 +26,14 @@ class TopicService extends Service {
 
   findChannel(guild, channelName) {
     let textChannels = guild.channels.filter((channel) => channel.type === 'text');
-    let foundChannel = null;
-
     let channelIdMatches = channelName.match(/<#!?(\d+)>|^(\d+)$/);
     if (channelIdMatches) {
       let channelId = channelIdMatches[1] || channelIdMatches[2];
-      foundChannel = textChannels.find((channel) => channel.id === channelId);
+      return textChannels.find((channel) => channel.id === channelId);
     } else {
       let searchName = this.channelNameSafeString(channelName).toLowerCase();
-      foundChannel = textChannels.find((channel) => channel.name.toLowerCase() === searchName);
+      return textChannels.find((channel) => channel.name.toLowerCase() === searchName);
     }
-
-    return foundChannel;
   }
 
   getOpenTopicsCategory(guild) {
