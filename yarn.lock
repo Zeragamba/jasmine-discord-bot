@@ -456,31 +456,35 @@ chalk@^3.0.0:
     ansi-styles "^4.1.0"
     supports-color "^7.1.0"
 
-"chaos-core@https://github.com/chaos-core/chaos-core#v5.0.0-dev":
-  version "5.0.0-dev"
-  resolved "https://github.com/chaos-core/chaos-core#e1ea573481cab8f8b28d561a5ce7b900d60254f1"
+chaos-core@^5.0.0:
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/chaos-core/-/chaos-core-5.0.0.tgz#3638a4ec6e10a97ab42053f31fa1e4dfd7587a80"
+  integrity sha512-r4jcp7C3R+C12SYRtqZiO667KSukAeKP/zMOAiGn6zfNdfnW1gzbodVsUsg0mFaQcpcs3O4BKY92G8/O6hFsTw==
   dependencies:
     deepmerge "^4.2.2"
     winston "^3.2.1"
 
-"chaos-data-disk@https://github.com/chaos-core/chaos-data-disk#v5.0.0-dev":
-  version "5.0.0-dev"
-  resolved "https://github.com/chaos-core/chaos-data-disk#ba021acea47a2db6d14655c0c0a42dd66a062073"
+chaos-data-disk@^5.0.0:
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/chaos-data-disk/-/chaos-data-disk-5.0.0.tgz#0f208508d0c9f4b66e6522b6b5cbce3bc6094a2f"
+  integrity sha512-5+wvYyj/WF+fhhZA2DvialkRw6Iy71ZKU/mkmsTjR0BQ/8nIH60fBozAauP76fcqrDrfYFg9vPcZ83iAxzLXbg==
   dependencies:
     rxjs "^6.5.1"
 
-chaos-data-memory@^4.3.0:
-  version "4.3.0"
-  resolved "https://registry.yarnpkg.com/chaos-data-memory/-/chaos-data-memory-4.3.0.tgz#03b15f0fad277eb20e1419924f86d290d3a30297"
-  integrity sha512-mJk5TFk3OjClqNisQQfSZ+4XzP30+p8qO/HcZkBJLd5ewBOVkEXms7FuSpDeVGzgIHyLH4P+P4szTbLBQ+uRbA==
-
-"chaos-plugin-auto-role@https://github.com/chaos-core/chaos-plugin-auto-role#5.0.0-dev":
-  version "5.0.0-dev"
-  resolved "https://github.com/chaos-core/chaos-plugin-auto-role#cd7d967f40908c273d6c4b5c67e570b0e69bf5ab"
-
-"chaos-plugin-user-roles@https://github.com/chaos-core/chaos-plugin-user-roles#5.0.0-dev":
+chaos-data-memory@^5.0.0:
   version "5.0.0"
-  resolved "https://github.com/chaos-core/chaos-plugin-user-roles#aa380880effa88204649ab4ebc04ee59bc95d036"
+  resolved "https://registry.yarnpkg.com/chaos-data-memory/-/chaos-data-memory-5.0.0.tgz#4f3f9ddf94c7043deb4b302ccde54fe86ffb121a"
+  integrity sha512-bY5E4l/QPxZsnmWmEOR6DTTM2g7o5HgSQ2ymYNCM3rjvqOlUnjpDW/vBTGPCHYZF8S5yZi2MdmWKDjSwkzNgEg==
+
+chaos-plugin-auto-role@^5.0.0:
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/chaos-plugin-auto-role/-/chaos-plugin-auto-role-5.0.0.tgz#823ce037c4386a85fed6caef59a2cd2b2f1837b0"
+  integrity sha512-v4HABVXevyVPl+g4+9X26SuTef+xZt9j6PXMfcDkrQlOoXLgpmRpWwy54w+ug5OPXpYH8JmVgvz5PokyOUePpQ==
+
+chaos-plugin-user-roles@^5.0.0:
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/chaos-plugin-user-roles/-/chaos-plugin-user-roles-5.0.0.tgz#8047888eca7a4eec6aaf3a57180263220aec79cf"
+  integrity sha512-5CyHVqoJTLNV3NXizejfW18b/8XRJDjVoRqodMK3X22Qgbmo3yXw5Yo0bCT7fxzWKlcW7CLcFu1u233vo2lDfg==
 
 chardet@^0.7.0:
   version "0.7.0"
