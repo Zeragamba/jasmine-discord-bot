@@ -1,4 +1,4 @@
-const {RuleNotFoundError} = require("../errors");
+const {RuleNotFoundError} = require("../../mod-tools/errors");
 
 module.exports = {
   name: 'setAutoBanRule',

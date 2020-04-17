@@ -6,6 +6,7 @@ const packageJson = require('../package');
 const plugins = [
   require("chaos-plugin-auto-role"),
   require("chaos-plugin-user-roles"),
+  require('./plugins/autoban'),
   require('./plugins/mod-tools'),
   require('./plugins/ow-info'),
   require('./plugins/ow-mains'),

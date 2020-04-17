@@ -1,8 +1,9 @@
-const {AUTO_BAN_RULES} = require("../utility");
+const AUTO_BAN_RULES = require("../rules");
+
 describe('AutoBanService', function () {
   beforeEach(async function () {
-    this.jasmine = stubJasmine({logger: {level: 'debug'}});
-    this.autoBanService = this.jasmine.getService('modTools', 'AutoBanService');
+    this.jasmine = stubJasmine();
+    this.autoBanService = this.jasmine.getService('autoban', 'AutoBanService');
     this.pluginService = this.jasmine.getService('core', 'pluginService');
 
     this.guild = {
@@ -10,7 +11,7 @@ describe('AutoBanService', function () {
       ban: async () => {},
     };
 
-    await this.pluginService.enablePlugin(this.guild.id, 'modTools');
+    await this.pluginService.enablePlugin(this.guild.id, 'autoban');
   });
 
   describe("#doAutoBans", function () {
@@ -23,9 +24,8 @@ describe('AutoBanService', function () {
         },
       };
 
-      await this.autoBanService.setAutoBansEnabled(this.guild, true);
-      await this.autoBanService.setAutoBanRule(this.guild, AUTO_BAN_RULES.BAN_DISCORD_INVITE, true);
-      await this.autoBanService.setAutoBanRule(this.guild, AUTO_BAN_RULES.BAN_TWITCH_LINK, true);
+      await this.autoBanService.setAutoBanRule(this.guild, AUTO_BAN_RULES.BAN_DISCORD_INVITE.name, true);
+      await this.autoBanService.setAutoBanRule(this.guild, AUTO_BAN_RULES.BAN_TWITCH_LINK.name, true);
     });
 
     context("when the user's name is fine", function () {
@@ -51,20 +51,7 @@ describe('AutoBanService', function () {
 
       context("when the plugin is disabled", function () {
         beforeEach(async function () {
-          await this.pluginService.disablePlugin(this.guild.id, 'modTools');
-        });
-
-        it("does not ban the user", async function () {
-          sinon.spy(this.guild, 'ban');
-
-          await this.autoBanService.doAutoBans(this.member);
-          expect(this.guild.ban).not.to.have.been.called;
-        });
-      });
-
-      context("when autobanning is disabled", function () {
-        beforeEach(async function () {
-          await this.autoBanService.setAutoBansEnabled(this.guild, false);
+          await this.pluginService.disablePlugin(this.guild.id, 'autoban');
         });
 
         it("does not ban the user", async function () {
@@ -77,7 +64,7 @@ describe('AutoBanService', function () {
 
       context("when twitch link rule is disabled", function () {
         beforeEach(async function () {
-          await this.autoBanService.setAutoBanRule(this.guild, AUTO_BAN_RULES.BAN_TWITCH_LINK, false);
+          await this.autoBanService.setAutoBanRule(this.guild, AUTO_BAN_RULES.BAN_TWITCH_LINK.name, false);
         });
 
         it("does not ban the user", async function () {
@@ -103,20 +90,7 @@ describe('AutoBanService', function () {
 
       context("when the plugin is disabled", function () {
         beforeEach(async function () {
-          await this.pluginService.disablePlugin(this.guild.id, 'modTools');
-        });
-
-        it("does not ban the user", async function () {
-          sinon.spy(this.guild, 'ban');
-
-          await this.autoBanService.doAutoBans(this.member);
-          expect(this.guild.ban).not.to.have.been.called;
-        });
-      });
-
-      context("when autobanning is disabled", function () {
-        beforeEach(async function () {
-          await this.autoBanService.setAutoBansEnabled(this.guild, false);
+          await this.pluginService.disablePlugin(this.guild.id, 'autoban');
         });
 
         it("does not ban the user", async function () {
@@ -129,7 +103,7 @@ describe('AutoBanService', function () {
 
       context("when discord link rule is disabled", function () {
         beforeEach(async function () {
-          await this.autoBanService.setAutoBanRule(this.guild, AUTO_BAN_RULES.BAN_DISCORD_INVITE, false);
+          await this.autoBanService.setAutoBanRule(this.guild, AUTO_BAN_RULES.BAN_DISCORD_INVITE.name, false);
         });
 
         it("does not ban the user", async function () {
@@ -138,40 +112,6 @@ describe('AutoBanService', function () {
           await this.autoBanService.doAutoBans(this.member);
           expect(this.guild.ban).not.to.have.been.called;
         });
-      });
-    });
-  });
-
-  describe('#memberNameMatches', function () {
-    beforeEach(function () {
-      this.member = {
-        user: {username: 'exampleUsername'},
-      };
-    });
-
-    it('returns true if the username matches', function () {
-      expect(this.autoBanService.memberNameMatches(this.member, /Username/))
-        .to.be.true;
-    });
-
-    it('returns false if the username does not match', function () {
-      expect(this.autoBanService.memberNameMatches(this.member, /foobar/))
-        .to.be.false;
-    });
-
-    context('when the member has a nickname', function () {
-      beforeEach(function () {
-        this.member.nickname = 'exampleNickname';
-      });
-
-      it('returns true if the nickname matches', function () {
-        expect(this.autoBanService.memberNameMatches(this.member, /Nickname/))
-          .to.be.true;
-      });
-
-      it('returns false if the nickname does not match', function () {
-        expect(this.autoBanService.memberNameMatches(this.member, /foobar/))
-          .to.be.false;
       });
     });
   });

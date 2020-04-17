@@ -1,8 +1,8 @@
 /node_modules/
 /data/
-
+/.nyc_output/
+.idea/workspace.xml
 
 config.js
 pm2.sh
-.idea/workspace.xml
 yarn-error.log

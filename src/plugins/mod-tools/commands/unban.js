@@ -39,7 +39,7 @@ module.exports = {
         });
       } else if (error.message === "Unknown Ban") {
         return response.send({
-          content: `Looks like that user is not banned.`,
+          content: `Looks like that user was not banned.`,
         });
       } else if (error.message === 'Missing Permissions') {
         return response.send({
