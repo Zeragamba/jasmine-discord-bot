@@ -476,10 +476,10 @@ chaos-data-memory@^5.0.0:
   resolved "https://registry.yarnpkg.com/chaos-data-memory/-/chaos-data-memory-5.0.0.tgz#4f3f9ddf94c7043deb4b302ccde54fe86ffb121a"
   integrity sha512-bY5E4l/QPxZsnmWmEOR6DTTM2g7o5HgSQ2ymYNCM3rjvqOlUnjpDW/vBTGPCHYZF8S5yZi2MdmWKDjSwkzNgEg==
 
-chaos-plugin-auto-role@^5.0.0:
-  version "5.0.0"
-  resolved "https://registry.yarnpkg.com/chaos-plugin-auto-role/-/chaos-plugin-auto-role-5.0.0.tgz#823ce037c4386a85fed6caef59a2cd2b2f1837b0"
-  integrity sha512-v4HABVXevyVPl+g4+9X26SuTef+xZt9j6PXMfcDkrQlOoXLgpmRpWwy54w+ug5OPXpYH8JmVgvz5PokyOUePpQ==
+chaos-plugin-auto-role@^5.0.1:
+  version "5.0.1"
+  resolved "https://registry.yarnpkg.com/chaos-plugin-auto-role/-/chaos-plugin-auto-role-5.0.1.tgz#c8097b323c716648d40c77b396cc438b646a11bb"
+  integrity sha512-kBy/dhuBupiGIM+syGWICh8TZz7ud/w/quFgRnBjFLF6D0zcypjgPnF2h7GIkMAOVuUCeaf3UPq4ObfxVqEaYQ==
 
 chaos-plugin-user-roles@^5.0.0:
   version "5.0.0"

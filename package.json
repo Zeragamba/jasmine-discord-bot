@@ -1,6 +1,6 @@
 {
   "name": "jasmine-discord-bot",
-  "version": "8.0.0",
+  "version": "8.0.1",
   "description": "",
   "homepage": "",
   "author": {
@@ -40,7 +40,7 @@
   "dependencies": {
     "chaos-core": "^5.0.0",
     "chaos-data-disk": "^5.0.0",
-    "chaos-plugin-auto-role": "^5.0.0",
+    "chaos-plugin-auto-role": "^5.0.1",
     "chaos-plugin-user-roles": "^5.0.0",
     "discord.js": "^11.5.1",
     "git-rev": "^0.2.1",
