@@ -19,7 +19,6 @@ module.exports = {
     require('./services/mod-log-service'),
   ],
   configActions: [
-    require('../autoban/config/disable-auto-ban'),
     require('./config/disable-log'),
     require('./config/enable-log'),
   ],

@@ -5,9 +5,8 @@ module.exports = {
     require('./services/auto-ban-service'),
   ],
   configActions: [
-    require('./config/disable-auto-ban'),
-    require('./config/enable-auto-ban'),
-    require('./config/list-auto-ban-rules'),
-    require('./config/set-auto-ban-rule'),
+    require('./config/disable'),
+    require('./config/enable'),
+    require('./config/list'),
   ],
 };

@@ -1,4 +1,4 @@
-const AUTO_BAN_RULES = require("../rules");
+const autoBanRules = require("../rules");
 
 describe('AutoBanService', function () {
   beforeEach(async function () {
@@ -24,8 +24,8 @@ describe('AutoBanService', function () {
         },
       };
 
-      await this.autoBanService.setAutoBanRule(this.guild, AUTO_BAN_RULES.BAN_DISCORD_INVITE.name, true);
-      await this.autoBanService.setAutoBanRule(this.guild, AUTO_BAN_RULES.BAN_TWITCH_LINK.name, true);
+      await this.autoBanService.setRuleEnabled(this.guild, autoBanRules.banDiscordInvites, true);
+      await this.autoBanService.setRuleEnabled(this.guild, autoBanRules.banTwitchLink, true);
     });
 
     context("when the user's name is fine", function () {
@@ -64,7 +64,7 @@ describe('AutoBanService', function () {
 
       context("when twitch link rule is disabled", function () {
         beforeEach(async function () {
-          await this.autoBanService.setAutoBanRule(this.guild, AUTO_BAN_RULES.BAN_TWITCH_LINK.name, false);
+          await this.autoBanService.setRuleEnabled(this.guild, autoBanRules.banTwitchLink, false);
         });
 
         it("does not ban the user", async function () {
@@ -103,7 +103,7 @@ describe('AutoBanService', function () {
 
       context("when discord link rule is disabled", function () {
         beforeEach(async function () {
-          await this.autoBanService.setAutoBanRule(this.guild, AUTO_BAN_RULES.BAN_DISCORD_INVITE.name, false);
+          await this.autoBanService.setRuleEnabled(this.guild, autoBanRules.banDiscordInvites, false);
         });
 
         it("does not ban the user", async function () {

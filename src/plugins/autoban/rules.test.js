@@ -1,9 +1,9 @@
-const AUTO_BAN_RULES = require('./rules');
+const autoBanRules = require('./rules');
 
 describe('Autoban Rule: banDiscordInvites', function () {
   beforeEach(function () {
     this.member = {user: {username: 'exampleUsername'}};
-    this.rule = AUTO_BAN_RULES.BAN_DISCORD_INVITE;
+    this.rule = autoBanRules.banDiscordInvites;
 
     this.invalidNames = [
       'discord.gg/invite',
@@ -45,7 +45,7 @@ describe('Autoban Rule: banDiscordInvites', function () {
 describe('Autoban Rule: banTwitchLink', function () {
   beforeEach(function () {
     this.member = {user: {username: 'exampleUsername'}};
-    this.rule = AUTO_BAN_RULES.BAN_TWITCH_LINK;
+    this.rule = autoBanRules.banTwitchLink;
 
     this.invalidNames = [
       'twitch.tv/channel',

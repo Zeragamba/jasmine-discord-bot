@@ -1,9 +1,6 @@
-class AutoBanError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = 'AutoBanError';
-  }
-}
+const ChaosCore = require('chaos-core');
+
+class AutoBanError extends ChaosCore.errors.ChaosError {}
 
 class RuleNotFoundError extends AutoBanError {
   constructor(rule) {
