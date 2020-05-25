@@ -1,17 +1,14 @@
-const {MockMessage} = require("chaos-core").test.discordMocks;
-
 const platforms = require('../data/platforms');
 
 describe('ow-info: !platform', function () {
   beforeEach(async function () {
     this.jasmine = stubJasmine();
-    this.message = new MockMessage();
+    this.message = this.jasmine.createMessage();
 
     this.author = this.message.author;
     this.author.username = "TestUser";
 
     this.member = this.message.member;
-    this.member.user = this.author;
     this.member.setNickname = (nickname) => {
       this.member.nickname = nickname;
       return Promise.resolve(this.member);
@@ -130,8 +127,8 @@ describe('ow-info: !platform', function () {
       });
 
       it('fetches the member and works normally', async function () {
-        sinon.spy(this.member.guild, 'fetchMember');
-        sinon.spy(this.member, 'setNickname');
+        sinon.stub(this.member.guild, 'fetchMember').resolves();
+        sinon.stub(this.member, 'setNickname').resolves();
 
         let responses = await this.jasmine.testMessage(this.message);
         expect(this.message.guild.fetchMember)

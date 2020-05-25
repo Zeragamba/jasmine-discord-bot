@@ -1,10 +1,9 @@
 const {Collection, SnowflakeUtil} = require('discord.js');
-const {MockMessage} = require("chaos-core").test.discordMocks;
 
 describe('modTools: !unban', function () {
   beforeEach(async function () {
     this.jasmine = stubJasmine();
-    this.message = new MockMessage();
+    this.message = this.jasmine.createMessage();
     this.message.author.username = 'modUser';
     this.message.author.discriminator = '0001';
 

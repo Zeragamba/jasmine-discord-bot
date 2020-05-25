@@ -1,11 +1,10 @@
 const Discord = require('discord.js');
 const {range} = require('range');
-const {MockMessage} = require("chaos-core").test.discordMocks;
 
 describe('owmains: !broadcast', function () {
   beforeEach(async function () {
     this.jasmine = stubJasmine();
-    this.message = new MockMessage();
+    this.message = this.jasmine.createMessage();
 
     this.message.member.displayName = "Test User";
     this.message.guild.id = this.jasmine.getService('owmains', 'OwmnService')

@@ -1,10 +1,9 @@
 const Discord = require('discord.js');
-const {MockMessage} = require("chaos-core").test.discordMocks;
 
 describe('ow-info: !region', function () {
   beforeEach(async function () {
     this.jasmine = stubJasmine();
-    this.message = new MockMessage();
+    this.message = this.jasmine.createMessage();
 
     await this.jasmine.listen();
     await this.jasmine.emit("guildCreate", this.message.guild);
