@@ -1,25 +1,23 @@
-const Collection = require('discord.js').Collection;
-const {MockGuild, MockUser, MockGuildMember} = require("chaos-core").test.discordMocks;
+const Discord = require('discord.js');
 
 const DATAKEYS = require('../lib/datakeys');
-const {RoleNotFoundError} = require('../lib/errors');
 
 describe('streaming: StreamingService', function () {
   beforeEach(async function () {
     this.jasmine = stubJasmine();
     await this.jasmine.listen();
     this.streamingService = this.jasmine.getService('streaming', 'StreamingService');
-
-    this.guild = new MockGuild({
-      client: this.jasmine.discord,
-    });
+    this.guild = {
+      members: new Discord.Collection(),
+      roles: new Discord.Collection(),
+    };
   });
 
   describe('on presence update', function () {
     beforeEach(function () {
-      this.user = new MockUser({client: this.jasmine.discord});
-      this.oldMember = new MockGuildMember({guild: this.guild, user: this.user});
-      this.newMember = new MockGuildMember({guild: this.guild, user: this.user});
+      this.user = {client: this.jasmine.discord};
+      this.oldMember = {guild: this.guild, user: this.user};
+      this.newMember = {guild: this.guild, user: this.user};
       this.eventPayload = [this.oldMember, this.newMember];
 
       sinon.stub(this.streamingService, 'updateMemberRoles').resolves();
@@ -42,7 +40,7 @@ describe('streaming: StreamingService', function () {
         id: 'testMember',
         guild: this.guild,
         user: {tag: 'member#0001'},
-        roles: new Collection(),
+        roles: new Discord.Collection(),
         presence: {
           activities: [],
         },
@@ -194,7 +192,7 @@ describe('streaming: StreamingService', function () {
       this.member = {
         guild: this.guild,
         user: {tag: 'member#0001'},
-        roles: new Collection(),
+        roles: new Discord.Collection(),
         addRole: sinon.fake.resolves(),
       };
     });
@@ -234,7 +232,7 @@ describe('streaming: StreamingService', function () {
       this.member = {
         guild: this.guild,
         user: {tag: 'member#0001'},
-        roles: new Collection(),
+        roles: new Discord.Collection(),
         removeRole: sinon.fake.resolves(),
       };
     });
@@ -375,7 +373,7 @@ describe('streaming: StreamingService', function () {
       this.member = {
         name: 'oldMember',
         guild: this.guild,
-        roles: new Collection(),
+        roles: new Discord.Collection(),
       };
     });
 
@@ -554,7 +552,7 @@ describe('streaming: StreamingService', function () {
         try {
           await this.streamingService.removeStreamerRole(this.guild);
         } catch (error) {
-          expect(error).to.be.an.instanceOf(RoleNotFoundError);
+          expect(error.name).to.eq("RoleNotFoundError");
           return;
         }
         throw new Error("Expected an error to be thrown");
@@ -570,7 +568,7 @@ describe('streaming: StreamingService', function () {
         try {
           await this.streamingService.removeStreamerRole(this.guild);
         } catch (error) {
-          expect(error).to.be.an.instanceOf(RoleNotFoundError);
+          expect(error.name).to.eq("RoleNotFoundError");
           return;
         }
         throw new Error("Expected an error to be thrown");

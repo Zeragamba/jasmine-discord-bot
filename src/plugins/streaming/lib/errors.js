@@ -1,15 +1,9 @@
-class StreamingError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = "StreamingError";
-  }
+const ChaosCore = require("chaos-core");
+
+class StreamingError extends ChaosCore.errors.ChaosError {
 }
 
 class RoleNotFoundError extends StreamingError {
-  constructor(message) {
-    super(message);
-    this.name = "RoleNotFoundError";
-  }
 }
 
 module.exports = {
