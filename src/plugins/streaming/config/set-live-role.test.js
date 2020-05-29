@@ -1,10 +1,9 @@
 const Discord = require('discord.js');
-const {MockMessage} = require("chaos-core").test.discordMocks;
 
 describe('streaming: !config streaming setLiveRole', function () {
   beforeEach(async function () {
     this.jasmine = stubJasmine();
-    this.message = new MockMessage();
+    this.message = this.jasmine.createMessage();
 
     this.role = {id: 'role-00001', name: 'testRole'};
 

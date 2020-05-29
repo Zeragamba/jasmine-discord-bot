@@ -1,10 +1,16 @@
 const Discord = require('discord.js');
-const {MockMessage} = require("chaos-core").test.discordMocks;
 
 describe('ow-info: !region', function () {
   beforeEach(async function () {
     this.jasmine = stubJasmine();
-    this.message = new MockMessage();
+    this.message = this.jasmine.createMessage();
+    this.message.guild.roles = new Discord.Collection();
+
+    this.member = this.message.member;
+    this.member.addRole = sinon.fake((nickname) => {
+      this.member.nickname = nickname;
+      return this.member;
+    });
 
     await this.jasmine.listen();
     await this.jasmine.emit("guildCreate", this.message.guild);
@@ -33,10 +39,7 @@ describe('ow-info: !region', function () {
 
     context('when the region is mapped to a role', function () {
       beforeEach(async function () {
-        this.role = {
-          id: Discord.SnowflakeUtil.generate(),
-          name: 'testRole',
-        };
+        this.role = {id: Discord.SnowflakeUtil.generate(), name: 'testRole'};
         this.message.guild.roles.set(this.role.id, this.role);
 
         await this.jasmine.getService('ow-info', 'RegionService')
@@ -52,7 +55,6 @@ describe('ow-info: !region', function () {
       });
 
       it('adds the role to the user', async function () {
-        sinon.spy(this.message.member, "addRole");
         await this.jasmine.testMessage(this.message);
         expect(this.message.member.addRole).to.have.been.calledWith(
           this.role.id,
@@ -63,7 +65,6 @@ describe('ow-info: !region', function () {
     context('when the region is not mapped to a role', function () {
       it('returns an error message', async function () {
         sinon.spy(this.message.channel, "send");
-        sinon.spy(this.message.member, "addRole");
         await this.jasmine.testMessage(this.message);
         expect(this.message.channel.send).to.have.been.calledWith(
           'I\'m sorry, but \'test\' is not an available region.',
@@ -100,8 +101,6 @@ describe('ow-info: !region', function () {
       });
 
       it('adds the role to the user', async function () {
-        sinon.spy(this.message.member, "addRole");
-
         await this.jasmine.testMessage(this.message);
         expect(this.message.member.addRole).to.have.been.calledWith(
           this.role.id,

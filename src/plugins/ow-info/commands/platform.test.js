@@ -1,21 +1,18 @@
-const {MockMessage} = require("chaos-core").test.discordMocks;
-
 const platforms = require('../data/platforms');
 
 describe('ow-info: !platform', function () {
   beforeEach(async function () {
     this.jasmine = stubJasmine();
-    this.message = new MockMessage();
+    this.message = this.jasmine.createMessage();
 
     this.author = this.message.author;
     this.author.username = "TestUser";
 
     this.member = this.message.member;
-    this.member.user = this.author;
-    this.member.setNickname = (nickname) => {
+    this.member.setNickname = sinon.fake(async (nickname) => {
       this.member.nickname = nickname;
-      return Promise.resolve(this.member);
-    };
+      return this.member;
+    });
 
     await this.jasmine.listen();
     await this.jasmine.emit("guildCreate", this.message.guild);
@@ -65,7 +62,6 @@ describe('ow-info: !platform', function () {
         });
 
         it(`adds the tag [${tag}] to the user's nickname`, async function () {
-          sinon.spy(this.message.member, 'setNickname');
           await this.jasmine.testMessage(this.message);
           expect(this.message.member.setNickname).to.have.been.calledWith(
             `TestUser [${tag}]`,
@@ -79,7 +75,6 @@ describe('ow-info: !platform', function () {
             });
 
             it(`sets the platform tag to [${tag}]`, async function () {
-              sinon.spy(this.message.member, 'setNickname');
               await this.jasmine.testMessage(this.message);
               expect(this.message.member.setNickname).to.have.been.calledWith(
                 `TestUser [${tag}]`,
@@ -97,7 +92,6 @@ describe('ow-info: !platform', function () {
       });
 
       it(`replaces the tag`, async function () {
-        sinon.spy(this.message.member, 'setNickname');
         await this.jasmine.testMessage(this.message);
         expect(this.message.member.setNickname).to.have.been.calledWith(
           `UserNickname [PC]`,
@@ -112,7 +106,6 @@ describe('ow-info: !platform', function () {
       });
 
       it(`updates the user's nickname`, async function () {
-        sinon.spy(this.message.member, 'setNickname');
         await this.jasmine.testMessage(this.message);
         expect(this.message.member.setNickname).to.have.been.calledWith(
           `UserNickname [PC]`,
@@ -125,14 +118,15 @@ describe('ow-info: !platform', function () {
         this.message.content = '!platform PC';
 
         this.member = this.message.member;
-        this.message.guild.fetchMember = () => Promise.resolve(this.member);
+        this.message.guild.fetchMember = sinon.stub()
+          .withArgs(this.message.author).callsFake(async () => {
+            return this.member;
+          });
+
         delete this.message.member;
       });
 
       it('fetches the member and works normally', async function () {
-        sinon.spy(this.member.guild, 'fetchMember');
-        sinon.spy(this.member, 'setNickname');
-
         let responses = await this.jasmine.testMessage(this.message);
         expect(this.message.guild.fetchMember)
           .to.have.been.calledWith(this.message.author);
