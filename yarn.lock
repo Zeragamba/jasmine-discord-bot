@@ -458,7 +458,7 @@ chalk@^3.0.0:
 
 "chaos-core@https://github.com/chaos-core/chaos-core.git#5.1.0-dev":
   version "5.1.0"
-  resolved "https://github.com/chaos-core/chaos-core.git#8831577717ea8cd3ffbc3083018baf388f50237a"
+  resolved "https://github.com/chaos-core/chaos-core.git#133cf22c1478fa5183e9f23387c14d64392ca7ca"
   dependencies:
     deepmerge "^4.2.2"
     winston "^3.2.1"

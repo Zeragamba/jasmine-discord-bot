@@ -20,39 +20,47 @@ class ModLogService extends ChaosCore.Service {
   }
 
   async handleGuildMemberAdd(member) {
-    this.chaos.logger.debug(`[ModLog:${member.guild.name}] User ${member.user.tag} joined`);
-    await this.addUserJoinedEntry(member);
+    if (await this.isPluginEnabled(member.guild)) {
+      this.chaos.logger.debug(`[ModLog:${member.guild.name}] User ${member.user.tag} joined`);
+      await this.addUserJoinedEntry(member);
+    }
   }
 
   async handleGuildMemberRemove(member) {
-    this.chaos.logger.debug(`[ModLog:${member.guild.name}] User ${member.user.tag} left`);
-    try {
-      const bans = member.guild.fetchBans();
-      if (bans.get(member.id)) { return; } // Filter out banned users
-    } catch {
-      //Error occurred while trying to fetch bans, just continue anyway.
+    if (await this.isPluginEnabled(member.guild)) {
+      this.chaos.logger.debug(`[ModLog:${member.guild.name}] User ${member.user.tag} left`);
+      try {
+        const bans = member.guild.fetchBans();
+        if (bans.get(member.id)) { return; } // Filter out banned users
+      } catch {
+        //Error occurred while trying to fetch bans, just continue anyway.
+      }
+      await this.addUserLeftEntry(member);
     }
-    await this.addUserLeftEntry(member);
   }
 
   async handleGuildBanAdd(guild, user) {
-    this.chaos.logger.debug(`[ModLog:${guild.name}] User ${user.tag} banned`);
+    if (await this.isPluginEnabled(guild)) {
+      this.chaos.logger.debug(`[ModLog:${guild.name}] User ${user.tag} banned`);
 
-    let log = await this.findReasonAuditLog(guild, user, {
-      type: AuditLogActions.MEMBER_BAN_ADD,
-    });
+      let log = await this.findReasonAuditLog(guild, user, {
+        type: AuditLogActions.MEMBER_BAN_ADD,
+      });
 
-    await this.addBanEntry(guild, user, log.reason, log.executor);
+      await this.addBanEntry(guild, user, log.reason, log.executor);
+    }
   }
 
   async handleGuildBanRemove(guild, user) {
-    this.chaos.logger.debug(`[ModLog:${guild.name}] User ${user.tag} unbanned`);
+    if (await this.isPluginEnabled(guild)) {
+      this.chaos.logger.debug(`[ModLog:${guild.name}] User ${user.tag} unbanned`);
 
-    let log = await this.findReasonAuditLog(guild, user, {
-      type: AuditLogActions.MEMBER_BAN_REMOVE,
-    });
+      let log = await this.findReasonAuditLog(guild, user, {
+        type: AuditLogActions.MEMBER_BAN_REMOVE,
+      });
 
-    return this.addUnbanEntry(guild, user, log.executor);
+      return this.addUnbanEntry(guild, user, log.executor);
+    }
   }
 
   async addUserJoinedEntry(member) {

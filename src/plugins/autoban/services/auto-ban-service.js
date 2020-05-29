@@ -13,13 +13,8 @@ class AutoBanService extends Service {
     this.chaos.on('guildMemberUpdate', async ([_oldMember, newMember]) => this.doAutoBans(newMember));
   }
 
-  async pluginEnabled(guild) {
-    return this.chaos.getService('core', 'PluginService')
-      .isPluginEnabled(guild.id, 'autoban');
-  }
-
   async doAutoBans(member) {
-    if (await this.pluginEnabled(member.guild)) {
+    if (await this.isPluginEnabled(member.guild)) {
       this.chaos.logger.info(`Checking if ${member.user.tag} should be auto banned...`);
       const reasons = await Promise.all(this.rules.map((rule) => this.runRule(rule, member)))
         .then((reasons) => reasons.filter((reason) => reason !== ''));
