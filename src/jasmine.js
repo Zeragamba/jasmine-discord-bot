@@ -27,6 +27,10 @@ const defaultConfig = {
     dataDir: Path.join(__dirname, '../data'),
   },
 
+  web: {
+    enabled: false,
+  },
+
   broadcastTokens: {},
   networkModLogToken: null,
 };

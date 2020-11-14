@@ -10,7 +10,7 @@ function stubJasmine(config = {}) {
     ownerUserId: ownerUserId,
     logger: {level: 'warn'},
     dataSource: {type: 'memory'},
-
+    web: {enabled: false},
     owmnServerId: Discord.SnowflakeUtil.generate(),
   };
 
